@@ -63,11 +63,11 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Cores dos setores
+				// Cores dos setores (atualizadas conforme solicitado)
 				saude: {
-					DEFAULT: '#0ea5e9',
-					light: '#e0f2fe',
-					dark: '#0284c7',
+					DEFAULT: '#dc2626', // Vermelho
+					light: '#fee2e2',
+					dark: '#b91c1c',
 				},
 				educacao: {
 					DEFAULT: '#22c55e',
@@ -75,9 +75,9 @@ export default {
 					dark: '#16a34a',
 				},
 				administrativo: {
-					DEFAULT: '#8b5cf6',
-					light: '#f3e8ff',
-					dark: '#7c3aed',
+					DEFAULT: '#eab308', // Amarelo
+					light: '#fef9c3',
+					dark: '#ca8a04',
 				},
 				transporte: {
 					DEFAULT: '#f97316',

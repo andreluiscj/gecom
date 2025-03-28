@@ -11,7 +11,9 @@ import {
   List,
   BookOpen,
   Building2,
-  Bus
+  Bus,
+  ShoppingCart,
+  Check
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -82,7 +84,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       )}
     >
       <div className="border-b border-indigo-800 py-4 px-5">
-        <h2 className="font-bold text-xl text-white">GECOM</h2>
+        <div className="flex items-center">
+          <div className="flex text-white mr-2">
+            <ShoppingCart className="h-6 w-6" />
+            <Check className="h-6 w-6 -ml-3 -mt-1" />
+          </div>
+          <h2 className="font-bold text-xl text-white">GECOM</h2>
+        </div>
       </div>
       <div className="flex flex-1 flex-col overflow-auto py-2">
         <nav className="flex-1 px-2">
