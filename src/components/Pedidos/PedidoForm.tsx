@@ -85,39 +85,58 @@ const PedidoForm: React.FC = () => {
     }
 
     setItens(novosItens);
+    
+    // Atualiza os valores no formulário também
+    const formItens = form.getValues().itens || [];
+    formItens[index] = {
+      nome: novosItens[index].nome,
+      quantidade: Number(novosItens[index].quantidade),
+      valorUnitario: Number(novosItens[index].valorUnitario),
+    };
+    form.setValue('itens', formItens);
   };
 
   const calcularValorTotal = () => {
-    return itens.reduce((total, item) => total + item.valorTotal, 0);
+    return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
   };
 
   const onSubmit = (data: PedidoFormValues) => {
-    const itensCompletos = itens.map((item) => ({
-      ...item,
-      valorTotal: item.quantidade * item.valorUnitario,
-    }));
+    try {
+      // Garantir que os itens tenham valores corretos
+      const itensCompletos = itens.map((item) => ({
+        id: item.id,
+        nome: item.nome,
+        quantidade: Number(item.quantidade),
+        valorUnitario: Number(item.valorUnitario),
+        valorTotal: Number(item.quantidade) * Number(item.valorUnitario),
+      }));
 
-    const novoPedido: PedidoCompra = {
-      id: gerarId(),
-      dataCompra: new Date(data.dataCompra),
-      descricao: data.descricao,
-      itens: itensCompletos,
-      valorTotal: calcularValorTotal(),
-      fundoMonetario: data.fundoMonetario,
-      setor: data.setor as Setor,
-      status: 'Pendente',
-      createdAt: new Date(),
-    };
+      const novoPedido: PedidoCompra = {
+        id: gerarId(),
+        dataCompra: new Date(data.dataCompra),
+        descricao: data.descricao,
+        itens: itensCompletos,
+        valorTotal: calcularValorTotal(),
+        fundoMonetario: data.fundoMonetario,
+        setor: data.setor as Setor,
+        status: 'Pendente',
+        createdAt: new Date(),
+      };
 
-    adicionarPedido(novoPedido);
-    toast.success('Pedido de compra cadastrado com sucesso!');
-    navigate('/pedidos');
+      console.log("Salvando pedido:", novoPedido);
+      adicionarPedido(novoPedido);
+      toast.success('Pedido de compra cadastrado com sucesso!');
+      navigate('/pedidos');
+    } catch (error) {
+      console.error("Erro ao salvar pedido:", error);
+      toast.error('Erro ao cadastrar pedido. Verifique os dados e tente novamente.');
+    }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Novo Pedido de Compra</CardTitle>
+        <CardTitle>Informações do Pedido</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -256,7 +275,7 @@ const PedidoForm: React.FC = () => {
                           atualizarItem(
                             index,
                             'quantidade',
-                            parseInt(e.target.value) || 0
+                            parseInt(e.target.value) || 1
                           )
                         }
                       />

@@ -1,8 +1,7 @@
 
-import React, { useState } from 'react';
-import { Bell, Menu, Search, Settings, User } from 'lucide-react';
+import React from 'react';
+import { Bell, Menu, Settings, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +16,6 @@ interface NavBarProps {
 }
 
 const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-
   return (
     <div className="border-b bg-background h-16 flex items-center justify-between px-4">
       <div className="flex items-center">
@@ -30,17 +27,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <div className="hidden md:flex items-center">
-          <div className="relative ml-4 w-64">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Pesquisar..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
       </div>
 
       <div className="flex items-center space-x-3">

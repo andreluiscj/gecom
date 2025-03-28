@@ -77,12 +77,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   return (
     <div
       className={cn(
-        'border-r bg-background fixed inset-y-0 z-30 flex w-64 flex-col transition-all duration-300 ease-in-out',
+        'border-r bg-indigo-900 fixed inset-y-0 z-30 flex w-64 flex-col transition-all duration-300 ease-in-out',
         isOpen ? 'left-0' : '-left-64'
       )}
     >
-      <div className="border-b py-4 px-5">
-        <h2 className="font-bold text-xl">SysGestão Municipal</h2>
+      <div className="border-b border-indigo-800 py-4 px-5">
+        <h2 className="font-bold text-xl text-white">GECOM</h2>
       </div>
       <div className="flex flex-1 flex-col overflow-auto py-2">
         <nav className="flex-1 px-2">
@@ -92,10 +92,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                 <Link
                   to={item.path}
                   className={cn(
-                    'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
                     location.pathname === item.path
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-muted'
+                      ? 'bg-indigo-700'
+                      : 'hover:bg-indigo-800'
                   )}
                 >
                   {item.icon}
@@ -103,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                 </Link>
               ) : (
                 <div className="space-y-1">
-                  <div className="flex items-center rounded-md px-3 py-2 text-sm font-medium">
+                  <div className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-white">
                     {item.icon}
                     <span className="ml-3">{item.title}</span>
                   </div>
@@ -113,10 +113,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                         key={subIdx}
                         to={subItem.path}
                         className={cn(
-                          'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                          'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
                           location.pathname === subItem.path
-                            ? 'bg-accent text-accent-foreground'
-                            : 'hover:bg-muted',
+                            ? 'bg-indigo-700'
+                            : 'hover:bg-indigo-800',
                           subItem.color
                         )}
                       >
@@ -131,11 +131,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           ))}
         </nav>
       </div>
-      <div className="border-t p-4">
+      <div className="border-t border-indigo-800 p-4">
         <div className="flex items-center">
           <div className="ml-2">
-            <p className="text-xs text-muted-foreground">
-              © 2023 SysGestão Municipal
+            <p className="text-xs text-indigo-300">
+              © 2023 GECOM
             </p>
           </div>
         </div>

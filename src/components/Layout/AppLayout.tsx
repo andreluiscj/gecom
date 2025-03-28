@@ -12,7 +12,7 @@ const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar isOpen={isSidebarOpen} />
       <div className={`transition-all duration-300 ${isSidebarOpen ? 'pl-64' : 'pl-0'}`}>
         <NavBar toggleSidebar={toggleSidebar} />
