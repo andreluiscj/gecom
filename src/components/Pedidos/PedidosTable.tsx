@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -104,7 +103,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os status</SelectItem>
+              <SelectItem value="todos">Todos os status</SelectItem>
               <SelectItem value="Pendente">Pendente</SelectItem>
               <SelectItem value="Aprovado">Aprovado</SelectItem>
               <SelectItem value="Reprovado">Reprovado</SelectItem>
