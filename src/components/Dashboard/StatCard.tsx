@@ -21,7 +21,8 @@ const StatCard: React.FC<StatCardProps> = ({
   colorClass = 'bg-blue-500',
 }) => {
   // Dynamic icon selection
-  const IconComponent = Icons[icon as keyof typeof Icons] || Wallet;
+  // Ensure icon name is a valid key in the Icons object
+  const LucideIcon = (Icons as any)[icon] || Icons.Wallet;
 
   return (
     <Card>
@@ -33,7 +34,7 @@ const StatCard: React.FC<StatCardProps> = ({
               colorClass
             )}
           >
-            <IconComponent className="h-6 w-6 text-white" />
+            <LucideIcon className="h-6 w-6 text-white" />
           </div>
           <div className="ml-4 flex-1">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>

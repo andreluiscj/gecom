@@ -7,7 +7,7 @@ const Index: React.FC = () => {
 
   useEffect(() => {
     // Redireciona para o dashboard
-    navigate('/');
+    navigate('/dashboard');
   }, [navigate]);
 
   return (
