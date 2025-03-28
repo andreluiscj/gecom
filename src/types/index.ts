@@ -1,0 +1,43 @@
+
+// Tipos dos setores
+export type Setor = 'Saúde' | 'Educação' | 'Administrativo' | 'Transporte';
+
+// Interface para Pedido de Compra
+export interface PedidoCompra {
+  id: string;
+  dataCompra: Date;
+  descricao: string;
+  itens: Item[];
+  valorTotal: number;
+  fundoMonetario: string;
+  setor: Setor;
+  status: 'Pendente' | 'Aprovado' | 'Reprovado';
+  createdAt: Date;
+}
+
+// Interface para Item de Pedido
+export interface Item {
+  id: string;
+  nome: string;
+  quantidade: number;
+  valorUnitario: number;
+  valorTotal: number;
+}
+
+// Interface para Dados do Dashboard
+export interface DadosDashboard {
+  gastosTotais: number;
+  gastosPorSetor: Record<Setor, number>;
+  orcamentoPrevisto: Record<Setor, number>;
+  pedidosPorSetor: Record<Setor, number>;
+  ticketMedioPorSetor: Record<Setor, number>;
+}
+
+// Interface para Estatísticas dos Cartões
+export interface CardStats {
+  titulo: string;
+  valor: number | string;
+  percentualMudanca: number;
+  icon: string;
+  cor: string;
+}

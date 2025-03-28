@@ -1,10 +1,17 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import AppLayout from "./components/Layout/AppLayout";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
+import ListaPedidos from "./pages/Pedidos/ListaPedidos";
+import NovoPedido from "./pages/Pedidos/NovoPedido";
+import Relatorios from "./pages/Relatorios/Relatorios";
+import ListaSetores from "./pages/Setores/ListaSetores";
+import DetalheSetor from "./pages/Setores/DetalheSetor";
 
 const queryClient = new QueryClient();
 
@@ -15,8 +22,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/pedidos" element={<ListaPedidos />} />
+            <Route path="/pedidos/novo" element={<NovoPedido />} />
+            <Route path="/relatorios" element={<Relatorios />} />
+            <Route path="/setores" element={<ListaSetores />} />
+            <Route path="/setores/:setor" element={<DetalheSetor />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
