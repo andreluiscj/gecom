@@ -65,9 +65,9 @@ export default {
 				},
 				// Cores dos setores (atualizadas conforme solicitado)
 				saude: {
-					DEFAULT: '#dc2626', // Vermelho
+					DEFAULT: '#f87171', // Vermelho mais suave
 					light: '#fee2e2',
-					dark: '#b91c1c',
+					dark: '#ef4444',
 				},
 				educacao: {
 					DEFAULT: '#22c55e',
