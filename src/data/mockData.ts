@@ -1,4 +1,3 @@
-
 import { PedidoCompra, Setor, DadosDashboard } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
@@ -232,7 +231,7 @@ const gerarDadosIniciais = () => {
       ],
       valorTotal: 190,
       fundoMonetario: 'Fundo Municipal de Saúde',
-      setor: 'Saúde',
+      setor: 'Saúde' as Setor,
       status: 'Aprovado',
       createdAt: new Date('2023-05-10')
     },
@@ -246,7 +245,7 @@ const gerarDadosIniciais = () => {
       ],
       valorTotal: 1250,
       fundoMonetario: 'Fundo Municipal de Educação',
-      setor: 'Educação',
+      setor: 'Educação' as Setor,
       status: 'Aprovado',
       createdAt: new Date('2023-06-15')
     }
@@ -264,7 +263,7 @@ const gerarDadosIniciais = () => {
       ],
       valorTotal: 22000,
       fundoMonetario: 'Fundo Municipal de Saúde',
-      setor: 'Saúde',
+      setor: 'Saúde' as Setor,
       status: 'Aprovado',
       createdAt: new Date('2023-07-05')
     },
@@ -278,7 +277,7 @@ const gerarDadosIniciais = () => {
       ],
       valorTotal: 76000,
       fundoMonetario: 'Fundo Municipal de Educação',
-      setor: 'Educação',
+      setor: 'Educação' as Setor,
       status: 'Pendente',
       createdAt: new Date('2023-08-12')
     }
@@ -296,7 +295,7 @@ const gerarDadosIniciais = () => {
       ],
       valorTotal: 6400,
       fundoMonetario: 'Fundo Municipal de Administração',
-      setor: 'Administrativo',
+      setor: 'Administrativo' as Setor,
       status: 'Aprovado',
       createdAt: new Date('2023-09-08')
     },
@@ -309,7 +308,7 @@ const gerarDadosIniciais = () => {
       ],
       valorTotal: 560000,
       fundoMonetario: 'Fundo Municipal de Transporte',
-      setor: 'Transporte',
+      setor: 'Transporte' as Setor,
       status: 'Pendente',
       createdAt: new Date('2023-10-20')
     }
@@ -317,15 +316,15 @@ const gerarDadosIniciais = () => {
   
   // Distribui os pedidos para as cidades corretas
   pedidosPaiPedro.forEach(pedido => {
-    adicionarPedido(pedido, 'pai-pedro');
+    adicionarPedido(pedido as PedidoCompra, 'pai-pedro');
   });
   
   pedidosJanauba.forEach(pedido => {
-    adicionarPedido(pedido, 'janauba');
+    adicionarPedido(pedido as PedidoCompra, 'janauba');
   });
   
   pedidosEspinosa.forEach(pedido => {
-    adicionarPedido(pedido, 'espinosa');
+    adicionarPedido(pedido as PedidoCompra, 'espinosa');
   });
 };
 
