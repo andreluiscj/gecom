@@ -1,11 +1,9 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
-  PieChart, 
   BarChart3, 
-  LineChart, 
   FileText, 
   Download, 
   Calendar, 
@@ -19,9 +17,50 @@ import ChartGastosPorSetor from '@/components/Dashboard/ChartGastosPorSetor';
 import ChartPedidosPorSetor from '@/components/Dashboard/ChartPedidosPorSetor';
 import ChartPrevisoRealizado from '@/components/Dashboard/ChartPrevisoRealizado';
 import ChartTicketMedio from '@/components/Dashboard/ChartTicketMedio';
+import { toast } from 'sonner';
 
 const Relatorios: React.FC = () => {
-  const dadosDashboard = calcularDadosDashboard();
+  const [dadosDashboard, setDadosDashboard] = useState(calcularDadosDashboard());
+  const [setor, setSetor] = useState<string>("todos");
+  const [periodo, setPeriodo] = useState<string>("mes");
+  const [tipoRelatorio, setTipoRelatorio] = useState<string>("geral");
+  
+  // Simula a atualização dos dados com base nos filtros
+  useEffect(() => {
+    // Em um cenário real, aqui faria uma chamada à API com os filtros
+    const novosDados = calcularDadosDashboard();
+    
+    // Aplica filtros simulados
+    if (setor !== "todos") {
+      const setorCapitalizado = setor.charAt(0).toUpperCase() + setor.slice(1);
+      
+      // Filtra apenas o setor selecionado
+      const gastosFiltrados: Record<string, number> = {};
+      gastosFiltrados[setorCapitalizado] = novosDados.gastosPorSetor[setorCapitalizado];
+      
+      const pedidosFiltrados: Record<string, number> = {};
+      pedidosFiltrados[setorCapitalizado] = novosDados.pedidosPorSetor[setorCapitalizado];
+      
+      const ticketMedioFiltrado: Record<string, number> = {};
+      ticketMedioFiltrado[setorCapitalizado] = novosDados.ticketMedioPorSetor[setorCapitalizado];
+      
+      const orcamentoFiltrado: Record<string, number> = {};
+      orcamentoFiltrado[setorCapitalizado] = novosDados.orcamentoPrevisto[setorCapitalizado];
+      
+      novosDados.gastosPorSetor = gastosFiltrados;
+      novosDados.pedidosPorSetor = pedidosFiltrados;
+      novosDados.ticketMedioPorSetor = ticketMedioFiltrado;
+      novosDados.orcamentoPrevisto = orcamentoFiltrado;
+      novosDados.gastosTotais = gastosFiltrados[setorCapitalizado];
+    }
+    
+    setDadosDashboard(novosDados);
+    toast.success("Filtros aplicados com sucesso!");
+  }, [setor, periodo, tipoRelatorio]);
+
+  const handleExportar = () => {
+    toast.success("Relatório exportado com sucesso!");
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -43,7 +82,7 @@ const Relatorios: React.FC = () => {
               <Button variant="outline" size="sm">
                 <Filter className="h-4 w-4 mr-2" /> Filtros
               </Button>
-              <Button size="sm">
+              <Button size="sm" onClick={handleExportar}>
                 <Download className="h-4 w-4 mr-2" /> Exportar
               </Button>
             </div>
@@ -52,13 +91,13 @@ const Relatorios: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Setor</label>
-              <Select>
+              <label className="text-sm font-medium mb-1 block">Secretária</label>
+              <Select value={setor} onValueChange={setSetor}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Todos os setores" />
+                  <SelectValue placeholder="Todas as secretárias" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todos">Todos os setores</SelectItem>
+                  <SelectItem value="todos">Todas as secretárias</SelectItem>
                   <SelectItem value="saude">Saúde</SelectItem>
                   <SelectItem value="educacao">Educação</SelectItem>
                   <SelectItem value="administrativo">Administrativo</SelectItem>
@@ -68,7 +107,7 @@ const Relatorios: React.FC = () => {
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Período</label>
-              <Select>
+              <Select value={periodo} onValueChange={setPeriodo}>
                 <SelectTrigger>
                   <SelectValue placeholder="Último mês" />
                 </SelectTrigger>
@@ -82,7 +121,7 @@ const Relatorios: React.FC = () => {
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Tipo de Relatório</label>
-              <Select>
+              <Select value={tipoRelatorio} onValueChange={setTipoRelatorio}>
                 <SelectTrigger>
                   <SelectValue placeholder="Geral" />
                 </SelectTrigger>
@@ -127,13 +166,13 @@ const Relatorios: React.FC = () => {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium mb-2">Gastos por Setor</h3>
+                  <h3 className="text-lg font-medium mb-2">Gastos por Secretária</h3>
                   <div className="border rounded-md overflow-hidden">
                     <table className="min-w-full divide-y divide-border">
                       <thead className="bg-muted">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Setor
+                            Secretária
                           </th>
                           <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Orçamento Previsto
@@ -187,13 +226,13 @@ const Relatorios: React.FC = () => {
                 <Separator />
                 
                 <div>
-                  <h3 className="text-lg font-medium mb-2">Pedidos por Setor</h3>
+                  <h3 className="text-lg font-medium mb-2">Pedidos por Secretária</h3>
                   <div className="border rounded-md overflow-hidden">
                     <table className="min-w-full divide-y divide-border">
                       <thead className="bg-muted">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Setor
+                            Secretária
                           </th>
                           <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Nº de Pedidos

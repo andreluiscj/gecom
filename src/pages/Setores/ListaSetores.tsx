@@ -46,9 +46,9 @@ const ListaSetores: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Setores</h1>
+        <h1 className="text-3xl font-bold mb-2">Secretárias</h1>
         <p className="text-muted-foreground">
-          Gerenciamento dos setores municipais e seus recursos
+          Gerenciamento das secretárias municipais e seus recursos
         </p>
       </div>
 

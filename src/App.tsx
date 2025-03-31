@@ -13,6 +13,8 @@ import Relatorios from "./pages/Relatorios/Relatorios";
 import ListaSetores from "./pages/Setores/ListaSetores";
 import DetalheSetor from "./pages/Setores/DetalheSetor";
 import Index from "./pages/Index";
+import TarefasSelecao from "./pages/Tarefas/TarefasSelecao";
+import TarefasKanban from "./pages/Tarefas/TarefasKanban";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/pedidos" element={<ListaPedidos />} />
             <Route path="/pedidos/novo" element={<NovoPedido />} />
             <Route path="/relatorios" element={<Relatorios />} />
+            <Route path="/tarefas" element={<TarefasSelecao />} />
+            <Route path="/tarefas/:secretaria" element={<TarefasKanban />} />
             <Route path="/setores" element={<ListaSetores />} />
             <Route path="/setores/:setor" element={<DetalheSetor />} />
           </Route>

@@ -13,7 +13,8 @@ import {
   Building2,
   Bus,
   ShoppingCart,
-  Check
+  Check,
+  CheckSquare
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -45,32 +46,33 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       icon: <BarChart3 className="h-5 w-5" />,
     },
     {
-      title: 'Setores',
+      title: 'Tarefas',
+      path: '/tarefas',
+      icon: <CheckSquare className="h-5 w-5" />,
+    },
+    {
+      title: 'Secretárias',
       icon: <Folder className="h-5 w-5" />,
       submenu: [
         {
           title: 'Saúde',
           path: '/setores/saude',
-          icon: <HeartPulse className="h-5 w-5" />,
-          color: 'text-saude-dark',
+          icon: <HeartPulse className="h-5 w-5 text-white" />,
         },
         {
           title: 'Educação',
           path: '/setores/educacao',
-          icon: <BookOpen className="h-5 w-5" />,
-          color: 'text-educacao-dark',
+          icon: <BookOpen className="h-5 w-5 text-white" />,
         },
         {
           title: 'Administrativo',
           path: '/setores/administrativo',
-          icon: <Building2 className="h-5 w-5" />,
-          color: 'text-administrativo-dark',
+          icon: <Building2 className="h-5 w-5 text-white" />,
         },
         {
           title: 'Transporte',
           path: '/setores/transporte',
-          icon: <Bus className="h-5 w-5" />,
-          color: 'text-transporte-dark',
+          icon: <Bus className="h-5 w-5 text-white" />,
         },
       ],
     },
@@ -124,8 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                           'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
                           location.pathname === subItem.path
                             ? 'bg-indigo-700'
-                            : 'hover:bg-indigo-800',
-                          subItem.color
+                            : 'hover:bg-indigo-800'
                         )}
                       >
                         {subItem.icon}

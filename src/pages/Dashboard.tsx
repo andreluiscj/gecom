@@ -1,3 +1,4 @@
+
 import React from 'react';
 import StatCard from '@/components/Dashboard/StatCard';
 import ChartGastosPorSetor from '@/components/Dashboard/ChartGastosPorSetor';
@@ -80,7 +81,7 @@ const Dashboard: React.FC = () => {
       </div>
       
       <div>
-        <h2 className="text-2xl font-bold mb-4">Setores</h2>
+        <h2 className="text-2xl font-bold mb-4">Secretárias</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {setores.map((setor, index) => (
             <SetorCard key={index} {...setor} />
