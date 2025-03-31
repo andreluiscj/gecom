@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -14,7 +14,9 @@ import {
   Bus,
   ShoppingCart,
   Check,
-  CheckSquare
+  CheckSquare,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,11 +25,16 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const location = useLocation();
+  const [secretariasOpen, setSecretariasOpen] = useState(false);
+
+  const toggleSecretarias = () => {
+    setSecretariasOpen(!secretariasOpen);
+  };
 
   const menuItems = [
     {
       title: 'Dashboard',
-      path: '/',
+      path: '/dashboard',
       icon: <Home className="h-5 w-5" />,
     },
     {
@@ -49,32 +56,29 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       title: 'Tarefas',
       path: '/tarefas',
       icon: <CheckSquare className="h-5 w-5" />,
+    }
+  ];
+
+  const secretariasItems = [
+    {
+      title: 'Saúde',
+      path: '/setores/saude',
+      icon: <HeartPulse className="h-5 w-5 text-white" />,
     },
     {
-      title: 'Secretárias',
-      icon: <Folder className="h-5 w-5" />,
-      submenu: [
-        {
-          title: 'Saúde',
-          path: '/setores/saude',
-          icon: <HeartPulse className="h-5 w-5 text-white" />,
-        },
-        {
-          title: 'Educação',
-          path: '/setores/educacao',
-          icon: <BookOpen className="h-5 w-5 text-white" />,
-        },
-        {
-          title: 'Administrativo',
-          path: '/setores/administrativo',
-          icon: <Building2 className="h-5 w-5 text-white" />,
-        },
-        {
-          title: 'Transporte',
-          path: '/setores/transporte',
-          icon: <Bus className="h-5 w-5 text-white" />,
-        },
-      ],
+      title: 'Educação',
+      path: '/setores/educacao',
+      icon: <BookOpen className="h-5 w-5 text-white" />,
+    },
+    {
+      title: 'Administrativo',
+      path: '/setores/administrativo',
+      icon: <Building2 className="h-5 w-5 text-white" />,
+    },
+    {
+      title: 'Transporte',
+      path: '/setores/transporte',
+      icon: <Bus className="h-5 w-5 text-white" />,
     },
   ];
 
@@ -98,46 +102,61 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         <nav className="flex-1 px-2">
           {menuItems.map((item, idx) => (
             <div key={idx} className="mb-2">
-              {item.path ? (
-                <Link
-                  to={item.path}
-                  className={cn(
-                    'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
-                    location.pathname === item.path
-                      ? 'bg-indigo-700'
-                      : 'hover:bg-indigo-800'
-                  )}
-                >
-                  {item.icon}
-                  <span className="ml-3">{item.title}</span>
-                </Link>
-              ) : (
-                <div className="space-y-1">
-                  <div className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-white">
-                    {item.icon}
-                    <span className="ml-3">{item.title}</span>
-                  </div>
-                  <div className="ml-4 space-y-1 group-data-[collapsible=icon]:hidden">
-                    {item.submenu?.map((subItem, subIdx) => (
-                      <Link
-                        key={subIdx}
-                        to={subItem.path}
-                        className={cn(
-                          'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
-                          location.pathname === subItem.path
-                            ? 'bg-indigo-700'
-                            : 'hover:bg-indigo-800'
-                        )}
-                      >
-                        {subItem.icon}
-                        <span className="ml-3">{subItem.title}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <Link
+                to={item.path}
+                className={cn(
+                  'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
+                  location.pathname === item.path
+                    ? 'bg-indigo-700'
+                    : 'hover:bg-indigo-800'
+                )}
+              >
+                {item.icon}
+                <span className="ml-3">{item.title}</span>
+              </Link>
             </div>
           ))}
+          
+          {/* Secretárias Dropdown */}
+          <div className="mb-2">
+            <button
+              onClick={toggleSecretarias}
+              className={cn(
+                'flex items-center w-full justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
+                secretariasOpen ? 'bg-indigo-700' : 'hover:bg-indigo-800'
+              )}
+            >
+              <div className="flex items-center">
+                <Folder className="h-5 w-5" />
+                <span className="ml-3">Secretárias</span>
+              </div>
+              {secretariasOpen ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
+            
+            {secretariasOpen && (
+              <div className="ml-4 mt-1 space-y-1">
+                {secretariasItems.map((subItem, subIdx) => (
+                  <Link
+                    key={subIdx}
+                    to={subItem.path}
+                    className={cn(
+                      'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
+                      location.pathname === subItem.path
+                        ? 'bg-indigo-700'
+                        : 'hover:bg-indigo-800'
+                    )}
+                  >
+                    {subItem.icon}
+                    <span className="ml-3">{subItem.title}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
       </div>
       <div className="border-t border-indigo-800 p-4">

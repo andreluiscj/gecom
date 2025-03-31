@@ -10,10 +10,10 @@ interface ChartPedidosPorSetorProps {
 
 const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) => {
   const data = [
-    { name: 'Saúde', pedidos: dados.pedidosPorSetor['Saúde'], fill: '#0ea5e9' },
-    { name: 'Educação', pedidos: dados.pedidosPorSetor['Educação'], fill: '#22c55e' },
-    { name: 'Administrativo', pedidos: dados.pedidosPorSetor['Administrativo'], fill: '#f87171' },
-    { name: 'Transporte', pedidos: dados.pedidosPorSetor['Transporte'], fill: '#f97316' },
+    { name: 'Saúde', pedidos: dados.pedidosPorSetor['Saúde'], fill: '#ffffff' },
+    { name: 'Educação', pedidos: dados.pedidosPorSetor['Educação'], fill: '#ffffff' },
+    { name: 'Administrativo', pedidos: dados.pedidosPorSetor['Administrativo'], fill: '#ffffff' },
+    { name: 'Transporte', pedidos: dados.pedidosPorSetor['Transporte'], fill: '#ffffff' },
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
