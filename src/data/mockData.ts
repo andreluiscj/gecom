@@ -16,40 +16,72 @@ export const fundosMonetarios = [
   'Fundo Municipal de Desenvolvimento',
 ];
 
-// Dados simulados de pedidos por setor
-export let pedidosSaude: PedidoCompra[] = [];
-export let pedidosEducacao: PedidoCompra[] = [];
-export let pedidosAdministrativo: PedidoCompra[] = [];
-export let pedidosTransporte: PedidoCompra[] = [];
+// Dados simulados de pedidos por município e setor
+const pedidosPorMunicipio: Record<string, {
+  saude: PedidoCompra[],
+  educacao: PedidoCompra[],
+  administrativo: PedidoCompra[],
+  transporte: PedidoCompra[]
+}> = {
+  'pai-pedro': {
+    saude: [],
+    educacao: [],
+    administrativo: [],
+    transporte: []
+  },
+  'janauba': {
+    saude: [],
+    educacao: [],
+    administrativo: [],
+    transporte: []
+  },
+  'espinosa': {
+    saude: [],
+    educacao: [],
+    administrativo: [],
+    transporte: []
+  }
+};
 
-// Função para obter todos os pedidos
-export const obterTodosPedidos = (): PedidoCompra[] => {
+// Obter referência aos dados do município selecionado
+const obterDadosMunicipio = (municipioId: string | null) => {
+  // Se não tiver município, usa Pai Pedro como padrão
+  const id = municipioId || 'pai-pedro';
+  return pedidosPorMunicipio[id] || pedidosPorMunicipio['pai-pedro'];
+};
+
+// Função para obter todos os pedidos de um município
+export const obterTodosPedidos = (municipioId: string | null = null): PedidoCompra[] => {
+  const { saude, educacao, administrativo, transporte } = obterDadosMunicipio(municipioId);
   return [
-    ...pedidosSaude,
-    ...pedidosEducacao,
-    ...pedidosAdministrativo,
-    ...pedidosTransporte,
+    ...saude,
+    ...educacao,
+    ...administrativo,
+    ...transporte,
   ];
 };
 
-// Função para obter pedidos por setor
-export const obterPedidosPorSetor = (setor: Setor): PedidoCompra[] => {
+// Função para obter pedidos por setor de um município
+export const obterPedidosPorSetor = (setor: Setor, municipioId: string | null = null): PedidoCompra[] => {
+  const dadosMunicipio = obterDadosMunicipio(municipioId);
+  
   switch(setor) {
     case 'Saúde':
-      return pedidosSaude;
+      return dadosMunicipio.saude;
     case 'Educação':
-      return pedidosEducacao;
+      return dadosMunicipio.educacao;
     case 'Administrativo':
-      return pedidosAdministrativo;
+      return dadosMunicipio.administrativo;
     case 'Transporte':
-      return pedidosTransporte;
+      return dadosMunicipio.transporte;
     default:
       return [];
   }
 };
 
 // Função para adicionar um pedido
-export const adicionarPedido = (pedido: PedidoCompra): void => {
+export const adicionarPedido = (pedido: PedidoCompra, municipioId: string | null = null): void => {
+  const dadosMunicipio = obterDadosMunicipio(municipioId);
   const novoPedido = {
     ...pedido,
     id: gerarId(),
@@ -58,58 +90,62 @@ export const adicionarPedido = (pedido: PedidoCompra): void => {
 
   switch(pedido.setor) {
     case 'Saúde':
-      pedidosSaude = [...pedidosSaude, novoPedido];
+      dadosMunicipio.saude.push(novoPedido);
       break;
     case 'Educação':
-      pedidosEducacao = [...pedidosEducacao, novoPedido];
+      dadosMunicipio.educacao.push(novoPedido);
       break;
     case 'Administrativo':
-      pedidosAdministrativo = [...pedidosAdministrativo, novoPedido];
+      dadosMunicipio.administrativo.push(novoPedido);
       break;
     case 'Transporte':
-      pedidosTransporte = [...pedidosTransporte, novoPedido];
+      dadosMunicipio.transporte.push(novoPedido);
       break;
   }
 };
 
 // Função para remover um pedido
-export const removerPedido = (id: string, setor: Setor): void => {
+export const removerPedido = (id: string, setor: Setor, municipioId: string | null = null): void => {
+  const dadosMunicipio = obterDadosMunicipio(municipioId);
+  
   switch(setor) {
     case 'Saúde':
-      pedidosSaude = pedidosSaude.filter(pedido => pedido.id !== id);
+      dadosMunicipio.saude = dadosMunicipio.saude.filter(pedido => pedido.id !== id);
       break;
     case 'Educação':
-      pedidosEducacao = pedidosEducacao.filter(pedido => pedido.id !== id);
+      dadosMunicipio.educacao = dadosMunicipio.educacao.filter(pedido => pedido.id !== id);
       break;
     case 'Administrativo':
-      pedidosAdministrativo = pedidosAdministrativo.filter(pedido => pedido.id !== id);
+      dadosMunicipio.administrativo = dadosMunicipio.administrativo.filter(pedido => pedido.id !== id);
       break;
     case 'Transporte':
-      pedidosTransporte = pedidosTransporte.filter(pedido => pedido.id !== id);
+      dadosMunicipio.transporte = dadosMunicipio.transporte.filter(pedido => pedido.id !== id);
       break;
   }
 };
 
 // Função para atualizar um pedido
-export const atualizarPedido = (pedidoAtualizado: PedidoCompra): void => {
+export const atualizarPedido = (pedidoAtualizado: PedidoCompra, municipioId: string | null = null): void => {
+  const dadosMunicipio = obterDadosMunicipio(municipioId);
+  
   switch(pedidoAtualizado.setor) {
     case 'Saúde':
-      pedidosSaude = pedidosSaude.map(pedido => 
+      dadosMunicipio.saude = dadosMunicipio.saude.map(pedido => 
         pedido.id === pedidoAtualizado.id ? pedidoAtualizado : pedido
       );
       break;
     case 'Educação':
-      pedidosEducacao = pedidosEducacao.map(pedido => 
+      dadosMunicipio.educacao = dadosMunicipio.educacao.map(pedido => 
         pedido.id === pedidoAtualizado.id ? pedidoAtualizado : pedido
       );
       break;
     case 'Administrativo':
-      pedidosAdministrativo = pedidosAdministrativo.map(pedido => 
+      dadosMunicipio.administrativo = dadosMunicipio.administrativo.map(pedido => 
         pedido.id === pedidoAtualizado.id ? pedidoAtualizado : pedido
       );
       break;
     case 'Transporte':
-      pedidosTransporte = pedidosTransporte.map(pedido => 
+      dadosMunicipio.transporte = dadosMunicipio.transporte.map(pedido => 
         pedido.id === pedidoAtualizado.id ? pedidoAtualizado : pedido
       );
       break;
@@ -117,23 +153,41 @@ export const atualizarPedido = (pedidoAtualizado: PedidoCompra): void => {
 };
 
 // Dados para o dashboard
-export const calcularDadosDashboard = (): DadosDashboard => {
-  const todosPedidos = obterTodosPedidos();
+export const calcularDadosDashboard = (municipioId: string | null = null): DadosDashboard => {
+  const dadosMunicipio = obterDadosMunicipio(municipioId);
+  const todosPedidos = obterTodosPedidos(municipioId);
   
-  // Orçamento previsto por setor (valores fictícios)
-  const orcamentoPrevisto: Record<Setor, number> = {
-    'Saúde': 1000000,
-    'Educação': 800000,
-    'Administrativo': 500000,
-    'Transporte': 700000
+  // Define orçamentos diferentes por município
+  const orcamentos = {
+    'pai-pedro': {
+      'Saúde': 12000000,
+      'Educação': 8000000,
+      'Administrativo': 4500000,
+      'Transporte': 4000000
+    },
+    'janauba': {
+      'Saúde': 50000000,
+      'Educação': 45000000,
+      'Administrativo': 30000000,
+      'Transporte': 20300000
+    },
+    'espinosa': {
+      'Saúde': 25000000,
+      'Educação': 22000000,
+      'Administrativo': 18000000,
+      'Transporte': 22600000
+    }
   };
+  
+  // Orçamento previsto por setor (baseado no município selecionado)
+  const orcamentoPrevisto: Record<Setor, number> = orcamentos[municipioId || 'pai-pedro'] || orcamentos['pai-pedro'];
   
   // Gastos por setor
   const gastosPorSetor: Record<Setor, number> = {
-    'Saúde': pedidosSaude.reduce((sum, pedido) => sum + pedido.valorTotal, 0),
-    'Educação': pedidosEducacao.reduce((sum, pedido) => sum + pedido.valorTotal, 0),
-    'Administrativo': pedidosAdministrativo.reduce((sum, pedido) => sum + pedido.valorTotal, 0),
-    'Transporte': pedidosTransporte.reduce((sum, pedido) => sum + pedido.valorTotal, 0)
+    'Saúde': dadosMunicipio.saude.reduce((sum, pedido) => sum + pedido.valorTotal, 0),
+    'Educação': dadosMunicipio.educacao.reduce((sum, pedido) => sum + pedido.valorTotal, 0),
+    'Administrativo': dadosMunicipio.administrativo.reduce((sum, pedido) => sum + pedido.valorTotal, 0),
+    'Transporte': dadosMunicipio.transporte.reduce((sum, pedido) => sum + pedido.valorTotal, 0)
   };
   
   // Total de gastos
@@ -141,18 +195,18 @@ export const calcularDadosDashboard = (): DadosDashboard => {
   
   // Número de pedidos por setor
   const pedidosPorSetor: Record<Setor, number> = {
-    'Saúde': pedidosSaude.length,
-    'Educação': pedidosEducacao.length,
-    'Administrativo': pedidosAdministrativo.length,
-    'Transporte': pedidosTransporte.length
+    'Saúde': dadosMunicipio.saude.length,
+    'Educação': dadosMunicipio.educacao.length,
+    'Administrativo': dadosMunicipio.administrativo.length,
+    'Transporte': dadosMunicipio.transporte.length
   };
   
   // Cálculo do ticket médio por setor
   const ticketMedioPorSetor: Record<Setor, number> = {
-    'Saúde': pedidosSaude.length > 0 ? gastosPorSetor['Saúde'] / pedidosSaude.length : 0,
-    'Educação': pedidosEducacao.length > 0 ? gastosPorSetor['Educação'] / pedidosEducacao.length : 0,
-    'Administrativo': pedidosAdministrativo.length > 0 ? gastosPorSetor['Administrativo'] / pedidosAdministrativo.length : 0,
-    'Transporte': pedidosTransporte.length > 0 ? gastosPorSetor['Transporte'] / pedidosTransporte.length : 0
+    'Saúde': dadosMunicipio.saude.length > 0 ? gastosPorSetor['Saúde'] / dadosMunicipio.saude.length : 0,
+    'Educação': dadosMunicipio.educacao.length > 0 ? gastosPorSetor['Educação'] / dadosMunicipio.educacao.length : 0,
+    'Administrativo': dadosMunicipio.administrativo.length > 0 ? gastosPorSetor['Administrativo'] / dadosMunicipio.administrativo.length : 0,
+    'Transporte': dadosMunicipio.transporte.length > 0 ? gastosPorSetor['Transporte'] / dadosMunicipio.transporte.length : 0
   };
   
   return {
@@ -164,10 +218,10 @@ export const calcularDadosDashboard = (): DadosDashboard => {
   };
 };
 
-// Gerar dados iniciais de exemplo
+// Gerar dados iniciais de exemplo para cada município
 const gerarDadosIniciais = () => {
-  // Pedidos para Saúde
-  const pedidosSaudeIniciais: PedidoCompra[] = [
+  // Pedidos para Pai Pedro
+  const pedidosPaiPedro = [
     {
       id: gerarId(),
       dataCompra: new Date('2023-05-10'),
@@ -185,32 +239,32 @@ const gerarDadosIniciais = () => {
     {
       id: gerarId(),
       dataCompra: new Date('2023-06-15'),
-      descricao: 'Equipamentos para hospital municipal',
+      descricao: 'Material escolar para escola municipal',
       itens: [
-        { id: gerarId(), nome: 'Monitor cardíaco', quantidade: 2, valorUnitario: 5000, valorTotal: 10000 },
-        { id: gerarId(), nome: 'Oxímetro', quantidade: 5, valorUnitario: 200, valorTotal: 1000 }
+        { id: gerarId(), nome: 'Caderno universitário', quantidade: 50, valorUnitario: 15, valorTotal: 750 },
+        { id: gerarId(), nome: 'Kit lápis e caneta', quantidade: 50, valorUnitario: 10, valorTotal: 500 }
       ],
-      valorTotal: 11000,
-      fundoMonetario: 'Fundo Municipal de Saúde',
-      setor: 'Saúde',
+      valorTotal: 1250,
+      fundoMonetario: 'Fundo Municipal de Educação',
+      setor: 'Educação',
       status: 'Aprovado',
       createdAt: new Date('2023-06-15')
     }
   ];
   
-  // Pedidos para Educação
-  const pedidosEducacaoIniciais: PedidoCompra[] = [
+  // Pedidos para Janaúba
+  const pedidosJanauba = [
     {
       id: gerarId(),
       dataCompra: new Date('2023-07-05'),
-      descricao: 'Material escolar para escola municipal',
+      descricao: 'Equipamentos para hospital municipal',
       itens: [
-        { id: gerarId(), nome: 'Caderno universitário', quantidade: 100, valorUnitario: 15, valorTotal: 1500 },
-        { id: gerarId(), nome: 'Kit lápis e caneta', quantidade: 100, valorUnitario: 10, valorTotal: 1000 }
+        { id: gerarId(), nome: 'Monitor cardíaco', quantidade: 4, valorUnitario: 5000, valorTotal: 20000 },
+        { id: gerarId(), nome: 'Oxímetro', quantidade: 10, valorUnitario: 200, valorTotal: 2000 }
       ],
-      valorTotal: 2500,
-      fundoMonetario: 'Fundo Municipal de Educação',
-      setor: 'Educação',
+      valorTotal: 22000,
+      fundoMonetario: 'Fundo Municipal de Saúde',
+      setor: 'Saúde',
       status: 'Aprovado',
       createdAt: new Date('2023-07-05')
     },
@@ -219,10 +273,10 @@ const gerarDadosIniciais = () => {
       dataCompra: new Date('2023-08-12'),
       descricao: 'Computadores para laboratório de informática',
       itens: [
-        { id: gerarId(), nome: 'Computador desktop', quantidade: 10, valorUnitario: 3000, valorTotal: 30000 },
-        { id: gerarId(), nome: 'Monitor 22 polegadas', quantidade: 10, valorUnitario: 800, valorTotal: 8000 }
+        { id: gerarId(), nome: 'Computador desktop', quantidade: 20, valorUnitario: 3000, valorTotal: 60000 },
+        { id: gerarId(), nome: 'Monitor 22 polegadas', quantidade: 20, valorUnitario: 800, valorTotal: 16000 }
       ],
-      valorTotal: 38000,
+      valorTotal: 76000,
       fundoMonetario: 'Fundo Municipal de Educação',
       setor: 'Educação',
       status: 'Pendente',
@@ -230,17 +284,17 @@ const gerarDadosIniciais = () => {
     }
   ];
   
-  // Pedidos para Administrativo
-  const pedidosAdministrativoIniciais: PedidoCompra[] = [
+  // Pedidos para Espinosa
+  const pedidosEspinosa = [
     {
       id: gerarId(),
       dataCompra: new Date('2023-09-08'),
       descricao: 'Material de escritório para prefeitura',
       itens: [
-        { id: gerarId(), nome: 'Resma de papel A4', quantidade: 50, valorUnitario: 20, valorTotal: 1000 },
-        { id: gerarId(), nome: 'Cartucho de impressora', quantidade: 10, valorUnitario: 80, valorTotal: 800 }
+        { id: gerarId(), nome: 'Resma de papel A4', quantidade: 200, valorUnitario: 20, valorTotal: 4000 },
+        { id: gerarId(), nome: 'Cartucho de impressora', quantidade: 30, valorUnitario: 80, valorTotal: 2400 }
       ],
-      valorTotal: 1800,
+      valorTotal: 6400,
       fundoMonetario: 'Fundo Municipal de Administração',
       setor: 'Administrativo',
       status: 'Aprovado',
@@ -249,62 +303,38 @@ const gerarDadosIniciais = () => {
     {
       id: gerarId(),
       dataCompra: new Date('2023-10-20'),
-      descricao: 'Móveis para secretaria municipal',
+      descricao: 'Aquisição de novo ônibus escolar',
       itens: [
-        { id: gerarId(), nome: 'Mesa de escritório', quantidade: 5, valorUnitario: 500, valorTotal: 2500 },
-        { id: gerarId(), nome: 'Cadeira ergonômica', quantidade: 5, valorUnitario: 400, valorTotal: 2000 }
+        { id: gerarId(), nome: 'Ônibus escolar 44 lugares', quantidade: 2, valorUnitario: 280000, valorTotal: 560000 }
       ],
-      valorTotal: 4500,
-      fundoMonetario: 'Fundo Municipal de Administração',
-      setor: 'Administrativo',
-      status: 'Reprovado',
+      valorTotal: 560000,
+      fundoMonetario: 'Fundo Municipal de Transporte',
+      setor: 'Transporte',
+      status: 'Pendente',
       createdAt: new Date('2023-10-20')
     }
   ];
   
-  // Pedidos para Transporte
-  const pedidosTransporteIniciais: PedidoCompra[] = [
-    {
-      id: gerarId(),
-      dataCompra: new Date('2023-11-10'),
-      descricao: 'Manutenção da frota de ônibus escolares',
-      itens: [
-        { id: gerarId(), nome: 'Troca de óleo', quantidade: 10, valorUnitario: 300, valorTotal: 3000 },
-        { id: gerarId(), nome: 'Filtros diversos', quantidade: 20, valorUnitario: 100, valorTotal: 2000 }
-      ],
-      valorTotal: 5000,
-      fundoMonetario: 'Fundo Municipal de Transporte',
-      setor: 'Transporte',
-      status: 'Aprovado',
-      createdAt: new Date('2023-11-10')
-    },
-    {
-      id: gerarId(),
-      dataCompra: new Date('2023-12-05'),
-      descricao: 'Aquisição de novo ônibus escolar',
-      itens: [
-        { id: gerarId(), nome: 'Ônibus escolar 44 lugares', quantidade: 1, valorUnitario: 280000, valorTotal: 280000 }
-      ],
-      valorTotal: 280000,
-      fundoMonetario: 'Fundo Municipal de Transporte',
-      setor: 'Transporte',
-      status: 'Pendente',
-      createdAt: new Date('2023-12-05')
-    }
-  ];
+  // Distribui os pedidos para as cidades corretas
+  pedidosPaiPedro.forEach(pedido => {
+    adicionarPedido(pedido, 'pai-pedro');
+  });
   
-  pedidosSaude = pedidosSaudeIniciais;
-  pedidosEducacao = pedidosEducacaoIniciais;
-  pedidosAdministrativo = pedidosAdministrativoIniciais;
-  pedidosTransporte = pedidosTransporteIniciais;
+  pedidosJanauba.forEach(pedido => {
+    adicionarPedido(pedido, 'janauba');
+  });
+  
+  pedidosEspinosa.forEach(pedido => {
+    adicionarPedido(pedido, 'espinosa');
+  });
 };
 
 // Inicializar dados
 gerarDadosIniciais();
 
 // Função para obter estatísticas para cartões do dashboard
-export const obterEstatisticasCartoes = () => {
-  const dados = calcularDadosDashboard();
+export const obterEstatisticasCartoes = (municipioId: string | null = null) => {
+  const dados = calcularDadosDashboard(municipioId);
   
   return [
     {
@@ -316,7 +346,7 @@ export const obterEstatisticasCartoes = () => {
     },
     {
       titulo: 'Pedidos de Compra',
-      valor: obterTodosPedidos().length,
+      valor: obterTodosPedidos(municipioId).length,
       percentualMudanca: 8.2,
       icon: 'ShoppingCart',
       cor: 'bg-green-500'
@@ -324,7 +354,7 @@ export const obterEstatisticasCartoes = () => {
     {
       titulo: 'Ticket Médio',
       valor: formatCurrency(
-        dados.gastosTotais / (obterTodosPedidos().length || 1)
+        dados.gastosTotais / (obterTodosPedidos(municipioId).length || 1)
       ),
       percentualMudanca: -2.4,
       icon: 'Receipt',
