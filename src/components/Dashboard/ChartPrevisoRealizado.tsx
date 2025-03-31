@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DadosDashboard } from '@/types';
 import { formatCurrency } from '@/utils/formatters';
@@ -49,6 +49,15 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
     return null;
   };
 
+  const formatLabel = (value: number) => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(0)}k`;
+    }
+    return value;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -60,14 +69,19 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
             <BarChart
               data={data}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              barSize={40}
+              barGap={0}
             >
-              <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
+              <YAxis hide />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Bar dataKey="Previsto" fill="#64748b" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Realizado" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Previsto" fill="#64748b" radius={[4, 4, 0, 0]}>
+                <LabelList dataKey="Previsto" position="top" formatter={formatLabel} />
+              </Bar>
+              <Bar dataKey="Realizado" fill="#0ea5e9" radius={[4, 4, 0, 0]} barSize={20}>
+                <LabelList dataKey="Realizado" position="center" fill="#ffffff" formatter={formatLabel} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,32 +19,44 @@ import ChartTicketMedio from '@/components/Dashboard/ChartTicketMedio';
 import { toast } from 'sonner';
 
 const Relatorios: React.FC = () => {
-  const [dadosDashboard, setDadosDashboard] = useState(calcularDadosDashboard());
+  const [municipioId, setMunicipioId] = useState<string | null>(null);
   const [setor, setSetor] = useState<string>("todos");
   const [periodo, setPeriodo] = useState<string>("mes");
   const [tipoRelatorio, setTipoRelatorio] = useState<string>("geral");
+  const [dadosDashboard, setDadosDashboard] = useState(calcularDadosDashboard(municipioId));
   
-  // Simula a atualização dos dados com base nos filtros
   useEffect(() => {
-    // Em um cenário real, aqui faria uma chamada à API com os filtros
-    const novosDados = calcularDadosDashboard();
+    const selectedMunicipioId = localStorage.getItem('municipio-selecionado');
+    if (selectedMunicipioId) {
+      setMunicipioId(selectedMunicipioId);
+    }
+  }, []);
+  
+  useEffect(() => {
+    if (municipioId) {
+      const novosDados = calcularDadosDashboard(municipioId);
+      setDadosDashboard(novosDados);
+    }
+  }, [municipioId]);
+  
+  useEffect(() => {
+    const dadosOriginais = calcularDadosDashboard(municipioId);
+    const novosDados = { ...dadosOriginais };
     
-    // Aplica filtros simulados
     if (setor !== "todos") {
       const setorCapitalizado = setor.charAt(0).toUpperCase() + setor.slice(1);
       
-      // Filtra apenas o setor selecionado
       const gastosFiltrados: Record<string, number> = {};
-      gastosFiltrados[setorCapitalizado] = novosDados.gastosPorSetor[setorCapitalizado];
+      gastosFiltrados[setorCapitalizado] = dadosOriginais.gastosPorSetor[setorCapitalizado];
       
       const pedidosFiltrados: Record<string, number> = {};
-      pedidosFiltrados[setorCapitalizado] = novosDados.pedidosPorSetor[setorCapitalizado];
+      pedidosFiltrados[setorCapitalizado] = dadosOriginais.pedidosPorSetor[setorCapitalizado];
       
       const ticketMedioFiltrado: Record<string, number> = {};
-      ticketMedioFiltrado[setorCapitalizado] = novosDados.ticketMedioPorSetor[setorCapitalizado];
+      ticketMedioFiltrado[setorCapitalizado] = dadosOriginais.ticketMedioPorSetor[setorCapitalizado];
       
       const orcamentoFiltrado: Record<string, number> = {};
-      orcamentoFiltrado[setorCapitalizado] = novosDados.orcamentoPrevisto[setorCapitalizado];
+      orcamentoFiltrado[setorCapitalizado] = dadosOriginais.orcamentoPrevisto[setorCapitalizado];
       
       novosDados.gastosPorSetor = gastosFiltrados;
       novosDados.pedidosPorSetor = pedidosFiltrados;
@@ -54,12 +65,36 @@ const Relatorios: React.FC = () => {
       novosDados.gastosTotais = gastosFiltrados[setorCapitalizado];
     }
     
+    if (periodo !== "mes") {
+      const multiplicador = periodo === "trimestre" ? 3 : 
+                           periodo === "semestre" ? 6 : 
+                           periodo === "ano" ? 12 : 1;
+      
+      Object.keys(novosDados.gastosPorSetor).forEach(key => {
+        novosDados.gastosPorSetor[key] *= multiplicador;
+      });
+      
+      Object.keys(novosDados.pedidosPorSetor).forEach(key => {
+        novosDados.pedidosPorSetor[key] = Math.round(novosDados.pedidosPorSetor[key] * multiplicador);
+      });
+      
+      novosDados.gastosTotais = Object.values(novosDados.gastosPorSetor).reduce((sum, val) => sum + val, 0);
+    }
+    
     setDadosDashboard(novosDados);
     toast.success("Filtros aplicados com sucesso!");
-  }, [setor, periodo, tipoRelatorio]);
+  }, [setor, periodo, tipoRelatorio, municipioId]);
 
   const handleExportar = () => {
-    toast.success("Relatório exportado com sucesso!");
+    const tipoRelatorioTexto = tipoRelatorio === "geral" ? "Geral" : 
+                              tipoRelatorio === "gastos" ? "Gastos" :
+                              tipoRelatorio === "pedidos" ? "Pedidos" : "Orçamento";
+                              
+    const periodoTexto = periodo === "mes" ? "Último mês" : 
+                        periodo === "trimestre" ? "Último trimestre" :
+                        periodo === "semestre" ? "Último semestre" : "Último ano";
+                        
+    toast.success(`Relatório ${tipoRelatorioTexto} de ${periodoTexto} exportado com sucesso!`);
   };
 
   return (

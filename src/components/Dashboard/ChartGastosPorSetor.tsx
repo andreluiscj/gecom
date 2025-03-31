@@ -17,9 +17,10 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
     { name: 'Educação', value: dados.gastosPorSetor['Educação'] },
     { name: 'Administrativo', value: dados.gastosPorSetor['Administrativo'] },
     { name: 'Transporte', value: dados.gastosPorSetor['Transporte'] },
-  ];
+  ].filter(item => item.value > 0); // Filter out zero values
 
   const renderCustomizedLabel = ({ name, value, percent }: any) => {
+    if (value === 0) return null;
     return `${name}: ${(percent * 100).toFixed(1)}%`;
   };
 
