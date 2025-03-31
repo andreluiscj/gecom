@@ -38,7 +38,7 @@ const MunicipioSelection: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSelectMunicipio = (id: string) => {
-    // Aqui você poderia armazenar o município selecionado em um contexto ou localStorage
+    // Armazena o município selecionado no localStorage
     localStorage.setItem('municipio-selecionado', id);
     navigate('/dashboard');
   };

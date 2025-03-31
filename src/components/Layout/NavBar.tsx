@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Bell, Menu, Settings, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Menu, Settings, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,12 +11,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 interface NavBarProps {
   toggleSidebar: () => void;
 }
 
 const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Remove o município selecionado do localStorage
+    localStorage.removeItem('municipio-selecionado');
+    
+    // Exibe notificação
+    toast.success("Sessão encerrada com sucesso!");
+    
+    // Redireciona para a página de admin
+    navigate('/admin');
+  };
+
   return (
     <div className="border-b bg-background h-16 flex items-center justify-between px-4">
       <div className="flex items-center">
@@ -88,7 +103,10 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
             <DropdownMenuItem>Perfil</DropdownMenuItem>
             <DropdownMenuItem>Configurações</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Sair</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

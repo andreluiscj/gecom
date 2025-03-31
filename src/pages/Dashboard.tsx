@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StatCard from '@/components/Dashboard/StatCard';
 import ChartGastosPorSetor from '@/components/Dashboard/ChartGastosPorSetor';
 import ChartPedidosPorSetor from '@/components/Dashboard/ChartPedidosPorSetor';
@@ -8,10 +9,58 @@ import ChartTicketMedio from '@/components/Dashboard/ChartTicketMedio';
 import { calcularDadosDashboard, obterEstatisticasCartoes } from '@/data/mockData';
 import SetorCard from '@/components/Setores/SetorCard';
 import { HeartPulse, BookOpen, Building2, Bus } from 'lucide-react';
+import { Municipio } from '@/types';
+
+const municipios: Record<string, Municipio> = {
+  'pai-pedro': {
+    id: 'pai-pedro',
+    nome: 'Pai Pedro',
+    estado: 'MG',
+    populacao: 6083,
+    orcamentoAnual: 28500000,
+    prefeito: 'Maria Silva',
+  },
+  'janauba': {
+    id: 'janauba',
+    nome: 'Janaúba',
+    estado: 'MG',
+    populacao: 72018,
+    orcamentoAnual: 145300000,
+    prefeito: 'José Santos',
+  },
+  'espinosa': {
+    id: 'espinosa',
+    nome: 'Espinosa',
+    estado: 'MG',
+    populacao: 31113,
+    orcamentoAnual: 87600000,
+    prefeito: 'Carlos Oliveira',
+  }
+};
 
 const Dashboard: React.FC = () => {
-  const dadosDashboard = calcularDadosDashboard();
-  const estatisticasCartoes = obterEstatisticasCartoes();
+  const navigate = useNavigate();
+  const [municipioId, setMunicipioId] = useState<string | null>(null);
+  const [municipio, setMunicipio] = useState<Municipio | null>(null);
+  
+  useEffect(() => {
+    // Recupera o município selecionado do localStorage
+    const selectedMunicipioId = localStorage.getItem('municipio-selecionado');
+    
+    if (!selectedMunicipioId) {
+      // Se não houver município selecionado, redireciona para a página admin
+      navigate('/admin');
+      return;
+    }
+    
+    setMunicipioId(selectedMunicipioId);
+    // Busca os dados do município selecionado
+    setMunicipio(municipios[selectedMunicipioId]);
+  }, [navigate]);
+
+  // Calcula os dados específicos do município
+  const dadosDashboard = calcularDadosDashboard(municipioId);
+  const estatisticasCartoes = obterEstatisticasCartoes(municipioId);
 
   const setores = [
     {
@@ -48,10 +97,14 @@ const Dashboard: React.FC = () => {
     },
   ];
 
+  if (!municipio) {
+    return <div className="flex items-center justify-center h-screen">Carregando...</div>;
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-2">Dashboard - {municipio.nome}</h1>
         <p className="text-muted-foreground">
           Visão geral da gestão municipal e dos recursos financeiros.
         </p>
