@@ -10,7 +10,7 @@ interface ChartGastosPorSetorProps {
 }
 
 const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
-  const COLORS = ['#0ea5e9', '#22c55e', '#8b5cf6', '#f97316'];
+  const COLORS = ['#0ea5e9', '#22c55e', '#f87171', '#f97316'];
 
   const data = [
     { name: 'Saúde', value: dados.gastosPorSetor['Saúde'] },
@@ -38,7 +38,7 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Gastos por Setor</CardTitle>
+        <CardTitle>Gastos por Secretária</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-80">

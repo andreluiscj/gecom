@@ -41,3 +41,14 @@ export interface CardStats {
   icon: string;
   cor: string;
 }
+
+// Interface para Município
+export interface Municipio {
+  id: string;
+  nome: string;
+  estado: string;
+  populacao: number;
+  orcamentoAnual: number;
+  prefeito: string;
+  logoUrl?: string;
+}

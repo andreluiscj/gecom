@@ -12,7 +12,7 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
   const data = [
     { name: 'Saúde', pedidos: dados.pedidosPorSetor['Saúde'], fill: '#0ea5e9' },
     { name: 'Educação', pedidos: dados.pedidosPorSetor['Educação'], fill: '#22c55e' },
-    { name: 'Administrativo', pedidos: dados.pedidosPorSetor['Administrativo'], fill: '#8b5cf6' },
+    { name: 'Administrativo', pedidos: dados.pedidosPorSetor['Administrativo'], fill: '#f87171' },
     { name: 'Transporte', pedidos: dados.pedidosPorSetor['Transporte'], fill: '#f97316' },
   ];
 
@@ -31,7 +31,7 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Pedidos por Setor</CardTitle>
+        <CardTitle>Pedidos por Secretária</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-80">

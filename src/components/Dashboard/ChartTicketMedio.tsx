@@ -13,7 +13,7 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
   const data = [
     { name: 'Saúde', valor: dados.ticketMedioPorSetor['Saúde'], color: '#0ea5e9' },
     { name: 'Educação', valor: dados.ticketMedioPorSetor['Educação'], color: '#22c55e' },
-    { name: 'Administrativo', valor: dados.ticketMedioPorSetor['Administrativo'], color: '#8b5cf6' },
+    { name: 'Administrativo', valor: dados.ticketMedioPorSetor['Administrativo'], color: '#f87171' },
     { name: 'Transporte', valor: dados.ticketMedioPorSetor['Transporte'], color: '#f97316' },
   ];
 
@@ -32,7 +32,7 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Ticket Médio por Setor</CardTitle>
+        <CardTitle>Ticket Médio por Secretária</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-80">

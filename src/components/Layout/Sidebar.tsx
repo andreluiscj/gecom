@@ -117,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                     {item.icon}
                     <span className="ml-3">{item.title}</span>
                   </div>
-                  <div className="ml-4 space-y-1">
+                  <div className="ml-4 space-y-1 group-data-[collapsible=icon]:hidden">
                     {item.submenu?.map((subItem, subIdx) => (
                       <Link
                         key={subIdx}

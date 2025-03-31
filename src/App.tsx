@@ -15,6 +15,7 @@ import DetalheSetor from "./pages/Setores/DetalheSetor";
 import Index from "./pages/Index";
 import TarefasSelecao from "./pages/Tarefas/TarefasSelecao";
 import TarefasKanban from "./pages/Tarefas/TarefasKanban";
+import MunicipioSelection from "./pages/Admin/MunicipioSelection";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/index" element={<Index />} />
+          <Route path="/admin" element={<MunicipioSelection />} />
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
