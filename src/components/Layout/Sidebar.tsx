@@ -16,7 +16,10 @@ import {
   Check,
   CheckSquare,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  ChevronLeft,
+  ChevronUp,
+  PieChart
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -63,72 +66,76 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     {
       title: 'Saúde',
       path: '/setores/saude',
-      icon: <HeartPulse className="h-5 w-5 text-white" />,
+      icon: <HeartPulse className="h-5 w-5" />,
+      color: 'bg-saude-DEFAULT text-white',
     },
     {
       title: 'Educação',
       path: '/setores/educacao',
-      icon: <BookOpen className="h-5 w-5 text-white" />,
+      icon: <BookOpen className="h-5 w-5" />,
+      color: 'bg-educacao-DEFAULT text-white',
     },
     {
       title: 'Administrativo',
       path: '/setores/administrativo',
-      icon: <Building2 className="h-5 w-5 text-white" />,
+      icon: <Building2 className="h-5 w-5" />,
+      color: 'bg-administrativo-DEFAULT text-white',
     },
     {
       title: 'Transporte',
       path: '/setores/transporte',
-      icon: <Bus className="h-5 w-5 text-white" />,
+      icon: <Bus className="h-5 w-5" />,
+      color: 'bg-transporte-DEFAULT text-white',
     },
   ];
 
   return (
     <div
       className={cn(
-        'border-r bg-indigo-900 fixed inset-y-0 z-30 flex w-64 flex-col transition-all duration-300 ease-in-out',
+        'border-r border-sidebar-border bg-sidebar fixed inset-y-0 z-30 flex w-64 flex-col transition-all duration-300 ease-in-out shadow-lg',
         isOpen ? 'left-0' : '-left-64'
       )}
     >
-      <div className="border-b border-indigo-800 py-4 px-5">
-        <div className="flex items-center">
-          <div className="flex text-white mr-2">
-            <ShoppingCart className="h-6 w-6" />
-            <Check className="h-6 w-6 -ml-3 -mt-1" />
+      <div className="border-b border-sidebar-border py-5 px-5">
+        <div className="flex items-center space-x-2">
+          <div className="flex text-white bg-sidebar-primary p-1.5 rounded-md">
+            <ShoppingCart className="h-5 w-5" />
+            <Check className="h-5 w-5 -ml-3 -mt-1" />
           </div>
-          <h2 className="font-bold text-xl text-white">GECOM</h2>
+          <h2 className="font-heading font-bold text-xl text-white">GECOM</h2>
         </div>
       </div>
-      <div className="flex flex-1 flex-col overflow-auto py-2">
-        <nav className="flex-1 px-2">
+      <div className="flex flex-1 flex-col overflow-auto py-4">
+        <nav className="flex-1 px-3 space-y-1">
           {menuItems.map((item, idx) => (
-            <div key={idx} className="mb-2">
+            <div key={idx} className="mb-1">
               <Link
                 to={item.path}
                 className={cn(
-                  'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
+                  'flex items-center rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 text-white',
                   location.pathname === item.path
-                    ? 'bg-indigo-700'
-                    : 'hover:bg-indigo-800'
+                    ? 'bg-sidebar-primary shadow-md'
+                    : 'hover:bg-sidebar-accent hover:shadow-sm'
                 )}
               >
-                {item.icon}
-                <span className="ml-3">{item.title}</span>
+                <span className="mr-3">{item.icon}</span>
+                <span>{item.title}</span>
               </Link>
             </div>
           ))}
           
           {/* Secretárias Dropdown */}
-          <div className="mb-2">
+          <div className="mb-1">
             <button
               onClick={toggleSecretarias}
               className={cn(
-                'flex items-center w-full justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
-                secretariasOpen ? 'bg-indigo-700' : 'hover:bg-indigo-800'
+                'flex items-center w-full justify-between rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 text-white',
+                secretariasOpen ? 'bg-sidebar-primary shadow-md' : 'hover:bg-sidebar-accent hover:shadow-sm'
               )}
             >
               <div className="flex items-center">
-                <Folder className="h-5 w-5" />
-                <span className="ml-3">Secretárias</span>
+                <span className="mr-3"><Folder className="h-5 w-5" /></span>
+                <span>Secretárias</span>
               </div>
               {secretariasOpen ? (
                 <ChevronDown className="h-4 w-4" />
@@ -138,20 +145,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             </button>
             
             {secretariasOpen && (
-              <div className="ml-4 mt-1 space-y-1">
+              <div className="mt-1 space-y-1 pl-10 pr-3">
                 {secretariasItems.map((subItem, subIdx) => (
                   <Link
                     key={subIdx}
                     to={subItem.path}
                     className={cn(
-                      'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-white',
+                      'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 text-white',
                       location.pathname === subItem.path
-                        ? 'bg-indigo-700'
-                        : 'hover:bg-indigo-800'
+                        ? 'bg-sidebar-primary shadow-md'
+                        : 'hover:bg-sidebar-accent hover:shadow-sm'
                     )}
                   >
-                    {subItem.icon}
-                    <span className="ml-3">{subItem.title}</span>
+                    <div className={`${subItem.color} p-1 rounded-md mr-2.5`}>
+                      {subItem.icon}
+                    </div>
+                    <span>{subItem.title}</span>
                   </Link>
                 ))}
               </div>
@@ -159,13 +168,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           </div>
         </nav>
       </div>
-      <div className="border-t border-indigo-800 p-4">
-        <div className="flex items-center">
-          <div className="ml-2">
-            <p className="text-xs text-indigo-300">
-              © 2023 GECOM
-            </p>
-          </div>
+      <div className="border-t border-sidebar-border p-4">
+        <div className="flex items-center justify-center">
+          <p className="text-xs text-sidebar-foreground/70">
+            © 2023 GECOM • Sistema de Gestão de Compras
+          </p>
         </div>
       </div>
     </div>

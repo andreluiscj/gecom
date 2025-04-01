@@ -12,11 +12,11 @@ const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Sidebar isOpen={isSidebarOpen} />
       <div className={`transition-all duration-300 ${isSidebarOpen ? 'pl-64' : 'pl-0'}`}>
         <NavBar toggleSidebar={toggleSidebar} />
-        <main className="p-6">
+        <main className="p-6 md:p-8">
           <Outlet />
         </main>
       </div>

@@ -36,7 +36,7 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-background p-3 shadow-lg border rounded-md">
+        <div className="bg-background p-3 shadow-lg border rounded-lg">
           <p className="font-medium">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={`tooltip-${index}`} className="text-sm" style={{ color: entry.color }}>
@@ -59,9 +59,11 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Previsto vs Realizado</CardTitle>
+    <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold flex items-center">
+          Previsto vs Realizado
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-80">
