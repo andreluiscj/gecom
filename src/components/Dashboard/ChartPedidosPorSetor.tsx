@@ -44,7 +44,7 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="pedidos" radius={[4, 4, 0, 0]}>
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={entry.fill || COLORS[index % COLORS.length]} />
                 ))}
               </Bar>
             </BarChart>

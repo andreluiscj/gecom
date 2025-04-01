@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DadosDashboard } from '@/types';
 import { formatCurrency } from '@/utils/formatters';
@@ -29,6 +29,22 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
     return null;
   };
 
+  const renderCustomizedLabel = (props: any) => {
+    const { x, y, value } = props;
+    return (
+      <text 
+        x={x} 
+        y={y - 10} 
+        fill="#666" 
+        textAnchor="middle" 
+        dominantBaseline="middle"
+        fontSize="12"
+      >
+        {formatCurrency(value)}
+      </text>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -37,10 +53,9 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
       <CardContent>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
+            <LineChart data={data} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
               <XAxis dataKey="name" />
-              <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
+              <YAxis hide />
               <Tooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
@@ -49,6 +64,7 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
                 strokeWidth={2}
                 dot={{ r: 6 }}
                 activeDot={{ r: 8 }}
+                label={renderCustomizedLabel}
               />
             </LineChart>
           </ResponsiveContainer>
