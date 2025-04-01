@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DadosDashboard } from '@/types';
 
@@ -40,7 +40,7 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <XAxis dataKey="name" />
-              <YAxis />
+              <YAxis hide />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="pedidos" radius={[4, 4, 0, 0]}>
                 {data.map((entry, index) => (
