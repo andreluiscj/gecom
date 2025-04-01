@@ -85,6 +85,46 @@
     --sidebar-border: 215 28% 10%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+  
+  /* High contrast mode */
+  .high-contrast {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 80%;
+
+    --accent: 0 0% 20%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 40%;
+    --input: 0 0% 40%;
+    --ring: 0 0% 100%;
+    
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 30%;
+    --sidebar-ring: 0 0% 100%;
+  }
 }
 
 @layer base {
@@ -135,4 +175,28 @@
 
 .border-dash {
   @apply border border-dashed;
+}
+
+/* High contrast mode specific styles */
+.high-contrast button,
+.high-contrast a,
+.high-contrast input,
+.high-contrast select {
+  @apply focus:outline-white focus:ring-white focus:ring-2;
+}
+
+.high-contrast .border {
+  @apply border-white/30;
+}
+
+.high-contrast .shadow-card {
+  @apply shadow-[0_0_0_1px_rgba(255,255,255,0.2)];
+}
+
+.high-contrast .shadow-nav {
+  @apply shadow-[0_1px_0_0_rgba(255,255,255,0.2)];
+}
+
+.high-contrast .shadow-card-hover {
+  @apply shadow-[0_0_0_2px_rgba(255,255,255,0.3)];
 }

@@ -7,8 +7,6 @@ import ChartPedidosPorSetor from '@/components/Dashboard/ChartPedidosPorSetor';
 import ChartPrevisoRealizado from '@/components/Dashboard/ChartPrevisoRealizado';
 import ChartTicketMedio from '@/components/Dashboard/ChartTicketMedio';
 import { calcularDadosDashboard, obterEstatisticasCartoes } from '@/data/mockData';
-import SetorCard from '@/components/Setores/SetorCard';
-import { HeartPulse, BookOpen, Building2, Bus } from 'lucide-react';
 import { Municipio } from '@/types';
 
 const municipios: Record<string, Municipio> = {
@@ -62,41 +60,6 @@ const Dashboard: React.FC = () => {
   const dadosDashboard = calcularDadosDashboard(municipioId);
   const estatisticasCartoes = obterEstatisticasCartoes(municipioId);
 
-  const setores = [
-    {
-      titulo: 'Saúde',
-      descricao: 'Gestão dos recursos e pedidos do setor de saúde municipal.',
-      icone: <HeartPulse className="h-5 w-5 text-white" />,
-      colorClass: 'bg-saude-DEFAULT',
-      bgClass: 'bg-saude-light/20',
-      href: '/setores/saude',
-    },
-    {
-      titulo: 'Educação',
-      descricao: 'Administração das compras e recursos para escolas e instituições de ensino.',
-      icone: <BookOpen className="h-5 w-5 text-white" />,
-      colorClass: 'bg-educacao-DEFAULT',
-      bgClass: 'bg-educacao-light/20',
-      href: '/setores/educacao',
-    },
-    {
-      titulo: 'Administrativo',
-      descricao: 'Gerenciamento administrativo e burocrático da prefeitura.',
-      icone: <Building2 className="h-5 w-5 text-white" />,
-      colorClass: 'bg-administrativo-DEFAULT',
-      bgClass: 'bg-administrativo-light/20',
-      href: '/setores/administrativo',
-    },
-    {
-      titulo: 'Transporte',
-      descricao: 'Controle da frota e logística de transporte municipal.',
-      icone: <Bus className="h-5 w-5 text-white" />,
-      colorClass: 'bg-transporte-DEFAULT',
-      bgClass: 'bg-transporte-light/20',
-      href: '/setores/transporte',
-    },
-  ];
-
   if (!municipio) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   }
@@ -131,15 +94,6 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartPedidosPorSetor dados={dadosDashboard} />
         <ChartTicketMedio dados={dadosDashboard} />
-      </div>
-      
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Secretárias</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {setores.map((setor, index) => (
-            <SetorCard key={index} {...setor} />
-          ))}
-        </div>
       </div>
     </div>
   );

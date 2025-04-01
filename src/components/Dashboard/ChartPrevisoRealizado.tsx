@@ -71,16 +71,16 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
             <BarChart
               data={data}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              barGap={-30} 
+              barGap={8}
             >
               <XAxis dataKey="name" />
               <YAxis hide />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Bar dataKey="Previsto" fill="#e2e8f0" radius={[4, 4, 0, 0]} barSize={55}>
+              <Bar dataKey="Previsto" fill="#e2e8f0" radius={[4, 4, 0, 0]} barSize={40}>
                 <LabelList dataKey="Previsto" position="top" formatter={formatLabel} />
               </Bar>
-              <Bar dataKey="Realizado" fill="#60a5fa" radius={[4, 4, 0, 0]} barSize={35}>
+              <Bar dataKey="Realizado" fill="#60a5fa" radius={[4, 4, 0, 0]} barSize={40}>
                 <LabelList dataKey="Realizado" position="center" fill="#fff" formatter={formatLabel} />
               </Bar>
             </BarChart>
