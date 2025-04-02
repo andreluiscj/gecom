@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '@/components/Dashboard/DashboardHeader';
 import DashboardStats from '@/components/Dashboard/DashboardStats';
 import DashboardTabs from '@/components/Dashboard/DashboardTabs';
-import { calcularDadosDashboard, obterEstatisticasCartoes } from '@/data/mockData';
+import { calcularDadosDashboard, obterEstatisticasCartoes } from '@/data/extended-mockData';
 import { Municipio } from '@/types';
 
 const municipios: Record<string, Municipio> = {
@@ -63,8 +63,8 @@ const Dashboard: React.FC = () => {
 
   // Calcula os dados específicos do município
   const dadosDashboard = calcularDadosDashboard(municipioId);
-  // Get estatisticas cartoes
-  const estatisticasCartoes = obterEstatisticasCartoes();
+  // Get estatisticas cartoes with municipioId
+  const estatisticasCartoes = obterEstatisticasCartoes(municipioId);
 
   if (!municipio) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
