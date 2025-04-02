@@ -81,7 +81,7 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
     profile: language === 'pt' ? "Perfil" : "Profile",
     logout: language === 'pt' ? "Sair" : "Logout",
     deleteAccount: language === 'pt' ? "Excluir conta" : "Delete account",
-    notifications: language === 'pt' ? "Notificações" : "Notifications",
+    // Removed duplicate 'notifications' property here (this fixes the first error)
     new: language === 'pt' ? "novas" : "new",
     contrast: language === 'pt' ? "Contraste" : "Contrast",
     highContrast: language === 'pt' ? "Alto contraste" : "High contrast",
@@ -103,6 +103,7 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
     notifications: language === 'pt' ? "Notificações" : "Notifications",
     enableNotifs: language === 'pt' ? "Habilitar notificações" : "Enable notifications",
     save: language === 'pt' ? "Salvar alterações" : "Save changes",
+    close: language === 'pt' ? "Fechar" : "Close", // Added the missing 'close' property (fixes the second error)
   };
 
   return (
@@ -317,7 +318,7 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
             <Button variant="destructive" onClick={() => {setOpenProfile(false); setOpenDeleteConfirm(true);}}>
               {texts.deleteAccount}
             </Button>
-            <Button onClick={() => setOpenProfile(false)}>{texts.close || "Fechar"}</Button>
+            <Button onClick={() => setOpenProfile(false)}>{texts.close}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
