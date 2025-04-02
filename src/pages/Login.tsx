@@ -66,12 +66,7 @@ const Login: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Senha</Label>
-                    <Button type="button" variant="link" className="px-0 text-xs">
-                      Esqueceu a senha?
-                    </Button>
-                  </div>
+                  <Label htmlFor="password">Senha</Label>
                   <Input
                     id="password"
                     type="password"
@@ -80,6 +75,11 @@ const Login: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
+                </div>
+                <div className="text-right">
+                  <Button type="button" variant="link" className="px-0 text-xs h-auto">
+                    Esqueceu a senha?
+                  </Button>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Entrando...' : 'Entrar'}

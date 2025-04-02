@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowDown, ArrowUp, Wallet, LucideIcon } from 'lucide-react';
+import { ArrowDown, ArrowUp, Wallet, Building, ShoppingCart, Receipt, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StatCardProps {
   title: string;
   value: string | number;
   percentChange?: number;
-  icon?: LucideIcon; // Changed from string to LucideIcon type
+  icon: string | LucideIcon;
   colorClass?: string;
 }
 
@@ -16,9 +16,30 @@ const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
   percentChange = 0,
-  icon: Icon = Wallet, // Default to Wallet icon
+  icon,
   colorClass = 'bg-blue-500',
 }) => {
+  // Function to render the icon based on string or component
+  const renderIcon = () => {
+    if (typeof icon === 'string') {
+      switch (icon) {
+        case 'Building':
+          return <Building className="h-6 w-6 text-white" />;
+        case 'Wallet':
+          return <Wallet className="h-6 w-6 text-white" />;
+        case 'ShoppingCart':
+          return <ShoppingCart className="h-6 w-6 text-white" />;
+        case 'Receipt':
+          return <Receipt className="h-6 w-6 text-white" />;
+        default:
+          return <Wallet className="h-6 w-6 text-white" />;
+      }
+    } else {
+      const Icon = icon;
+      return <Icon className="h-6 w-6 text-white" />;
+    }
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -29,8 +50,7 @@ const StatCard: React.FC<StatCardProps> = ({
               colorClass
             )}
           >
-            {/* Use the Icon directly as a component */}
-            <Icon className="h-6 w-6 text-white" />
+            {renderIcon()}
           </div>
           <div className="ml-4 flex-1">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>

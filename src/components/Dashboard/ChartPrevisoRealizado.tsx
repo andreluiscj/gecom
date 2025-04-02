@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, LabelList, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
 interface ChartPrevisoRealizadoProps {
@@ -32,25 +32,6 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
   const legendPrevisto = language === 'pt' ? 'Previsto' : 'Planned';
   const legendRealizado = language === 'pt' ? 'Realizado' : 'Actual';
 
-  const CustomizedLabel = (props: any) => {
-    const { x, y, width, height, value, dataKey } = props;
-    const formattedValue = formatCurrency(value);
-    
-    return (
-      <text 
-        x={x + width / 2} 
-        y={dataKey === 'previsto' ? y - 6 : y + height / 2}
-        fill={dataKey === 'previsto' ? '#333' : '#fff'}
-        textAnchor="middle"
-        dominantBaseline={dataKey === 'previsto' ? 'bottom' : 'middle'}
-        fontSize={11}
-        fontWeight="500"
-      >
-        {formattedValue}
-      </text>
-    );
-  };
-
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -59,9 +40,23 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
       <CardContent>
         <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} barGap={4}>
+            <BarChart 
+              data={chartData} 
+              barGap={8}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
               <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+              <XAxis 
+                dataKey="name" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fontSize: 11 }} 
+              />
               <YAxis 
                 axisLine={false} 
                 tickLine={false} 
@@ -87,25 +82,13 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
                 fill="#64748b" 
                 name="previsto"
                 radius={[4, 4, 0, 0]}
-              >
-                <LabelList 
-                  dataKey="previsto" 
-                  position="top" 
-                  content={<CustomizedLabel />}
-                />
-              </Bar>
+              />
               <Bar 
                 dataKey="realizado" 
                 fill="#3b82f6" 
                 name="realizado"
                 radius={[4, 4, 0, 0]}
-              >
-                <LabelList 
-                  dataKey="realizado" 
-                  position="center" 
-                  content={<CustomizedLabel />}
-                />
-              </Bar>
+              />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>

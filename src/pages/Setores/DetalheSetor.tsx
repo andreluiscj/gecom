@@ -1,14 +1,14 @@
+
 import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
-import { DadosDashboard, Setor } from '@/types';
-import { calcularDadosDashboard, obterPedidosPorSetor } from '@/data/mockData';
+import { Setor } from '@/types';
+import { calcularDadosDashboard, obterPedidosPorSetor } from '@/data/extended-mockData';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
-import { HeartPulse, BookOpen, Building2, Bus, PiggyBank, Wallet, ShoppingCart, Receipt } from 'lucide-react';
+import { HeartPulse, BookOpen, Building2, Bus } from 'lucide-react';
 import StatCard from '@/components/Dashboard/StatCard';
 
 const DetalheSetor: React.FC = () => {
@@ -39,18 +39,17 @@ const DetalheSetor: React.FC = () => {
   const totalGasto = dadosDashboard.gastosPorSetor[setorMapeado];
   const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setorMapeado];
   const percentualGasto = calcularPorcentagem(totalGasto, orcamentoPrevisto);
-  const ticketMedio = dadosDashboard.ticketMedioPorSetor[setorMapeado];
 
   const getSetorIcone = () => {
     switch (setorMapeado) {
       case 'Saúde':
-        return <HeartPulse className="h-6 w-6 text-saude-DEFAULT" />;
+        return <HeartPulse className="h-6 w-6 text-white" />;
       case 'Educação':
-        return <BookOpen className="h-6 w-6 text-educacao-DEFAULT" />;
+        return <BookOpen className="h-6 w-6 text-white" />;
       case 'Administrativo':
-        return <Building2 className="h-6 w-6 text-administrativo-DEFAULT" />;
+        return <Building2 className="h-6 w-6 text-white" />;
       case 'Transporte':
-        return <Bus className="h-6 w-6 text-transporte-DEFAULT" />;
+        return <Bus className="h-6 w-6 text-white" />;
       default:
         return null;
     }
@@ -71,58 +70,6 @@ const DetalheSetor: React.FC = () => {
     }
   };
 
-  const dadosGraficoGastos = [
-    { name: 'Gasto', value: totalGasto },
-    { name: 'Disponível', value: orcamentoPrevisto - totalGasto },
-  ];
-
-  const CORES_GRAFICO = ['#3b82f6', '#94a3b8'];
-
-  const dadosTendencia = [
-    { mes: 'Jan', valor: 10000 },
-    { mes: 'Fev', valor: 15000 },
-    { mes: 'Mar', valor: 12000 },
-    { mes: 'Abr', valor: 20000 },
-    { mes: 'Mai', valor: 18000 },
-    { mes: 'Jun', valor: totalGasto * 0.85 },
-    { mes: 'Jul', valor: totalGasto * 0.9 },
-    { mes: 'Ago', valor: totalGasto * 0.95 },
-    { mes: 'Set', valor: totalGasto },
-  ];
-
-  const renderizarLabelGrafico = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    const RADS = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADS);
-    const y = cy + radius * Math.sin(-midAngle * RADS);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-        fontSize={12}
-        fontWeight="bold"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background p-3 shadow-lg border rounded-md">
-          <p className="font-medium">{payload[0].name}</p>
-          <p className="text-sm">{formatCurrency(payload[0].value)}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center space-x-3">
@@ -130,42 +77,11 @@ const DetalheSetor: React.FC = () => {
           {getSetorIcone()}
         </div>
         <div>
-          <h1 className="text-3xl font-bold mb-1">Setor de {setorMapeado}</h1>
+          <h1 className="text-3xl font-bold mb-1">Secretária de {setorMapeado}</h1>
           <p className="text-muted-foreground">
-            Visão geral dos recursos e pedidos do setor
+            Visão geral dos recursos e demandas da secretária
           </p>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Orçamento Total"
-          value={formatCurrency(orcamentoPrevisto)}
-          percentChange={10}
-          icon={PiggyBank}
-          colorClass={getSetorCor()}
-        />
-        <StatCard
-          title="Total Gasto"
-          value={formatCurrency(totalGasto)}
-          percentChange={percentualGasto > 100 ? -5 : 8}
-          icon={Wallet}
-          colorClass={getSetorCor()}
-        />
-        <StatCard
-          title="Documento de Formalização de Demanda"
-          value={totalPedidos}
-          percentChange={15}
-          icon={ShoppingCart}
-          colorClass={getSetorCor()}
-        />
-        <StatCard
-          title="Ticket Médio"
-          value={formatCurrency(ticketMedio)}
-          percentChange={-3}
-          icon={Receipt}
-          colorClass={getSetorCor()}
-        />
       </div>
 
       <Card>
@@ -179,90 +95,25 @@ const DetalheSetor: React.FC = () => {
             </span>
             <span className="text-sm font-medium">{percentualGasto.toFixed(1)}%</span>
           </div>
-          <Progress value={percentualGasto > 100 ? 100 : percentualGasto} className="h-2" />
+          <Progress 
+            value={percentualGasto > 100 ? 100 : percentualGasto} 
+            className="h-2" 
+            color={percentualGasto > 90 ? "bg-red-500" : percentualGasto > 70 ? "bg-yellow-500" : ""}
+          />
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="graficos">
-        <TabsList className="mb-4">
-          <TabsTrigger value="graficos">Gráficos</TabsTrigger>
-          <TabsTrigger value="pedidos">DFDs</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="graficos" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Distribuição do Orçamento</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={dadosGraficoGastos}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={renderizarLabelGrafico}
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {dadosGraficoGastos.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={CORES_GRAFICO[index % CORES_GRAFICO.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Tendência de Gastos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={dadosTendencia}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="mes" />
-                      <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
-                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                      <Line
-                        type="monotone"
-                        dataKey="valor"
-                        stroke={
-                          setorMapeado === 'Saúde' ? '#0ea5e9' :
-                          setorMapeado === 'Educação' ? '#22c55e' :
-                          setorMapeado === 'Administrativo' ? '#8b5cf6' :
-                          '#f97316'
-                        }
-                        strokeWidth={2}
-                        activeDot={{ r: 8 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="pedidos">
+      <Card>
+        <CardHeader>
+          <CardTitle>DFDs da Secretária de {setorMapeado}</CardTitle>
+        </CardHeader>
+        <CardContent>
           <PedidosTable 
             pedidos={pedidos} 
-            titulo={`DFDs do Setor de ${setorMapeado}`} 
+            titulo={`Documentos de Formalização de Demanda`} 
           />
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
