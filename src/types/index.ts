@@ -52,3 +52,39 @@ export interface Municipio {
   prefeito: string;
   logoUrl?: string;
 }
+
+// Interface para EstatisticaCartao - Adicionada para resolver o erro
+export interface EstatisticaCartao {
+  titulo: string;
+  valor: string | number;
+  percentualMudanca: number;
+  icon: any; // Usando any para compatibilidade com Lucide icons
+  cor: string;
+}
+
+// Interface para Pedido - Adicionada para resolver o erro
+export interface Pedido {
+  id: string;
+  dataCompra: Date;
+  descricao: string;
+  itens: Item[];
+  valorTotal: number;
+  fundoMonetario: string;
+  setor: Setor;
+  status: PedidoStatus;
+  createdAt: Date;
+}
+
+// Tipo para PedidoStatus - Adicionado para resolver o erro
+export type PedidoStatus = 'Pendente' | 'Aprovado' | 'Reprovado';
+
+// Interface para FiltroPedido - Adicionada para resolver o erro
+export interface FiltroPedido {
+  setor?: Setor;
+  status?: PedidoStatus;
+  dataInicio?: Date;
+  dataFim?: Date;
+  valorMinimo?: number;
+  valorMaximo?: number;
+  termo?: string;
+}
