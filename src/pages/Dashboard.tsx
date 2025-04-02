@@ -11,7 +11,6 @@ import { Municipio } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, Calendar, FileText } from 'lucide-react';
-import { useEffect as useEffectOriginal } from 'react';
 
 const municipios: Record<string, Municipio> = {
   'pai-pedro': {
@@ -95,7 +94,8 @@ const Dashboard: React.FC = () => {
 
   // Calcula os dados específicos do município
   const dadosDashboard = calcularDadosDashboard(municipioId);
-  const estatisticasCartoes = obterEstatisticasCartoes(municipioId);
+  // Corrected: Remove the municipioId argument since obterEstatisticasCartoes doesn't accept parameters
+  const estatisticasCartoes = obterEstatisticasCartoes();
 
   if (!municipio) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
