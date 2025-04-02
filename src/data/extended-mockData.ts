@@ -1,4 +1,3 @@
-
 import { 
   DadosDashboard, 
   EstatisticaCartao, 
@@ -6,7 +5,6 @@ import {
   PedidoStatus, 
   FiltroPedido 
 } from '@/types';
-import { Heart, BookOpen, Building, Bus } from "lucide-react";
 
 // Dados para 3 meses para cada setor em cada município
 export function calcularDadosDashboard(municipioId?: string | null): DadosDashboard {
@@ -141,28 +139,28 @@ export function obterEstatisticasCartoes(municipioId?: string | null): Estatisti
       titulo: texts.budgetTitle,
       valor: `R$ ${(orcamentoTotal).toLocaleString('pt-BR')}`,
       percentualMudanca: 0, // Orçamento é fixo, não tem variação mensal
-      icon: Building,
+      icon: 'Building',
       cor: 'bg-administrativo-DEFAULT'
     },
     {
       titulo: texts.expensesTitle,
       valor: `R$ ${gastoTotal.toLocaleString('pt-BR')}`,
       percentualMudanca: percentualVariacao,
-      icon: Building,
+      icon: 'Wallet',
       cor: 'bg-saude-DEFAULT'
     },
     {
       titulo: isDFD ? texts.dfdTitle : 'Pedidos de Compra',
       valor: totalPedidos.toString(),
       percentualMudanca: variacaoPedidos,
-      icon: Building,
+      icon: 'ShoppingCart',
       cor: 'bg-educacao-DEFAULT'
     },
     {
       titulo: texts.ticketTitle,
       valor: `R$ ${Math.round(ticketMedioTotal).toLocaleString('pt-BR')}`,
       percentualMudanca: variacaoTicket,
-      icon: Building,
+      icon: 'Receipt',
       cor: 'bg-transporte-DEFAULT'
     }
   ];

@@ -58,7 +58,7 @@ export interface EstatisticaCartao {
   titulo: string;
   valor: string | number;
   percentualMudanca: number;
-  icon: string;
+  icon: string; // Keep as string - we'll use string identifiers for icons
   cor: string;
 }
 
