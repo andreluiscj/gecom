@@ -1,373 +1,636 @@
-import { PedidoCompra, Setor, DadosDashboard } from '../types';
-import { formatCurrency } from '../utils/formatters';
 
-// Função para gerar um ID único
-export const gerarId = (): string => {
-  return Math.random().toString(36).substring(2, 11);
-};
+import { addDays, addHours, format, subMonths } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
+import { DadosDashboard, PedidoCompra, Item, Setor } from '@/types';
 
-// Lista de fundos monetários disponíveis
-export const fundosMonetarios = [
-  'Fundo Municipal de Saúde',
-  'Fundo Municipal de Educação',
-  'Fundo Municipal de Administração',
-  'Fundo Municipal de Transporte',
-  'Fundo Municipal de Desenvolvimento',
+// Dados simulados
+const pedidosCompra: PedidoCompra[] = [
+  {
+    id: '1',
+    dataCompra: new Date(2023, 8, 15),
+    descricao: 'Compra de medicamentos para o posto de saúde',
+    itens: [
+      {
+        id: '1-1',
+        nome: 'Paracetamol 500mg (caixa)',
+        quantidade: 50,
+        valorUnitario: 15.0,
+        valorTotal: 750.0,
+      },
+      {
+        id: '1-2',
+        nome: 'Dipirona 500mg (caixa)',
+        quantidade: 40,
+        valorUnitario: 12.5,
+        valorTotal: 500.0,
+      },
+    ],
+    valorTotal: 1250.0,
+    fundoMonetario: 'Fundo Municipal de Saúde',
+    setor: 'Saúde',
+    status: 'Aprovado',
+    createdAt: new Date(2023, 8, 14),
+  },
+  {
+    id: '2',
+    dataCompra: new Date(2023, 8, 10),
+    descricao: 'Material escolar para a escola municipal',
+    itens: [
+      {
+        id: '2-1',
+        nome: 'Cadernos (pacote)',
+        quantidade: 100,
+        valorUnitario: 10.0,
+        valorTotal: 1000.0,
+      },
+      {
+        id: '2-2',
+        nome: 'Lápis (caixa)',
+        quantidade: 50,
+        valorUnitario: 5.0,
+        valorTotal: 250.0,
+      },
+      {
+        id: '2-3',
+        nome: 'Borrachas (pacote)',
+        quantidade: 50,
+        valorUnitario: 2.0,
+        valorTotal: 100.0,
+      },
+    ],
+    valorTotal: 1350.0,
+    fundoMonetario: 'Fundo Municipal de Educação',
+    setor: 'Educação',
+    status: 'Aprovado',
+    createdAt: new Date(2023, 8, 8),
+  },
+  {
+    id: '3',
+    dataCompra: new Date(2023, 8, 5),
+    descricao: 'Material de escritório para a prefeitura',
+    itens: [
+      {
+        id: '3-1',
+        nome: 'Papel A4 (caixa)',
+        quantidade: 20,
+        valorUnitario: 25.0,
+        valorTotal: 500.0,
+      },
+      {
+        id: '3-2',
+        nome: 'Canetas (caixa)',
+        quantidade: 10,
+        valorUnitario: 15.0,
+        valorTotal: 150.0,
+      },
+    ],
+    valorTotal: 650.0,
+    fundoMonetario: 'Fundo Municipal de Administração',
+    setor: 'Administrativo',
+    status: 'Aprovado',
+    createdAt: new Date(2023, 8, 4),
+  },
+  {
+    id: '4',
+    dataCompra: new Date(2023, 8, 1),
+    descricao: 'Peças para manutenção de veículos',
+    itens: [
+      {
+        id: '4-1',
+        nome: 'Pneus para ônibus escolar',
+        quantidade: 4,
+        valorUnitario: 500.0,
+        valorTotal: 2000.0,
+      },
+      {
+        id: '4-2',
+        nome: 'Óleo lubrificante (litro)',
+        quantidade: 10,
+        valorUnitario: 30.0,
+        valorTotal: 300.0,
+      },
+    ],
+    valorTotal: 2300.0,
+    fundoMonetario: 'Fundo Municipal de Transporte',
+    setor: 'Transporte',
+    status: 'Pendente',
+    createdAt: new Date(2023, 7, 30),
+  },
+  {
+    id: '5',
+    dataCompra: new Date(2023, 7, 25),
+    descricao: 'Equipamentos para o posto de saúde',
+    itens: [
+      {
+        id: '5-1',
+        nome: 'Estetoscópio',
+        quantidade: 5,
+        valorUnitario: 120.0,
+        valorTotal: 600.0,
+      },
+      {
+        id: '5-2',
+        nome: 'Termômetro digital',
+        quantidade: 10,
+        valorUnitario: 35.0,
+        valorTotal: 350.0,
+      },
+    ],
+    valorTotal: 950.0,
+    fundoMonetario: 'Fundo Municipal de Saúde',
+    setor: 'Saúde',
+    status: 'Aprovado',
+    createdAt: new Date(2023, 7, 24),
+  },
 ];
 
-// Dados simulados de pedidos por município e setor
-const pedidosPorMunicipio: Record<string, {
-  saude: PedidoCompra[],
-  educacao: PedidoCompra[],
-  administrativo: PedidoCompra[],
-  transporte: PedidoCompra[]
-}> = {
-  'pai-pedro': {
-    saude: [],
-    educacao: [],
-    administrativo: [],
-    transporte: []
+// Dados de Pai Pedro (3 meses para cada setor)
+const pedidosPaiPedro: PedidoCompra[] = [
+  // Setor Saúde - Janeiro
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 3),
+    descricao: 'Medicamentos para UBS Pai Pedro',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Amoxicilina 500mg (caixa)',
+        quantidade: 30,
+        valorUnitario: 25.0,
+        valorTotal: 750.0,
+      },
+      {
+        id: uuidv4(),
+        nome: 'Dipirona injetável (ampolas)',
+        quantidade: 100,
+        valorUnitario: 2.5,
+        valorTotal: 250.0,
+      }
+    ],
+    valorTotal: 1000.0,
+    fundoMonetario: 'Fundo Municipal de Saúde',
+    setor: 'Saúde',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 3),
   },
-  'janauba': {
-    saude: [],
-    educacao: [],
-    administrativo: [],
-    transporte: []
+  // Setor Saúde - Fevereiro
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 2),
+    descricao: 'Materiais para Posto Central',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Seringas descartáveis (cx)',
+        quantidade: 20,
+        valorUnitario: 30.0,
+        valorTotal: 600.0,
+      },
+      {
+        id: uuidv4(),
+        nome: 'Luvas de procedimento (cx)',
+        quantidade: 30,
+        valorUnitario: 40.0,
+        valorTotal: 1200.0,
+      }
+    ],
+    valorTotal: 1800.0,
+    fundoMonetario: 'Fundo Municipal de Saúde',
+    setor: 'Saúde',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 2),
   },
-  'espinosa': {
-    saude: [],
-    educacao: [],
-    administrativo: [],
-    transporte: []
+  // Setor Saúde - Março
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 1),
+    descricao: 'Equipamentos para laboratório',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Microscópio',
+        quantidade: 1,
+        valorUnitario: 3000.0,
+        valorTotal: 3000.0,
+      },
+      {
+        id: uuidv4(),
+        nome: 'Centrífuga',
+        quantidade: 1,
+        valorUnitario: 2500.0,
+        valorTotal: 2500.0,
+      }
+    ],
+    valorTotal: 5500.0,
+    fundoMonetario: 'Fundo Municipal de Saúde',
+    setor: 'Saúde',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 1),
+  },
+  
+  // Setor Educação - Janeiro
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 3),
+    descricao: 'Material didático escolas municipais',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Livros didáticos',
+        quantidade: 200,
+        valorUnitario: 40.0,
+        valorTotal: 8000.0,
+      },
+      {
+        id: uuidv4(),
+        nome: 'Cadernos de caligrafia',
+        quantidade: 150,
+        valorUnitario: 5.0,
+        valorTotal: 750.0,
+      }
+    ],
+    valorTotal: 8750.0,
+    fundoMonetario: 'Fundo Municipal de Educação',
+    setor: 'Educação',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 3),
+  },
+  // Setor Educação - Fevereiro
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 2),
+    descricao: 'Computadores para laboratório de informática',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Computadores desktop',
+        quantidade: 10,
+        valorUnitario: 2500.0,
+        valorTotal: 25000.0,
+      },
+      {
+        id: uuidv4(),
+        nome: 'Monitores',
+        quantidade: 10,
+        valorUnitario: 500.0,
+        valorTotal: 5000.0,
+      }
+    ],
+    valorTotal: 30000.0,
+    fundoMonetario: 'Fundo Municipal de Educação',
+    setor: 'Educação',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 2),
+  },
+  // Setor Educação - Março
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 1),
+    descricao: 'Mobiliário escolar',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Conjuntos de carteiras escolares',
+        quantidade: 50,
+        valorUnitario: 400.0,
+        valorTotal: 20000.0,
+      },
+      {
+        id: uuidv4(),
+        nome: 'Quadros brancos',
+        quantidade: 8,
+        valorUnitario: 300.0,
+        valorTotal: 2400.0,
+      }
+    ],
+    valorTotal: 22400.0,
+    fundoMonetario: 'Fundo Municipal de Educação',
+    setor: 'Educação',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 1),
+  },
+  
+  // Setor Administrativo - Janeiro
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 3),
+    descricao: 'Material de escritório para prefeitura',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Resmas de papel A4',
+        quantidade: 100,
+        valorUnitario: 25.0,
+        valorTotal: 2500.0,
+      },
+      {
+        id: uuidv4(),
+        nome: 'Cartuchos de impressora',
+        quantidade: 20,
+        valorUnitario: 80.0,
+        valorTotal: 1600.0,
+      }
+    ],
+    valorTotal: 4100.0,
+    fundoMonetario: 'Fundo Municipal de Administração',
+    setor: 'Administrativo',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 3),
+  },
+  // Setor Administrativo - Fevereiro
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 2),
+    descricao: 'Equipamentos para sala de reuniões',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Projetor multimídia',
+        quantidade: 1,
+        valorUnitario: 3000.0,
+        valorTotal: 3000.0,
+      },
+      {
+        id: uuidv4(),
+        nome: 'Tela de projeção',
+        quantidade: 1,
+        valorUnitario: 500.0,
+        valorTotal: 500.0,
+      }
+    ],
+    valorTotal: 3500.0,
+    fundoMonetario: 'Fundo Municipal de Administração',
+    setor: 'Administrativo',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 2),
+  },
+  // Setor Administrativo - Março
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 1),
+    descricao: 'Mobiliário para prefeitura',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Cadeiras ergonômicas',
+        quantidade: 15,
+        valorUnitario: 450.0,
+        valorTotal: 6750.0,
+      },
+      {
+        id: uuidv4(),
+        nome: 'Mesas de escritório',
+        quantidade: 8,
+        valorUnitario: 600.0,
+        valorTotal: 4800.0,
+      }
+    ],
+    valorTotal: 11550.0,
+    fundoMonetario: 'Fundo Municipal de Administração',
+    setor: 'Administrativo',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 1),
+  },
+  
+  // Setor Transporte - Janeiro
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 3),
+    descricao: 'Combustível para frota municipal',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Diesel (litros)',
+        quantidade: 5000,
+        valorUnitario: 5.0,
+        valorTotal: 25000.0,
+      }
+    ],
+    valorTotal: 25000.0,
+    fundoMonetario: 'Fundo Municipal de Transporte',
+    setor: 'Transporte',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 3),
+  },
+  // Setor Transporte - Fevereiro
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 2),
+    descricao: 'Manutenção da frota de ônibus escolares',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Pneus',
+        quantidade: 12,
+        valorUnitario: 1200.0,
+        valorTotal: 14400.0,
+      },
+      {
+        id: uuidv4(),
+        nome: 'Óleo lubrificante',
+        quantidade: 80,
+        valorUnitario: 30.0,
+        valorTotal: 2400.0,
+      }
+    ],
+    valorTotal: 16800.0,
+    fundoMonetario: 'Fundo Municipal de Transporte',
+    setor: 'Transporte',
+    status: 'Aprovado',
+    createdAt: subMonths(new Date(), 2),
+  },
+  // Setor Transporte - Março
+  {
+    id: uuidv4(),
+    dataCompra: subMonths(new Date(), 1),
+    descricao: 'Aquisição de novo veículo',
+    itens: [
+      {
+        id: uuidv4(),
+        nome: 'Caminhonete para serviços municipais',
+        quantidade: 1,
+        valorUnitario: 120000.0,
+        valorTotal: 120000.0,
+      }
+    ],
+    valorTotal: 120000.0,
+    fundoMonetario: 'Fundo Municipal de Transporte',
+    setor: 'Transporte',
+    status: 'Pendente',
+    createdAt: subMonths(new Date(), 1),
   }
-};
+];
 
-// Obter referência aos dados do município selecionado
-const obterDadosMunicipio = (municipioId: string | null) => {
-  // Se não tiver município, usa Pai Pedro como padrão
-  const id = municipioId || 'pai-pedro';
-  return pedidosPorMunicipio[id] || pedidosPorMunicipio['pai-pedro'];
-};
+// Combina todos os pedidos
+const todosPedidos = [...pedidosCompra, ...pedidosPaiPedro];
 
-// Função para obter todos os pedidos de um município
-export const obterTodosPedidos = (municipioId: string | null = null): PedidoCompra[] => {
-  const { saude, educacao, administrativo, transporte } = obterDadosMunicipio(municipioId);
-  return [
-    ...saude,
-    ...educacao,
-    ...administrativo,
-    ...transporte,
-  ];
-};
-
-// Função para obter pedidos por setor de um município
-export const obterPedidosPorSetor = (setor: Setor, municipioId: string | null = null): PedidoCompra[] => {
-  const dadosMunicipio = obterDadosMunicipio(municipioId);
+// Função para calcular dados para o dashboard
+export function calcularDadosDashboard(municipioId?: string | null): DadosDashboard {
+  // Filtra pedidos com base no município selecionado
+  const pedidosFiltrados = municipioId ? 
+    todosPedidos.filter(pedido => pedido.id.includes(municipioId)) : 
+    todosPedidos;
   
-  switch(setor) {
-    case 'Saúde':
-      return dadosMunicipio.saude;
-    case 'Educação':
-      return dadosMunicipio.educacao;
-    case 'Administrativo':
-      return dadosMunicipio.administrativo;
-    case 'Transporte':
-      return dadosMunicipio.transporte;
-    default:
-      return [];
-  }
-};
-
-// Função para adicionar um pedido
-export const adicionarPedido = (pedido: PedidoCompra, municipioId: string | null = null): void => {
-  const dadosMunicipio = obterDadosMunicipio(municipioId);
-  const novoPedido = {
-    ...pedido,
-    id: gerarId(),
-    createdAt: new Date()
-  };
-
-  switch(pedido.setor) {
-    case 'Saúde':
-      dadosMunicipio.saude.push(novoPedido);
-      break;
-    case 'Educação':
-      dadosMunicipio.educacao.push(novoPedido);
-      break;
-    case 'Administrativo':
-      dadosMunicipio.administrativo.push(novoPedido);
-      break;
-    case 'Transporte':
-      dadosMunicipio.transporte.push(novoPedido);
-      break;
-  }
-};
-
-// Função para remover um pedido
-export const removerPedido = (id: string, setor: Setor, municipioId: string | null = null): void => {
-  const dadosMunicipio = obterDadosMunicipio(municipioId);
-  
-  switch(setor) {
-    case 'Saúde':
-      dadosMunicipio.saude = dadosMunicipio.saude.filter(pedido => pedido.id !== id);
-      break;
-    case 'Educação':
-      dadosMunicipio.educacao = dadosMunicipio.educacao.filter(pedido => pedido.id !== id);
-      break;
-    case 'Administrativo':
-      dadosMunicipio.administrativo = dadosMunicipio.administrativo.filter(pedido => pedido.id !== id);
-      break;
-    case 'Transporte':
-      dadosMunicipio.transporte = dadosMunicipio.transporte.filter(pedido => pedido.id !== id);
-      break;
-  }
-};
-
-// Função para atualizar um pedido
-export const atualizarPedido = (pedidoAtualizado: PedidoCompra, municipioId: string | null = null): void => {
-  const dadosMunicipio = obterDadosMunicipio(municipioId);
-  
-  switch(pedidoAtualizado.setor) {
-    case 'Saúde':
-      dadosMunicipio.saude = dadosMunicipio.saude.map(pedido => 
-        pedido.id === pedidoAtualizado.id ? pedidoAtualizado : pedido
-      );
-      break;
-    case 'Educação':
-      dadosMunicipio.educacao = dadosMunicipio.educacao.map(pedido => 
-        pedido.id === pedidoAtualizado.id ? pedidoAtualizado : pedido
-      );
-      break;
-    case 'Administrativo':
-      dadosMunicipio.administrativo = dadosMunicipio.administrativo.map(pedido => 
-        pedido.id === pedidoAtualizado.id ? pedidoAtualizado : pedido
-      );
-      break;
-    case 'Transporte':
-      dadosMunicipio.transporte = dadosMunicipio.transporte.map(pedido => 
-        pedido.id === pedidoAtualizado.id ? pedidoAtualizado : pedido
-      );
-      break;
-  }
-};
-
-// Dados para o dashboard
-export const calcularDadosDashboard = (municipioId: string | null = null): DadosDashboard => {
-  const dadosMunicipio = obterDadosMunicipio(municipioId);
-  const todosPedidos = obterTodosPedidos(municipioId);
-  
-  // Define orçamentos diferentes por município
-  const orcamentos = {
-    'pai-pedro': {
-      'Saúde': 12000000,
-      'Educação': 8000000,
-      'Administrativo': 4500000,
-      'Transporte': 4000000
-    },
-    'janauba': {
-      'Saúde': 50000000,
-      'Educação': 45000000,
-      'Administrativo': 30000000,
-      'Transporte': 20300000
-    },
-    'espinosa': {
-      'Saúde': 25000000,
-      'Educação': 22000000,
-      'Administrativo': 18000000,
-      'Transporte': 22600000
-    }
-  };
-  
-  // Orçamento previsto por setor (baseado no município selecionado)
-  const orcamentoPrevisto: Record<Setor, number> = orcamentos[municipioId || 'pai-pedro'] || orcamentos['pai-pedro'];
-  
-  // Gastos por setor
+  // Calcular gastos por setor
   const gastosPorSetor: Record<Setor, number> = {
-    'Saúde': dadosMunicipio.saude.reduce((sum, pedido) => sum + pedido.valorTotal, 0),
-    'Educação': dadosMunicipio.educacao.reduce((sum, pedido) => sum + pedido.valorTotal, 0),
-    'Administrativo': dadosMunicipio.administrativo.reduce((sum, pedido) => sum + pedido.valorTotal, 0),
-    'Transporte': dadosMunicipio.transporte.reduce((sum, pedido) => sum + pedido.valorTotal, 0)
+    'Saúde': 0,
+    'Educação': 0,
+    'Administrativo': 0,
+    'Transporte': 0,
   };
-  
-  // Total de gastos
-  const gastosTotais = Object.values(gastosPorSetor).reduce((sum, gasto) => sum + gasto, 0);
-  
-  // Número de pedidos por setor
+
+  // Calcular quantidade de pedidos por setor
   const pedidosPorSetor: Record<Setor, number> = {
-    'Saúde': dadosMunicipio.saude.length,
-    'Educação': dadosMunicipio.educacao.length,
-    'Administrativo': dadosMunicipio.administrativo.length,
-    'Transporte': dadosMunicipio.transporte.length
+    'Saúde': 0,
+    'Educação': 0,
+    'Administrativo': 0,
+    'Transporte': 0,
   };
-  
-  // Cálculo do ticket médio por setor
+
+  // Adiciona valores dos pedidos aos totais
+  pedidosFiltrados.forEach(pedido => {
+    if (pedido.status === 'Aprovado') {
+      gastosPorSetor[pedido.setor as Setor] += pedido.valorTotal;
+    }
+    pedidosPorSetor[pedido.setor as Setor] += 1;
+  });
+
+  // Define orçamento previsto por setor (valores fictícios)
+  const orcamentoPrevisto: Record<Setor, number> = {
+    'Saúde': 8000000,
+    'Educação': 6500000,
+    'Administrativo': 3500000,
+    'Transporte': 2500000,
+  };
+
+  // Calcula ticket médio por setor
   const ticketMedioPorSetor: Record<Setor, number> = {
-    'Saúde': dadosMunicipio.saude.length > 0 ? gastosPorSetor['Saúde'] / dadosMunicipio.saude.length : 0,
-    'Educação': dadosMunicipio.educacao.length > 0 ? gastosPorSetor['Educação'] / dadosMunicipio.educacao.length : 0,
-    'Administrativo': dadosMunicipio.administrativo.length > 0 ? gastosPorSetor['Administrativo'] / dadosMunicipio.administrativo.length : 0,
-    'Transporte': dadosMunicipio.transporte.length > 0 ? gastosPorSetor['Transporte'] / dadosMunicipio.transporte.length : 0
+    'Saúde': pedidosPorSetor['Saúde'] ? gastosPorSetor['Saúde'] / pedidosPorSetor['Saúde'] : 0,
+    'Educação': pedidosPorSetor['Educação'] ? gastosPorSetor['Educação'] / pedidosPorSetor['Educação'] : 0,
+    'Administrativo': pedidosPorSetor['Administrativo'] ? gastosPorSetor['Administrativo'] / pedidosPorSetor['Administrativo'] : 0,
+    'Transporte': pedidosPorSetor['Transporte'] ? gastosPorSetor['Transporte'] / pedidosPorSetor['Transporte'] : 0,
   };
-  
+
+  // Calcula o gasto total
+  const gastosTotais = Object.values(gastosPorSetor).reduce((total, gasto) => total + gasto, 0);
+
   return {
     gastosTotais,
     gastosPorSetor,
     orcamentoPrevisto,
     pedidosPorSetor,
-    ticketMedioPorSetor
+    ticketMedioPorSetor,
   };
-};
+}
 
-// Gerar dados iniciais de exemplo para cada município
-const gerarDadosIniciais = () => {
-  // Pedidos para Pai Pedro
-  const pedidosPaiPedro = [
-    {
-      id: gerarId(),
-      dataCompra: new Date('2023-05-10'),
-      descricao: 'Compra de medicamentos para o posto de saúde central',
-      itens: [
-        { id: gerarId(), nome: 'Paracetamol 500mg', quantidade: 500, valorUnitario: 0.20, valorTotal: 100 },
-        { id: gerarId(), nome: 'Dipirona 1g', quantidade: 300, valorUnitario: 0.30, valorTotal: 90 }
-      ],
-      valorTotal: 190,
-      fundoMonetario: 'Fundo Municipal de Saúde',
-      setor: 'Saúde' as Setor,
-      status: 'Aprovado',
-      createdAt: new Date('2023-05-10')
-    },
-    {
-      id: gerarId(),
-      dataCompra: new Date('2023-06-15'),
-      descricao: 'Material escolar para escola municipal',
-      itens: [
-        { id: gerarId(), nome: 'Caderno universitário', quantidade: 50, valorUnitario: 15, valorTotal: 750 },
-        { id: gerarId(), nome: 'Kit lápis e caneta', quantidade: 50, valorUnitario: 10, valorTotal: 500 }
-      ],
-      valorTotal: 1250,
-      fundoMonetario: 'Fundo Municipal de Educação',
-      setor: 'Educação' as Setor,
-      status: 'Aprovado',
-      createdAt: new Date('2023-06-15')
-    }
-  ];
-  
-  // Pedidos para Janaúba
-  const pedidosJanauba = [
-    {
-      id: gerarId(),
-      dataCompra: new Date('2023-07-05'),
-      descricao: 'Equipamentos para hospital municipal',
-      itens: [
-        { id: gerarId(), nome: 'Monitor cardíaco', quantidade: 4, valorUnitario: 5000, valorTotal: 20000 },
-        { id: gerarId(), nome: 'Oxímetro', quantidade: 10, valorUnitario: 200, valorTotal: 2000 }
-      ],
-      valorTotal: 22000,
-      fundoMonetario: 'Fundo Municipal de Saúde',
-      setor: 'Saúde' as Setor,
-      status: 'Aprovado',
-      createdAt: new Date('2023-07-05')
-    },
-    {
-      id: gerarId(),
-      dataCompra: new Date('2023-08-12'),
-      descricao: 'Computadores para laboratório de informática',
-      itens: [
-        { id: gerarId(), nome: 'Computador desktop', quantidade: 20, valorUnitario: 3000, valorTotal: 60000 },
-        { id: gerarId(), nome: 'Monitor 22 polegadas', quantidade: 20, valorUnitario: 800, valorTotal: 16000 }
-      ],
-      valorTotal: 76000,
-      fundoMonetario: 'Fundo Municipal de Educação',
-      setor: 'Educação' as Setor,
-      status: 'Pendente',
-      createdAt: new Date('2023-08-12')
-    }
-  ];
-  
-  // Pedidos para Espinosa
-  const pedidosEspinosa = [
-    {
-      id: gerarId(),
-      dataCompra: new Date('2023-09-08'),
-      descricao: 'Material de escritório para prefeitura',
-      itens: [
-        { id: gerarId(), nome: 'Resma de papel A4', quantidade: 200, valorUnitario: 20, valorTotal: 4000 },
-        { id: gerarId(), nome: 'Cartucho de impressora', quantidade: 30, valorUnitario: 80, valorTotal: 2400 }
-      ],
-      valorTotal: 6400,
-      fundoMonetario: 'Fundo Municipal de Administração',
-      setor: 'Administrativo' as Setor,
-      status: 'Aprovado',
-      createdAt: new Date('2023-09-08')
-    },
-    {
-      id: gerarId(),
-      dataCompra: new Date('2023-10-20'),
-      descricao: 'Aquisição de novo ônibus escolar',
-      itens: [
-        { id: gerarId(), nome: 'Ônibus escolar 44 lugares', quantidade: 2, valorUnitario: 280000, valorTotal: 560000 }
-      ],
-      valorTotal: 560000,
-      fundoMonetario: 'Fundo Municipal de Transporte',
-      setor: 'Transporte' as Setor,
-      status: 'Pendente',
-      createdAt: new Date('2023-10-20')
-    }
-  ];
-  
-  // Distribui os pedidos para as cidades corretas
-  pedidosPaiPedro.forEach(pedido => {
-    adicionarPedido(pedido as PedidoCompra, 'pai-pedro');
-  });
-  
-  pedidosJanauba.forEach(pedido => {
-    adicionarPedido(pedido as PedidoCompra, 'janauba');
-  });
-  
-  pedidosEspinosa.forEach(pedido => {
-    adicionarPedido(pedido as PedidoCompra, 'espinosa');
-  });
-};
+// Função para obter todos os pedidos
+export function obterPedidos(): PedidoCompra[] {
+  return todosPedidos;
+}
 
-// Inicializar dados
-gerarDadosIniciais();
+// Função para obter pedidos por setor
+export function obterPedidosPorSetor(setor: Setor): PedidoCompra[] {
+  return todosPedidos.filter(pedido => pedido.setor === setor);
+}
 
-// Função para obter estatísticas para cartões do dashboard
-export const obterEstatisticasCartoes = (municipioId: string | null = null) => {
-  const dados = calcularDadosDashboard(municipioId);
+// Função auxiliar para formatar data
+export function formatarData(data: Date): string {
+  return format(data, 'dd/MM/yyyy');
+}
+
+// Função para obter estatísticas dos cartões
+export function obterEstatisticasCartoes() {
+  const isDFD = true; // Use "DFD" em vez de "Pedidos"
+  const dados = calcularDadosDashboard();
+  const orcamentoTotal = Object.values(dados.orcamentoPrevisto).reduce((a, b) => a + b, 0);
+  const gastoTotal = dados.gastosTotais;
+  const percentualGasto = (gastoTotal / orcamentoTotal) * 100;
+  const percentualVariacao = percentualGasto - 75; // Base comparativa
+  
+  const totalPedidos = Object.values(dados.pedidosPorSetor).reduce((a, b) => a + b, 0);
+  const mediaPedidosMesAnterior = totalPedidos * 0.92; // Simulação do mês anterior
+  const variacaoPedidos = ((totalPedidos - mediaPedidosMesAnterior) / mediaPedidosMesAnterior) * 100;
+  
+  const ticketMedioTotal = gastoTotal / totalPedidos;
+  const ticketMedioAnterior = ticketMedioTotal * 0.95; // Simulação do mês anterior
+  const variacaoTicket = ((ticketMedioTotal - ticketMedioAnterior) / ticketMedioAnterior) * 100;
   
   return [
     {
-      titulo: 'Total de Gastos',
-      valor: formatCurrency(dados.gastosTotais),
-      percentualMudanca: 12.5,
-      icon: 'Wallet',
-      cor: 'bg-blue-500'
+      titulo: 'Orçamento Total',
+      valor: `R$ ${(orcamentoTotal).toLocaleString('pt-BR')}`,
+      percentualMudanca: 0, // Orçamento é fixo, não tem variação mensal
+      icon: 'Building',
+      cor: 'bg-administrativo-DEFAULT'
     },
     {
-      titulo: 'Pedidos de Compra',
-      valor: obterTodosPedidos(municipioId).length,
-      percentualMudanca: 8.2,
-      icon: 'ShoppingCart',
-      cor: 'bg-green-500'
+      titulo: 'Total Gasto',
+      valor: `R$ ${gastoTotal.toLocaleString('pt-BR')}`,
+      percentualMudanca: percentualVariacao,
+      icon: 'Building',
+      cor: 'bg-saude-DEFAULT'
+    },
+    {
+      titulo: isDFD ? 'Documento de Formalização de Demanda' : 'Pedidos de Compra',
+      valor: totalPedidos.toString(),
+      percentualMudanca: variacaoPedidos,
+      icon: 'Building',
+      cor: 'bg-educacao-DEFAULT'
     },
     {
       titulo: 'Ticket Médio',
-      valor: formatCurrency(
-        dados.gastosTotais / (obterTodosPedidos(municipioId).length || 1)
-      ),
-      percentualMudanca: -2.4,
-      icon: 'Receipt',
-      cor: 'bg-amber-500'
-    },
-    {
-      titulo: 'Orçamento Disponível',
-      valor: formatCurrency(
-        Object.values(dados.orcamentoPrevisto).reduce((sum, val) => sum + val, 0) - 
-        dados.gastosTotais
-      ),
-      percentualMudanca: -5.1,
-      icon: 'PiggyBank',
-      cor: 'bg-purple-500'
+      valor: `R$ ${Math.round(ticketMedioTotal).toLocaleString('pt-BR')}`,
+      percentualMudanca: variacaoTicket,
+      icon: 'Building',
+      cor: 'bg-transporte-DEFAULT'
     }
   ];
-};
+}
+
+// Função para filtrar pedidos com base em critérios
+export function filtrarPedidos(pedidos: PedidoCompra[], filtros: any) {
+  return pedidos.filter(pedido => {
+    // Filtra por setor
+    if (filtros.setor && pedido.setor !== filtros.setor) {
+      return false;
+    }
+    
+    // Filtra por status
+    if (filtros.status && pedido.status !== filtros.status) {
+      return false;
+    }
+    
+    // Filtra por data
+    if (filtros.dataInicio && new Date(filtros.dataInicio) > pedido.dataCompra) {
+      return false;
+    }
+    
+    if (filtros.dataFim && new Date(filtros.dataFim) < pedido.dataCompra) {
+      return false;
+    }
+    
+    // Filtra por valor
+    if (filtros.valorMinimo && pedido.valorTotal < filtros.valorMinimo) {
+      return false;
+    }
+    
+    if (filtros.valorMaximo && pedido.valorTotal > filtros.valorMaximo) {
+      return false;
+    }
+    
+    // Filtra por termo de busca
+    if (filtros.termo) {
+      const termo = filtros.termo.toLowerCase();
+      const descricaoMatch = pedido.descricao.toLowerCase().includes(termo);
+      const itensMatch = pedido.itens.some(item => 
+        item.nome.toLowerCase().includes(termo)
+      );
+      
+      if (!descricaoMatch && !itensMatch) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
+}

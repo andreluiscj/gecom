@@ -228,6 +228,11 @@
   @apply text-white;
 }
 
+/* Fix for high contrast mode text visibility */
+.high-contrast [data-state="active"] {
+  color: black !important;
+}
+
 /* Estilos adicionais para cores dos gráficos */
 :root {
   --chart-color-primary: 59, 130, 246; /* blue-500 */

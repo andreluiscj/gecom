@@ -40,10 +40,11 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
       <text 
         x={x + width / 2} 
         y={dataKey === 'previsto' ? y - 6 : y + height / 2}
-        fill={dataKey === 'previsto' ? '#666' : '#fff'}
+        fill={dataKey === 'previsto' ? '#333' : '#fff'}
         textAnchor="middle"
         dominantBaseline={dataKey === 'previsto' ? 'bottom' : 'middle'}
-        fontSize={10}
+        fontSize={11}
+        fontWeight="500"
       >
         {formattedValue}
       </text>
@@ -60,12 +61,13 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barGap={4}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
               <YAxis 
                 axisLine={false} 
                 tickLine={false} 
                 tickFormatter={value => formatCurrency(value)}
                 width={80}
+                tick={{ fontSize: 11 }}
               />
               <ChartTooltip 
                 content={
@@ -77,11 +79,12 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
               <Legend 
                 align="center" 
                 verticalAlign="bottom" 
+                fontSize={11}
                 formatter={(value: string) => value === 'previsto' ? legendPrevisto : legendRealizado}
               />
               <Bar 
                 dataKey="previsto" 
-                fill="#9CA3AF" 
+                fill="#64748b" 
                 name="previsto"
                 radius={[4, 4, 0, 0]}
               >
@@ -93,7 +96,7 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
               </Bar>
               <Bar 
                 dataKey="realizado" 
-                fill="#3B82F6" 
+                fill="#3b82f6" 
                 name="realizado"
                 radius={[4, 4, 0, 0]}
               >

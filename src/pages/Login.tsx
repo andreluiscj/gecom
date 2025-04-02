@@ -59,7 +59,7 @@ const Login: React.FC = () => {
                   <Label htmlFor="username">Usuário</Label>
                   <Input
                     id="username"
-                    placeholder="admin"
+                    placeholder="Usuário"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
@@ -75,7 +75,7 @@ const Login: React.FC = () => {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="admin"
+                    placeholder="Senha"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required

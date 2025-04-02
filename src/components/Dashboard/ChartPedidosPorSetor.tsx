@@ -58,12 +58,13 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
               <Bar 
                 dataKey="quantidade" 
                 name={language === 'pt' ? 'Quantidade de DFDs' : 'Number of DFDs'} 
-                fill="rgba(var(--chart-color-primary), 0.8)" 
+                fill="rgba(59, 130, 246, 0.8)" 
                 radius={[4, 4, 0, 0]} 
                 label={{
                   position: 'top',
-                  fill: 'var(--foreground)',
-                  fontSize: 12
+                  fill: '#333',
+                  fontSize: 11,
+                  fontWeight: '500'
                 }}
               />
             </BarChart>

@@ -9,7 +9,7 @@ import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
 import { DadosDashboard, Setor } from '@/types';
 import { calcularDadosDashboard, obterPedidosPorSetor } from '@/data/mockData';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
-import { HeartPulse, BookOpen, Building2, Bus } from 'lucide-react';
+import { HeartPulse, BookOpen, Building2, Bus, PiggyBank, Wallet, ShoppingCart, Receipt } from 'lucide-react';
 import StatCard from '@/components/Dashboard/StatCard';
 
 const DetalheSetor: React.FC = () => {
@@ -78,7 +78,7 @@ const DetalheSetor: React.FC = () => {
     { name: 'Disponível', value: orcamentoPrevisto - totalGasto },
   ];
 
-  const CORES_GRAFICO = ['#0ea5e9', '#d1d5db'];
+  const CORES_GRAFICO = ['#3b82f6', '#94a3b8'];
 
   // Dados simulados para gráfico de tendência
   const dadosTendencia = [
@@ -106,6 +106,8 @@ const DetalheSetor: React.FC = () => {
         fill="white"
         textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
+        fontSize={12}
+        fontWeight="bold"
       >
         {`${(percent * 100).toFixed(0)}%`}
       </text>
@@ -143,28 +145,28 @@ const DetalheSetor: React.FC = () => {
           title="Orçamento Total"
           value={formatCurrency(orcamentoPrevisto)}
           percentChange={10}
-          icon="PiggyBank"
+          icon={PiggyBank}
           colorClass={getSetorCor()}
         />
         <StatCard
           title="Total Gasto"
           value={formatCurrency(totalGasto)}
           percentChange={percentualGasto > 100 ? -5 : 8}
-          icon="Wallet"
+          icon={Wallet}
           colorClass={getSetorCor()}
         />
         <StatCard
-          title="Pedidos de Compra"
+          title="Documento de Formalização de Demanda"
           value={totalPedidos}
           percentChange={15}
-          icon="ShoppingCart"
+          icon={ShoppingCart}
           colorClass={getSetorCor()}
         />
         <StatCard
           title="Ticket Médio"
           value={formatCurrency(ticketMedio)}
           percentChange={-3}
-          icon="Receipt"
+          icon={Receipt}
           colorClass={getSetorCor()}
         />
       </div>
@@ -187,7 +189,7 @@ const DetalheSetor: React.FC = () => {
       <Tabs defaultValue="graficos">
         <TabsList className="mb-4">
           <TabsTrigger value="graficos">Gráficos</TabsTrigger>
-          <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
+          <TabsTrigger value="pedidos">DFDs</TabsTrigger>
         </TabsList>
         
         <TabsContent value="graficos" className="space-y-6">
@@ -260,7 +262,7 @@ const DetalheSetor: React.FC = () => {
         <TabsContent value="pedidos">
           <PedidosTable 
             pedidos={pedidos} 
-            titulo={`Pedidos do Setor de ${setorMapeado}`} 
+            titulo={`DFDs do Setor de ${setorMapeado}`} 
           />
         </TabsContent>
       </Tabs>
