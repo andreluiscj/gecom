@@ -1,24 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StatCard from '@/components/Dashboard/StatCard';
-import ChartGastosPorSetor from '@/components/Dashboard/ChartGastosPorSetor';
-import ChartPedidosPorSetor from '@/components/Dashboard/ChartPedidosPorSetor';
-import ChartPrevisoRealizado from '@/components/Dashboard/ChartPrevisoRealizado';
-import ChartTicketMedio from '@/components/Dashboard/ChartTicketMedio';
+import DashboardHeader from '@/components/Dashboard/DashboardHeader';
+import DashboardStats from '@/components/Dashboard/DashboardStats';
+import DashboardTabs from '@/components/Dashboard/DashboardTabs';
 import { calcularDadosDashboard, obterEstatisticasCartoes } from '@/data/mockData';
 import { Municipio } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutDashboard, Calendar, FileText, Building, Wallet, ShoppingCart, Receipt } from 'lucide-react';
-
-// Import Lucide icons that we'll need for the dashboard
-const iconMap = {
-  'Building': Building,
-  'Wallet': Wallet,
-  'ShoppingCart': ShoppingCart,
-  'Receipt': Receipt
-};
 
 const municipios: Record<string, Municipio> = {
   'pai-pedro': {
@@ -45,32 +32,6 @@ const municipios: Record<string, Municipio> = {
     orcamentoAnual: 87600000,
     prefeito: 'Carlos Oliveira',
   }
-};
-
-// Constantes para tradução
-const getTranslation = (key: string) => {
-  const language = localStorage.getItem('app-language') || 'pt';
-  
-  const translations: Record<string, Record<string, string>> = {
-    dashboardTitle: {
-      pt: 'Dashboard',
-      en: 'Dashboard'
-    },
-    overview: {
-      pt: 'Visão geral da gestão municipal e dos recursos financeiros.',
-      en: 'Overview of municipal management and financial resources.'
-    },
-    graphicsTab: {
-      pt: 'Gráficos',
-      en: 'Charts'
-    },
-    summaryTab: {
-      pt: 'Resumo',
-      en: 'Summary'
-    }
-  };
-  
-  return translations[key]?.[language] || translations[key]?.['pt'] || key;
 };
 
 const Dashboard: React.FC = () => {
@@ -102,13 +63,8 @@ const Dashboard: React.FC = () => {
 
   // Calcula os dados específicos do município
   const dadosDashboard = calcularDadosDashboard(municipioId);
-  // Corrected: Remove the municipioId argument since obterEstatisticasCartoes doesn't accept parameters
+  // Get estatisticas cartoes
   const estatisticasCartoes = obterEstatisticasCartoes();
-
-  // Function to map string icon names to actual Lucide components
-  const getLucideIcon = (iconName: string) => {
-    return iconMap[iconName] || Building; // Default to Building if icon not found
-  };
 
   if (!municipio) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
@@ -116,134 +72,15 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold mb-1">{getTranslation('dashboardTitle')} - {municipio.nome}</h1>
-        <p className="text-muted-foreground text-sm">
-          {getTranslation('overview')}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {estatisticasCartoes.map((stat, index) => (
-          <StatCard
-            key={index}
-            title={stat.titulo}
-            value={stat.valor}
-            percentChange={stat.percentualMudanca}
-            icon={getLucideIcon(stat.icon)}
-            colorClass={stat.cor}
-          />
-        ))}
-      </div>
-
-      <Tabs defaultValue="graficos" className="pt-2">
-        <TabsList className="mb-4">
-          <TabsTrigger value="graficos">
-            <LayoutDashboard className="h-4 w-4 mr-2" /> {getTranslation('graphicsTab')}
-          </TabsTrigger>
-          <TabsTrigger value="resumo">
-            <FileText className="h-4 w-4 mr-2" /> {getTranslation('summaryTab')}
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="graficos" className="space-y-5">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <ChartPrevisoRealizado dados={dadosDashboard} />
-            <ChartGastosPorSetor dados={dadosDashboard} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <ChartPedidosPorSetor dados={dadosDashboard} />
-            <ChartTicketMedio dados={dadosDashboard} />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="resumo" className="space-y-5">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{language === 'pt' ? 'Resumo Financeiro' : 'Financial Summary'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="border rounded-md overflow-hidden">
-                  <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          {language === 'pt' ? 'Métrica' : 'Metric'}
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          {language === 'pt' ? 'Valor' : 'Value'}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-background divide-y divide-border">
-                      <tr>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                          {language === 'pt' ? 'Orçamento Anual' : 'Annual Budget'}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          R$ {municipio.orcamentoAnual.toLocaleString('pt-BR')}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                          {language === 'pt' ? 'Gastos Totais' : 'Total Expenses'}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          R$ {dadosDashboard.gastosTotais.toLocaleString('pt-BR')}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                          {language === 'pt' ? 'Percentual do Orçamento Utilizado' : 'Budget Usage Percentage'}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          {((dadosDashboard.gastosTotais / municipio.orcamentoAnual) * 100).toFixed(2)}%
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                          {language === 'pt' ? 'Total de DFDs' : 'Total Purchase Orders'}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          {Object.values(dadosDashboard.pedidosPorSetor).reduce((sum, count) => sum + count, 0)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{language === 'pt' ? 'Informações do Município' : 'Municipality Information'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{language === 'pt' ? 'Nome' : 'Name'}</p>
-                  <p className="font-medium">{municipio.nome}</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{language === 'pt' ? 'Estado' : 'State'}</p>
-                  <p className="font-medium">{municipio.estado}</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{language === 'pt' ? 'População' : 'Population'}</p>
-                  <p className="font-medium">{municipio.populacao.toLocaleString('pt-BR')}</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{language === 'pt' ? 'Prefeito' : 'Mayor'}</p>
-                  <p className="font-medium">{municipio.prefeito}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <DashboardHeader municipio={municipio} language={language} />
+      
+      <DashboardStats estatisticasCartoes={estatisticasCartoes} />
+      
+      <DashboardTabs 
+        dadosDashboard={dadosDashboard}
+        municipio={municipio}
+        language={language}
+      />
     </div>
   );
 };

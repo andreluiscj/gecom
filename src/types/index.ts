@@ -1,3 +1,4 @@
+
 // Tipos dos setores
 export type Setor = 'Saúde' | 'Educação' | 'Administrativo' | 'Transporte';
 
@@ -52,7 +53,7 @@ export interface Municipio {
   logoUrl?: string;
 }
 
-// Interface para EstatisticaCartao - Adicionada para resolver o erro
+// Interface para EstatisticaCartao
 export interface EstatisticaCartao {
   titulo: string;
   valor: string | number;
