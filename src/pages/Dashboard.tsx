@@ -10,7 +10,15 @@ import { calcularDadosDashboard, obterEstatisticasCartoes } from '@/data/mockDat
 import { Municipio } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutDashboard, Calendar, FileText } from 'lucide-react';
+import { LayoutDashboard, Calendar, FileText, Building, Wallet, ShoppingCart, Receipt } from 'lucide-react';
+
+// Import Lucide icons that we'll need for the dashboard
+const iconMap = {
+  'Building': Building,
+  'Wallet': Wallet,
+  'ShoppingCart': ShoppingCart,
+  'Receipt': Receipt
+};
 
 const municipios: Record<string, Municipio> = {
   'pai-pedro': {
@@ -97,6 +105,11 @@ const Dashboard: React.FC = () => {
   // Corrected: Remove the municipioId argument since obterEstatisticasCartoes doesn't accept parameters
   const estatisticasCartoes = obterEstatisticasCartoes();
 
+  // Function to map string icon names to actual Lucide components
+  const getLucideIcon = (iconName: string) => {
+    return iconMap[iconName] || Building; // Default to Building if icon not found
+  };
+
   if (!municipio) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   }
@@ -117,7 +130,7 @@ const Dashboard: React.FC = () => {
             title={stat.titulo}
             value={stat.valor}
             percentChange={stat.percentualMudanca}
-            icon={stat.icon}
+            icon={getLucideIcon(stat.icon)}
             colorClass={stat.cor}
           />
         ))}

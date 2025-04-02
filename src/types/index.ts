@@ -1,4 +1,3 @@
-
 // Tipos dos setores
 export type Setor = 'Saúde' | 'Educação' | 'Administrativo' | 'Transporte';
 
@@ -58,7 +57,7 @@ export interface EstatisticaCartao {
   titulo: string;
   valor: string | number;
   percentualMudanca: number;
-  icon: any; // Usando any para compatibilidade com Lucide icons
+  icon: string;
   cor: string;
 }
 
