@@ -41,13 +41,13 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 12, fill: '#333' }}
               />
               <YAxis 
                 axisLine={false} 
                 tickLine={false} 
                 width={30}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 12, fill: '#333' }}
               />
               <ChartTooltip 
                 content={<ChartTooltipContent />}
@@ -63,7 +63,7 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
                 label={{
                   position: 'top',
                   fill: '#333',
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: '500'
                 }}
               />

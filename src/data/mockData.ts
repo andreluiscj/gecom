@@ -3,6 +3,22 @@ import { addDays, addHours, format, subMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { DadosDashboard, PedidoCompra, Item, Setor } from '@/types';
 
+// Array com os fundos monetários disponíveis
+export const fundosMonetarios = [
+  'Fundo Municipal de Saúde',
+  'Fundo Municipal de Educação',
+  'Fundo Municipal de Administração',
+  'Fundo Municipal de Transporte',
+  'Fundo Municipal de Assistência Social',
+  'Fundo Municipal de Cultura',
+  'Fundo Municipal de Meio Ambiente',
+];
+
+// Função para gerar IDs únicos
+export function gerarId() {
+  return uuidv4();
+}
+
 // Dados simulados
 const pedidosCompra: PedidoCompra[] = [
   {
@@ -464,6 +480,22 @@ const pedidosPaiPedro: PedidoCompra[] = [
 // Combina todos os pedidos
 const todosPedidos = [...pedidosCompra, ...pedidosPaiPedro];
 
+// Função para adicionar um novo pedido
+export function adicionarPedido(pedido: PedidoCompra) {
+  todosPedidos.push(pedido);
+  return pedido;
+}
+
+// Função para remover um pedido
+export function removerPedido(id: string, setor?: Setor) {
+  const index = todosPedidos.findIndex(p => p.id === id);
+  if (index !== -1) {
+    todosPedidos.splice(index, 1);
+    return true;
+  }
+  return false;
+}
+
 // Função para calcular dados para o dashboard
 export function calcularDadosDashboard(municipioId?: string | null): DadosDashboard {
   // Filtra pedidos com base no município selecionado
@@ -527,6 +559,9 @@ export function calcularDadosDashboard(municipioId?: string | null): DadosDashbo
 export function obterPedidos(): PedidoCompra[] {
   return todosPedidos;
 }
+
+// Função para obter todos os pedidos (alias para compatibilidade)
+export const obterTodosPedidos = obterPedidos;
 
 // Função para obter pedidos por setor
 export function obterPedidosPorSetor(setor: Setor): PedidoCompra[] {
