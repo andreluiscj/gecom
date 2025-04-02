@@ -1,7 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Menu, Settings, User, LogOut, HelpCircle, Search, Accessibility, Globe, Trash2 } from 'lucide-react';
+import { 
+  Bell, 
+  Menu, 
+  User, 
+  LogOut, 
+  HelpCircle, 
+  Accessibility, 
+  Globe, 
+  Trash2,
+  LayoutDashboard,
+  Calendar
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,7 +23,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -31,7 +41,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   const [isHighContrast, setIsHighContrast] = useState(false);
   const [language, setLanguage] = useState('pt');
-  const [openPreferences, setOpenPreferences] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   
@@ -52,27 +61,44 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
   const toggleLanguage = () => {
     const newLanguage = language === 'pt' ? 'en' : 'pt';
     setLanguage(newLanguage);
+    
+    // Salvamos a preferência de idioma no localStorage
+    localStorage.setItem('app-language', newLanguage);
+    
     toast.success(newLanguage === 'pt' ? "Idioma alterado para Português" : "Language changed to English");
+    
+    // Recarregar a página para aplicar o idioma
+    window.location.reload();
   };
 
   const handleLogout = () => {
-    // Remove o município selecionado do localStorage
+    // Remove o município selecionado e a autenticação do localStorage
     localStorage.removeItem('municipio-selecionado');
+    localStorage.removeItem('user-authenticated');
     
     // Exibe notificação
     toast.success(language === 'pt' ? "Sessão encerrada com sucesso!" : "Session ended successfully!");
     
-    // Redireciona para a página de admin
-    navigate('/admin');
+    // Redireciona para a página de login
+    navigate('/login');
   };
   
   const handleDeleteAccount = () => {
     // Simulating account deletion
     toast.success(language === 'pt' ? "Conta excluída com sucesso!" : "Account deleted successfully!");
     localStorage.removeItem('municipio-selecionado');
-    navigate('/admin');
+    localStorage.removeItem('user-authenticated');
+    navigate('/login');
     setOpenDeleteConfirm(false);
   };
+
+  // Verifica o idioma salvo no localStorage ao carregar o componente
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('app-language');
+    if (savedLanguage && (savedLanguage === 'pt' || savedLanguage === 'en')) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
 
   // Translated texts
   const texts = {
@@ -81,7 +107,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
     profile: language === 'pt' ? "Perfil" : "Profile",
     logout: language === 'pt' ? "Sair" : "Logout",
     deleteAccount: language === 'pt' ? "Excluir conta" : "Delete account",
-    // Removed duplicate 'notifications' property here (this fixes the first error)
     new: language === 'pt' ? "novas" : "new",
     contrast: language === 'pt' ? "Contraste" : "Contrast",
     highContrast: language === 'pt' ? "Alto contraste" : "High contrast",
@@ -103,7 +128,8 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
     notifications: language === 'pt' ? "Notificações" : "Notifications",
     enableNotifs: language === 'pt' ? "Habilitar notificações" : "Enable notifications",
     save: language === 'pt' ? "Salvar alterações" : "Save changes",
-    close: language === 'pt' ? "Fechar" : "Close", // Added the missing 'close' property (fixes the second error)
+    close: language === 'pt' ? "Fechar" : "Close",
+    editProfile: language === 'pt' ? "Editar Perfil" : "Edit Profile",
   };
 
   return (
@@ -117,14 +143,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        
-        <div className="hidden md:flex relative max-w-md">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder={texts.search}
-            className="pl-9 w-80 bg-muted/50 focus:bg-background"
-          />
-        </div>
       </div>
 
       <div className="flex items-center space-x-2">
@@ -143,9 +161,15 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
             <DropdownMenuLabel>{texts.accessibility}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={toggleContrast} className="cursor-pointer">
+              <div className={`p-1 mr-2 ${isHighContrast ? 'bg-white text-black' : 'bg-black text-white'} rounded`}>
+                <span className="text-xs">Aa</span>
+              </div>
               {texts.contrast}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={toggleLanguage} className="cursor-pointer">
+              <div className="p-1 mr-2 bg-primary/10 text-primary rounded">
+                <Globe className="h-3 w-3" />
+              </div>
               {texts.language}: {texts.languageToggle}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -168,20 +192,20 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
             <div className="max-h-96 overflow-auto py-1">
               <DropdownMenuItem className="cursor-pointer flex flex-col items-start p-3 hover:bg-muted focus:bg-muted border-l-2 border-destructive">
                 <div className="flex items-center w-full justify-between">
-                  <p className="font-medium">Novo pedido cadastrado</p>
+                  <p className="font-medium">Novo DFD cadastrado</p>
                   <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Agora</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Pedido de compra de medicamentos foi cadastrado
+                  DFD de compra de medicamentos foi cadastrado
                 </p>
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer flex flex-col items-start p-3 hover:bg-muted focus:bg-muted border-l-2 border-primary">
                 <div className="flex items-center w-full justify-between">
-                  <p className="font-medium">Pedido aprovado</p>
+                  <p className="font-medium">DFD aprovado</p>
                   <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">1h atrás</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Pedido de material escolar foi aprovado
+                  DFD de material escolar foi aprovado
                 </p>
               </DropdownMenuItem>
             </div>
@@ -190,26 +214,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
                 Ver todas as notificações
               </Button>
             </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="shadow-lg rounded-xl">
-            <DropdownMenuLabel>{texts.settings}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setOpenProfile(true)} className="cursor-pointer">
-              <User className="mr-2 h-4 w-4" />
-              <span>{texts.profile}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setOpenPreferences(true)} className="cursor-pointer">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>{texts.preferences}</span>
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -226,64 +230,16 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setOpenProfile(true)} className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
-              <span>{texts.profile}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setOpenPreferences(true)} className="cursor-pointer">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>{texts.preferences}</span>
+              <span>{texts.editProfile}</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
               <LogOut className="h-4 w-4 mr-2" />
               <span>{texts.logout}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setOpenDeleteConfirm(true)} className="text-destructive cursor-pointer focus:text-destructive">
-              <Trash2 className="h-4 w-4 mr-2" />
-              <span>{texts.deleteAccount}</span>
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      
-      {/* Preferences Dialog */}
-      <Dialog open={openPreferences} onOpenChange={setOpenPreferences}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{texts.systemPreferences}</DialogTitle>
-            <DialogDescription>
-              {language === 'pt' ? "Ajuste as configurações do sistema de acordo com suas preferências." : "Adjust system settings according to your preferences."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>{texts.appearance}</Label>
-              <div className="flex items-center space-x-2">
-                <Button onClick={toggleContrast} variant="outline" size="sm">
-                  {isHighContrast ? language === 'pt' ? "Desativar alto contraste" : "Disable high contrast" : texts.highContrast}
-                </Button>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label>{texts.language}</Label>
-              <div className="flex items-center space-x-2">
-                <Button onClick={toggleLanguage} variant="outline" size="sm">
-                  {language === 'pt' ? "English" : "Português"}
-                </Button>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label>{texts.notifications}</Label>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="notifications" className="rounded border-gray-300" defaultChecked />
-                <label htmlFor="notifications" className="text-sm">{texts.enableNotifs}</label>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setOpenPreferences(false)}>{texts.save}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       
       {/* Profile Dialog */}
       <Dialog open={openProfile} onOpenChange={setOpenProfile}>

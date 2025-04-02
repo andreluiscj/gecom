@@ -200,3 +200,55 @@
 .high-contrast .shadow-card-hover {
   @apply shadow-[0_0_0_2px_rgba(255,255,255,0.3)];
 }
+
+/* Corrigindo o modo de alto contraste para o sidebar e tabs */
+.high-contrast [data-state="active"].sidebar-item {
+  @apply bg-white text-black;
+}
+
+.high-contrast [data-state="inactive"].sidebar-item:hover {
+  @apply bg-white/20;
+}
+
+.high-contrast [data-state="active"].tab-item {
+  @apply bg-white text-black;
+}
+
+.high-contrast [data-state="inactive"].tab-item:hover {
+  @apply bg-white/20;
+}
+
+.high-contrast .tabs-list {
+  @apply bg-black border border-white/30;
+}
+
+.high-contrast .logo-text {
+  @apply text-white;
+}
+
+/* Estilos adicionais para cores dos gráficos */
+:root {
+  --chart-color-primary: 59, 130, 246; /* blue-500 */
+  --chart-color-secondary: 156, 163, 175; /* gray-400 */
+  --chart-color-success: 5, 150, 105; /* green-600 */
+  --chart-color-warning: 245, 158, 11; /* amber-500 */
+  --chart-color-danger: 239, 68, 68; /* red-500 */
+  
+  --chart-saude: 225, 29, 72; /* saude */
+  --chart-educacao: 5, 150, 105; /* educacao */
+  --chart-administrativo: 202, 138, 4; /* administrativo */
+  --chart-transporte: 234, 88, 12; /* transporte */
+}
+
+.high-contrast {
+  --chart-color-primary: 255, 255, 255; /* white */
+  --chart-color-secondary: 160, 160, 160; /* light gray */
+  --chart-color-success: 200, 255, 200; /* light green */
+  --chart-color-warning: 255, 255, 200; /* light yellow */
+  --chart-color-danger: 255, 200, 200; /* light red */
+  
+  --chart-saude: 255, 200, 200; /* light red for saude */
+  --chart-educacao: 200, 255, 200; /* light green for educacao */
+  --chart-administrativo: 255, 255, 200; /* light yellow for administrativo */
+  --chart-transporte: 255, 220, 180; /* light orange for transporte */
+}

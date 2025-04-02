@@ -7,6 +7,7 @@ import Sidebar from './Sidebar';
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isHighContrast, setIsHighContrast] = useState(false);
+  const [language, setLanguage] = useState('pt');
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -30,13 +31,21 @@ const AppLayout: React.FC = () => {
     
     return () => observer.disconnect();
   }, []);
+  
+  // Verificar o idioma armazenado no localStorage
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('app-language');
+    if (savedLanguage && (savedLanguage === 'pt' || savedLanguage === 'en')) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
 
   return (
     <div className={`min-h-screen bg-background ${isHighContrast ? 'high-contrast' : ''}`}>
       <Sidebar isOpen={isSidebarOpen} />
       <div className={`transition-all duration-300 ${isSidebarOpen ? 'pl-64' : 'pl-0'}`}>
         <NavBar toggleSidebar={toggleSidebar} />
-        <main className="p-6 md:p-8">
+        <main className="p-5 md:p-6">
           <Outlet />
         </main>
       </div>

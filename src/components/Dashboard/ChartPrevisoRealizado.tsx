@@ -1,91 +1,111 @@
 
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DadosDashboard } from '@/types';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, LabelList, Legend } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
 interface ChartPrevisoRealizadoProps {
-  dados: DadosDashboard;
+  dados: {
+    orcamentoPrevisto: Record<string, number>;
+    gastosPorSetor: Record<string, number>;
+  };
 }
 
 const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) => {
-  const data = [
-    {
-      name: 'Saúde',
-      Previsto: dados.orcamentoPrevisto['Saúde'],
-      Realizado: dados.gastosPorSetor['Saúde'],
-    },
-    {
-      name: 'Educação',
-      Previsto: dados.orcamentoPrevisto['Educação'],
-      Realizado: dados.gastosPorSetor['Educação'],
-    },
-    {
-      name: 'Administrativo',
-      Previsto: dados.orcamentoPrevisto['Administrativo'],
-      Realizado: dados.gastosPorSetor['Administrativo'],
-    },
-    {
-      name: 'Transporte',
-      Previsto: dados.orcamentoPrevisto['Transporte'],
-      Realizado: dados.gastosPorSetor['Transporte'],
-    },
-  ];
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background p-3 shadow-lg border rounded-lg">
-          <p className="font-medium">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={`tooltip-${index}`} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {formatCurrency(entry.value)}
-            </p>
-          ))}
-        </div>
-      );
+  const [language, setLanguage] = useState('pt');
+  
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('app-language');
+    if (savedLanguage && (savedLanguage === 'pt' || savedLanguage === 'en')) {
+      setLanguage(savedLanguage);
     }
-    return null;
-  };
+  }, []);
+  
+  const chartData = Object.keys(dados.orcamentoPrevisto).map(setor => ({
+    name: setor,
+    previsto: dados.orcamentoPrevisto[setor],
+    realizado: dados.gastosPorSetor[setor],
+  }));
 
-  const formatLabel = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)}k`;
-    }
-    return value;
+  const cardTitle = language === 'pt' ? 'Orçamento Previsto vs. Realizado' : 'Planned vs. Actual Budget';
+  const legendPrevisto = language === 'pt' ? 'Previsto' : 'Planned';
+  const legendRealizado = language === 'pt' ? 'Realizado' : 'Actual';
+
+  const CustomizedLabel = (props: any) => {
+    const { x, y, width, height, value, dataKey } = props;
+    const formattedValue = formatCurrency(value);
+    
+    return (
+      <text 
+        x={x + width / 2} 
+        y={dataKey === 'previsto' ? y - 6 : y + height / 2}
+        fill={dataKey === 'previsto' ? '#666' : '#fff'}
+        textAnchor="middle"
+        dominantBaseline={dataKey === 'previsto' ? 'bottom' : 'middle'}
+        fontSize={10}
+      >
+        {formattedValue}
+      </text>
+    );
   };
 
   return (
-    <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
+    <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold flex items-center">
-          Previsto vs Realizado
-        </CardTitle>
+        <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-80">
+        <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={data}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              barGap={8}
-            >
-              <XAxis dataKey="name" />
-              <YAxis hide />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Bar dataKey="Previsto" fill="#e2e8f0" radius={[4, 4, 0, 0]} barSize={40}>
-                <LabelList dataKey="Previsto" position="top" formatter={formatLabel} />
+            <BarChart data={chartData} barGap={4}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tickFormatter={value => formatCurrency(value)}
+                width={80}
+              />
+              <ChartTooltip 
+                content={
+                  <ChartTooltipContent 
+                    formatter={(value: any) => formatCurrency(value)}
+                  />
+                }
+              />
+              <Legend 
+                align="center" 
+                verticalAlign="bottom" 
+                formatter={(value: string) => value === 'previsto' ? legendPrevisto : legendRealizado}
+              />
+              <Bar 
+                dataKey="previsto" 
+                fill="#9CA3AF" 
+                name="previsto"
+                radius={[4, 4, 0, 0]}
+              >
+                <LabelList 
+                  dataKey="previsto" 
+                  position="top" 
+                  content={<CustomizedLabel />}
+                />
               </Bar>
-              <Bar dataKey="Realizado" fill="#60a5fa" radius={[4, 4, 0, 0]} barSize={40}>
-                <LabelList dataKey="Realizado" position="center" fill="#fff" formatter={formatLabel} />
+              <Bar 
+                dataKey="realizado" 
+                fill="#3B82F6" 
+                name="realizado"
+                radius={[4, 4, 0, 0]}
+              >
+                <LabelList 
+                  dataKey="realizado" 
+                  position="center" 
+                  content={<CustomizedLabel />}
+                />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </ChartContainer>
       </CardContent>
     </Card>
   );

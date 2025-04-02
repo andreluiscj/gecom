@@ -1,55 +1,74 @@
 
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DadosDashboard } from '@/types';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
 
 interface ChartPedidosPorSetorProps {
-  dados: DadosDashboard;
+  dados: {
+    pedidosPorSetor: Record<string, number>;
+  };
 }
 
 const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) => {
-  const COLORS = ['#0ea5e9', '#22c55e', '#f87171', '#f97316'];
+  const [language, setLanguage] = useState('pt');
   
-  const data = [
-    { name: 'Saúde', pedidos: dados.pedidosPorSetor['Saúde'], fill: COLORS[0] },
-    { name: 'Educação', pedidos: dados.pedidosPorSetor['Educação'], fill: COLORS[1] },
-    { name: 'Administrativo', pedidos: dados.pedidosPorSetor['Administrativo'], fill: COLORS[2] },
-    { name: 'Transporte', pedidos: dados.pedidosPorSetor['Transporte'], fill: COLORS[3] },
-  ];
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background p-3 shadow-lg border rounded-md">
-          <p className="font-medium">{label}</p>
-          <p className="text-sm">Pedidos: {payload[0].value}</p>
-        </div>
-      );
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('app-language');
+    if (savedLanguage && (savedLanguage === 'pt' || savedLanguage === 'en')) {
+      setLanguage(savedLanguage);
     }
-    return null;
-  };
+  }, []);
+
+  const chartData = Object.entries(dados.pedidosPorSetor).map(([setor, quantidade]) => ({
+    name: setor,
+    quantidade: quantidade,
+  }));
+
+  const cardTitle = language === 'pt' ? 'DFDs por Secretária' : 'DFDs by Department';
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Pedidos por Secretária</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-80">
+        <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <XAxis dataKey="name" />
-              <YAxis hide />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="pedidos" radius={[4, 4, 0, 0]}>
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill || COLORS[index % COLORS.length]} />
-                ))}
-              </Bar>
+            <BarChart data={chartData} barGap={8}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+              <XAxis 
+                dataKey="name" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                width={30}
+                tick={{ fontSize: 12 }}
+              />
+              <ChartTooltip 
+                content={<ChartTooltipContent />}
+              />
+              <Legend 
+                formatter={(value: string) => language === 'pt' ? 'Quantidade de DFDs' : 'Number of DFDs'}
+              />
+              <Bar 
+                dataKey="quantidade" 
+                name={language === 'pt' ? 'Quantidade de DFDs' : 'Number of DFDs'} 
+                fill="rgba(var(--chart-color-primary), 0.8)" 
+                radius={[4, 4, 0, 0]} 
+                label={{
+                  position: 'top',
+                  fill: 'var(--foreground)',
+                  fontSize: 12
+                }}
+              />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </ChartContainer>
       </CardContent>
     </Card>
   );

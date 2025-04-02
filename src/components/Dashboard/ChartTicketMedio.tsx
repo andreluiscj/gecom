@@ -1,73 +1,89 @@
 
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DadosDashboard } from '@/types';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
 interface ChartTicketMedioProps {
-  dados: DadosDashboard;
+  dados: {
+    ticketMedioPorSetor: Record<string, number>;
+  };
 }
 
 const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
-  const data = [
-    { name: 'Saúde', valor: dados.ticketMedioPorSetor['Saúde'], color: '#0ea5e9' },
-    { name: 'Educação', valor: dados.ticketMedioPorSetor['Educação'], color: '#22c55e' },
-    { name: 'Administrativo', valor: dados.ticketMedioPorSetor['Administrativo'], color: '#f87171' },
-    { name: 'Transporte', valor: dados.ticketMedioPorSetor['Transporte'], color: '#f97316' },
-  ];
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background p-3 shadow-lg border rounded-md">
-          <p className="font-medium">{label}</p>
-          <p className="text-sm">Ticket Médio: {formatCurrency(payload[0].value)}</p>
-        </div>
-      );
+  const [language, setLanguage] = useState('pt');
+  
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('app-language');
+    if (savedLanguage && (savedLanguage === 'pt' || savedLanguage === 'en')) {
+      setLanguage(savedLanguage);
     }
-    return null;
-  };
+  }, []);
 
-  const renderCustomizedLabel = (props: any) => {
-    const { x, y, value } = props;
-    return (
-      <text 
-        x={x} 
-        y={y - 10} 
-        fill="#666" 
-        textAnchor="middle" 
-        dominantBaseline="middle"
-        fontSize="12"
-      >
-        {formatCurrency(value)}
-      </text>
-    );
-  };
+  const chartData = Object.entries(dados.ticketMedioPorSetor).map(([setor, valor]) => ({
+    name: setor,
+    valor: valor,
+  }));
+
+  const cardTitle = language === 'pt' ? 'Ticket Médio por Secretária' : 'Average Ticket by Department';
+  const mediaGeral = chartData.reduce((sum, item) => sum + item.valor, 0) / chartData.length;
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Ticket Médio por Secretária</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-80">
+        <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
-              <XAxis dataKey="name" />
-              <YAxis hide />
-              <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="valor"
-                stroke="#0ea5e9"
-                strokeWidth={2}
-                dot={{ r: 6 }}
-                activeDot={{ r: 8 }}
-                label={renderCustomizedLabel}
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="colorTicket" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="rgba(var(--chart-color-success), 0.8)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="rgba(var(--chart-color-success), 0.2)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+              <XAxis 
+                dataKey="name" 
+                axisLine={false} 
+                tickLine={false}
+                tick={{ fontSize: 12 }}
               />
-            </LineChart>
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tickFormatter={(value) => formatCurrency(value)}
+                width={80}
+                tick={{ fontSize: 12 }}
+              />
+              <ChartTooltip 
+                content={
+                  <ChartTooltipContent 
+                    formatter={(value: any) => formatCurrency(value)}
+                  />
+                }
+              />
+              <Legend 
+                formatter={(value: string) => language === 'pt' ? 'Valor Médio' : 'Average Value'}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="valor" 
+                name={language === 'pt' ? 'Valor Médio' : 'Average Value'} 
+                stroke="rgba(var(--chart-color-success), 1)" 
+                fillOpacity={1} 
+                fill="url(#colorTicket)" 
+              />
+            </AreaChart>
           </ResponsiveContainer>
+        </ChartContainer>
+        
+        <div className="mt-2 text-center">
+          <p className="text-sm text-muted-foreground">
+            {language === 'pt' ? 'Média Geral' : 'General Average'}: <span className="font-semibold">{formatCurrency(mediaGeral)}</span>
+          </p>
         </div>
       </CardContent>
     </Card>
