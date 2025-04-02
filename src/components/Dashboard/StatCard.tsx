@@ -1,15 +1,14 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowDown, ArrowUp, Wallet } from 'lucide-react';
+import { ArrowDown, ArrowUp, Wallet, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import * as Icons from 'lucide-react';
 
 interface StatCardProps {
   title: string;
   value: string | number;
   percentChange?: number;
-  icon?: string;
+  icon?: LucideIcon; // Changed from string to LucideIcon type
   colorClass?: string;
 }
 
@@ -17,13 +16,9 @@ const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
   percentChange = 0,
-  icon = 'Wallet',
+  icon: Icon = Wallet, // Default to Wallet icon
   colorClass = 'bg-blue-500',
 }) => {
-  // Dynamic icon selection
-  // Ensure icon name is a valid key in the Icons object
-  const LucideIcon = (Icons as any)[icon] || Icons.Wallet;
-
   return (
     <Card>
       <CardContent className="p-6">
@@ -34,7 +29,8 @@ const StatCard: React.FC<StatCardProps> = ({
               colorClass
             )}
           >
-            <LucideIcon className="h-6 w-6 text-white" />
+            {/* Use the Icon directly as a component */}
+            <Icon className="h-6 w-6 text-white" />
           </div>
           <div className="ml-4 flex-1">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>

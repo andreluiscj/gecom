@@ -71,7 +71,6 @@ const DetalheSetor: React.FC = () => {
     }
   };
 
-  // Preparar dados para os gráficos
   const dadosGraficoGastos = [
     { name: 'Gasto', value: totalGasto },
     { name: 'Disponível', value: orcamentoPrevisto - totalGasto },
@@ -79,7 +78,6 @@ const DetalheSetor: React.FC = () => {
 
   const CORES_GRAFICO = ['#3b82f6', '#94a3b8'];
 
-  // Dados simulados para gráfico de tendência
   const dadosTendencia = [
     { mes: 'Jan', valor: 10000 },
     { mes: 'Fev', valor: 15000 },
