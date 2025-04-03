@@ -2,6 +2,7 @@
 import { addDays, addHours, format, subMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { DadosDashboard, PedidoCompra, Item, Setor } from '@/types';
+import { obterPedidosFicticios } from './extended-mockData';
 
 // Array com os fundos monetários disponíveis
 export const fundosMonetarios = [
@@ -19,8 +20,8 @@ export function gerarId() {
   return uuidv4();
 }
 
-// Lista de pedidos vazia
-const todosPedidos: PedidoCompra[] = [];
+// Lista de pedidos - inicializada com dados fictícios
+const todosPedidos: PedidoCompra[] = [...obterPedidosFicticios()];
 
 // Função para adicionar um novo pedido
 export function adicionarPedido(pedido: PedidoCompra) {
@@ -38,45 +39,8 @@ export function removerPedido(id: string, setor?: Setor) {
   return false;
 }
 
-// Função para calcular dados para o dashboard
-export function calcularDadosDashboard(municipioId?: string | null): DadosDashboard {
-  // Estrutura vazia para os dados do dashboard
-  const gastosPorSetor: Record<Setor, number> = {
-    'Saúde': 0,
-    'Educação': 0,
-    'Administrativo': 0,
-    'Transporte': 0,
-  };
-
-  const pedidosPorSetor: Record<Setor, number> = {
-    'Saúde': 0,
-    'Educação': 0,
-    'Administrativo': 0,
-    'Transporte': 0,
-  };
-
-  const orcamentoPrevisto: Record<Setor, number> = {
-    'Saúde': 0,
-    'Educação': 0,
-    'Administrativo': 0,
-    'Transporte': 0,
-  };
-
-  const ticketMedioPorSetor: Record<Setor, number> = {
-    'Saúde': 0,
-    'Educação': 0,
-    'Administrativo': 0,
-    'Transporte': 0,
-  };
-
-  return {
-    gastosTotais: 0,
-    gastosPorSetor,
-    orcamentoPrevisto,
-    pedidosPorSetor,
-    ticketMedioPorSetor,
-  };
-}
+// Função para calcular dados para o dashboard - importada de extended-mockData.ts
+export { calcularDadosDashboard } from './extended-mockData';
 
 // Função para obter todos os pedidos
 export function obterPedidos(): PedidoCompra[] {
@@ -96,39 +60,8 @@ export function formatarData(data: Date): string {
   return format(data, 'dd/MM/yyyy');
 }
 
-// Função para obter estatísticas dos cartões
-export function obterEstatisticasCartoes() {
-  return [
-    {
-      titulo: 'Orçamento Total',
-      valor: `R$ 0,00`,
-      percentualMudanca: 0,
-      icon: 'Building',
-      cor: 'bg-administrativo-DEFAULT'
-    },
-    {
-      titulo: 'Total Gasto',
-      valor: `R$ 0,00`,
-      percentualMudanca: 0,
-      icon: 'Wallet',
-      cor: 'bg-saude-DEFAULT'
-    },
-    {
-      titulo: 'Documento de Formalização de Demanda',
-      valor: '0',
-      percentualMudanca: 0,
-      icon: 'ShoppingCart',
-      cor: 'bg-educacao-DEFAULT'
-    },
-    {
-      titulo: 'Ticket Médio',
-      valor: `R$ 0,00`,
-      percentualMudanca: 0,
-      icon: 'Receipt',
-      cor: 'bg-transporte-DEFAULT'
-    }
-  ];
-}
+// Função para obter estatísticas dos cartões - importada de extended-mockData.ts
+export { obterEstatisticasCartoes } from './extended-mockData';
 
 // Função para filtrar pedidos com base em critérios
 export function filtrarPedidos(pedidos: PedidoCompra[], filtros: any) {

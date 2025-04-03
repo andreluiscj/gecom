@@ -46,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       icon: <List className="h-5 w-5" />,
     },
     {
-      title: 'Novo Pedido',
+      title: 'Nova DFD',
       path: '/pedidos/novo',
       icon: <FilePlus className="h-5 w-5" />,
     },

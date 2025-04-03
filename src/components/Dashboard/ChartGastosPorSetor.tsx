@@ -20,18 +20,20 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
     }
   }, []);
 
-  const chartData = Object.entries(dados.gastosPorSetor).map(([setor, valor]) => ({
-    name: setor,
-    value: valor,
-  }));
+  const chartData = Object.entries(dados.gastosPorSetor)
+    .filter(([_, valor]) => valor > 0) // Filter out zero values
+    .map(([setor, valor]) => ({
+      name: setor,
+      value: valor,
+    }));
 
-  // Colors with higher contrast and better visibility
-  const COLORS = [
-    'rgb(225, 29, 72)',   // Saúde - vibrant red
-    'rgb(5, 150, 105)',   // Educação - vivid green
-    'rgb(234, 179, 8)',   // Administrativo - rich yellow
-    'rgb(249, 115, 22)'   // Transporte - bright orange
-  ];
+  // Custom colors with higher contrast for better accessibility
+  const COLORS = {
+    'Saúde': 'rgb(220, 38, 38)',       // Stronger red
+    'Educação': 'rgb(16, 185, 129)',    // Stronger green
+    'Administrativo': 'rgb(245, 158, 11)', // Stronger yellow
+    'Transporte': 'rgb(249, 115, 22)'   // Stronger orange
+  };
 
   const cardTitle = language === 'pt' ? 'Gastos por Secretária' : 'Expenses by Department';
   const totalGastos = chartData.reduce((sum, item) => sum + item.value, 0);
@@ -40,9 +42,9 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-background border border-border p-2 rounded-md shadow-md">
-          <p className="font-semibold">{payload[0].name}</p>
-          <p className="text-sm">{formatCurrency(payload[0].value)}</p>
+        <div className="bg-background border border-border p-3 rounded-md shadow-lg">
+          <p className="font-semibold text-base">{payload[0].name}</p>
+          <p className="text-sm mb-1">{formatCurrency(payload[0].value)}</p>
           <p className="text-xs text-muted-foreground">
             {((payload[0].value / totalGastos) * 100).toFixed(1)}%
           </p>
@@ -56,19 +58,35 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
   const renderLegend = (props: any) => {
     const { payload } = props;
     return (
-      <ul className="flex flex-wrap justify-center mt-2 gap-3">
+      <ul className="flex flex-wrap justify-center mt-3 gap-4">
         {payload.map((entry: any, index: number) => (
-          <li key={`item-${index}`} className="flex items-center gap-1">
+          <li key={`item-${index}`} className="flex items-center gap-2">
             <div
-              className="w-3 h-3 rounded-sm"
+              className="w-4 h-4 rounded"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-xs">{entry.value}</span>
+            <span className="text-sm font-medium">{entry.value}</span>
           </li>
         ))}
       </ul>
     );
   };
+  
+  // Check if there is data to display
+  if (chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[300px] flex flex-col items-center justify-center">
+          <p className="text-muted-foreground text-center">
+            {language === 'pt' ? 'Não há dados disponíveis' : 'No data available'}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card>
@@ -83,17 +101,18 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={50}
-                outerRadius={80}
+                innerRadius={60}
+                outerRadius={90}
                 paddingAngle={4}
                 dataKey="value"
                 stroke="var(--background)"
                 strokeWidth={2}
+                animationDuration={800}
               >
-                {chartData.map((entry, index) => (
+                {chartData.map((entry) => (
                   <Cell 
-                    key={`cell-${index}`} 
-                    fill={COLORS[index % COLORS.length]} 
+                    key={`cell-${entry.name}`} 
+                    fill={COLORS[entry.name as keyof typeof COLORS]} 
                     className="hover:opacity-80 transition-opacity"
                   />
                 ))}
@@ -108,9 +127,10 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
           </ResponsiveContainer>
         </div>
         
-        <div className="mt-2 text-center">
+        <div className="mt-3 text-center">
           <p className="text-sm text-muted-foreground">
-            {language === 'pt' ? 'Total de Gastos' : 'Total Expenses'}: <span className="font-semibold">{formatCurrency(totalGastos)}</span>
+            {language === 'pt' ? 'Total de Gastos' : 'Total Expenses'}: 
+            <span className="font-semibold ml-1">{formatCurrency(totalGastos)}</span>
           </p>
         </div>
       </CardContent>
