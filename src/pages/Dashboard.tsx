@@ -13,7 +13,7 @@ const municipios: Record<string, Municipio> = {
     nome: 'Pai Pedro',
     estado: 'MG',
     populacao: 6083,
-    orcamentoAnual: 28500000,
+    orcamentoAnual: 0,
     prefeito: 'Maria Silva',
   },
   'janauba': {
@@ -21,7 +21,7 @@ const municipios: Record<string, Municipio> = {
     nome: 'Janaúba',
     estado: 'MG',
     populacao: 72018,
-    orcamentoAnual: 145300000,
+    orcamentoAnual: 0,
     prefeito: 'José Santos',
   },
   'espinosa': {
@@ -29,7 +29,7 @@ const municipios: Record<string, Municipio> = {
     nome: 'Espinosa',
     estado: 'MG',
     populacao: 31113,
-    orcamentoAnual: 87600000,
+    orcamentoAnual: 0,
     prefeito: 'Carlos Oliveira',
   }
 };

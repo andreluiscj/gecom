@@ -76,7 +76,7 @@ const Login: React.FC = () => {
                     required
                   />
                 </div>
-                <div className="text-right">
+                <div>
                   <Button type="button" variant="link" className="px-0 text-xs h-auto">
                     Esqueceu a senha?
                   </Button>
