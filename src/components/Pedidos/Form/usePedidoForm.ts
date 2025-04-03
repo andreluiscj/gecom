@@ -30,7 +30,6 @@ export const usePedidoForm = () => {
   const [itens, setItens] = useState<Item[]>([
     { id: gerarId(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
   ]);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const form = useForm<PedidoFormValues>({
     resolver: zodResolver(pedidoSchema),
@@ -87,17 +86,6 @@ export const usePedidoForm = () => {
     return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
   };
 
-  const handlePreview = () => {
-    // Verify form is valid before showing preview
-    form.trigger().then((isValid) => {
-      if (isValid) {
-        setIsPreviewOpen(true);
-      } else {
-        toast.error('Por favor, corrija os erros no formulário antes de visualizar');
-      }
-    });
-  };
-
   const onSubmit = (data: PedidoFormValues) => {
     try {
       // Garantir que os itens tenham valores corretos
@@ -139,8 +127,5 @@ export const usePedidoForm = () => {
     atualizarItem,
     calcularValorTotal,
     onSubmit,
-    isPreviewOpen,
-    setIsPreviewOpen,
-    handlePreview
   };
 };

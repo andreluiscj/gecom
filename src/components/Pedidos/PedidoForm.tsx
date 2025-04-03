@@ -17,7 +17,6 @@ import { usePedidoForm } from './Form/usePedidoForm';
 import ItemsSection from './Form/ItemsSection';
 import TotalSection from './Form/TotalSection';
 import ActionButtons from './Form/ActionButtons';
-import DfdPreview from './Form/DfdPreview';
 
 const PedidoForm: React.FC = () => {
   const {
@@ -27,10 +26,7 @@ const PedidoForm: React.FC = () => {
     removerItem,
     atualizarItem,
     calcularValorTotal,
-    onSubmit,
-    isPreviewOpen,
-    setIsPreviewOpen,
-    handlePreview
+    onSubmit
   } = usePedidoForm();
 
   return (
@@ -137,26 +133,9 @@ const PedidoForm: React.FC = () => {
               onUpdateItem={atualizarItem}
             />
 
-            <TotalSection 
-              total={calcularValorTotal()} 
-              onPreview={handlePreview}
-            />
+            <TotalSection total={calcularValorTotal()} />
 
-            <ActionButtons 
-              onPreview={handlePreview}
-            />
-
-            <DfdPreview
-              open={isPreviewOpen}
-              onOpenChange={setIsPreviewOpen}
-              dataCompra={form.getValues().dataCompra}
-              descricao={form.getValues().descricao}
-              fundoMonetario={form.getValues().fundoMonetario}
-              setor={form.getValues().setor}
-              itens={itens}
-              total={calcularValorTotal()}
-              onConfirm={form.handleSubmit(onSubmit)}
-            />
+            <ActionButtons />
           </form>
         </Form>
       </CardContent>
