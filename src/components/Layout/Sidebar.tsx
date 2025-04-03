@@ -41,12 +41,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       icon: <Home className="h-5 w-5" />,
     },
     {
-      title: 'DFD',
+      title: 'Pedidos de Compras',
       path: '/pedidos',
       icon: <List className="h-5 w-5" />,
     },
     {
-      title: 'Novo DFD',
+      title: 'Novo Pedido',
       path: '/pedidos/novo',
       icon: <FilePlus className="h-5 w-5" />,
     },

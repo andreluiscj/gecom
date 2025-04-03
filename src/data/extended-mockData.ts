@@ -55,7 +55,7 @@ export function obterEstatisticasCartoes(municipioId?: string | null): Estatisti
   const texts = {
     budgetTitle: language === 'pt' ? 'Orçamento Total' : 'Total Budget',
     expensesTitle: language === 'pt' ? 'Total Gasto' : 'Total Spent',
-    dfdTitle: language === 'pt' ? 'Documento de Formalização de Demanda' : 'Formalization of Demand Documents',
+    dfdTitle: language === 'pt' ? 'Pedidos de Compras' : 'Purchase Orders',
     ticketTitle: language === 'pt' ? 'Ticket Médio' : 'Average Ticket'
   };
   

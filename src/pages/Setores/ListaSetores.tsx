@@ -69,7 +69,7 @@ const ListaSetores: React.FC = () => {
                 <CardContent className="pt-4 space-y-4">
                   <div className="space-y-1">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="font-medium">DFDs Totais</span>
+                      <span className="font-medium">Pedidos de Compras</span>
                       <span className="font-bold">{totalDFDs}</span>
                     </div>
                   </div>
