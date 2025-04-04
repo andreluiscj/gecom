@@ -14,7 +14,8 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
   // Calculate total budget safely
   const calculateTotalBudget = (): number => {
     if (!dadosDashboard?.orcamentoPrevisto) return 0;
-    return Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + Number(b), 0);
+    // Explicitly convert each value to number before summing
+    return Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: unknown) => a + Number(b || 0), 0);
   };
 
   // Get total budget
