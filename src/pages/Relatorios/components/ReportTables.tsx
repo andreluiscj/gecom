@@ -11,6 +11,15 @@ interface ReportTablesProps {
 }
 
 const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashboard, translations }) => {
+  // Calculate total budget safely
+  const calculateTotalBudget = (): number => {
+    if (!dadosDashboard?.orcamentoPrevisto) return 0;
+    return Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + Number(b), 0);
+  };
+
+  // Get total budget
+  const totalBudget = calculateTotalBudget();
+  
   return (
     <Card>
       <CardHeader>
@@ -42,7 +51,7 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                   <tbody className="bg-background divide-y divide-border">
                     {Object.entries(dadosDashboard.gastosPorSetor).map(([setor, valor], index) => {
                       const valorNumerico = Number(valor);
-                      const orcamento = dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto];
+                      const orcamento = Number(dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto] || 0);
                       const percentualUsado = orcamento > 0 ? (valorNumerico / orcamento * 100) : 0;
                       
                       return (
@@ -69,13 +78,13 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                         {translations.total}
                       </th>
                       <th className="px-4 py-3 text-right text-sm font-medium">
-                        {formatCurrency(Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0))}
+                        {formatCurrency(totalBudget)}
                       </th>
                       <th className="px-4 py-3 text-right text-sm font-medium">
-                        {formatCurrency(dadosDashboard.gastosTotais)}
+                        {formatCurrency(Number(dadosDashboard.gastosTotais || 0))}
                       </th>
                       <th className="px-4 py-3 text-right text-sm font-medium">
-                        {formatPercentage((dadosDashboard.gastosTotais / Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0)) * 100)}
+                        {formatPercentage(totalBudget > 0 ? (Number(dadosDashboard.gastosTotais || 0) / totalBudget * 100) : 0)}
                       </th>
                     </tr>
                   </tfoot>
@@ -111,7 +120,7 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                     <tbody className="bg-background divide-y divide-border">
                       {Object.entries(dadosDashboard.pedidosPorSetor).map(([setor, quantidade], index) => {
                         const quantidadeNumerica = Number(quantidade);
-                        const gastoTotal = Number(dadosDashboard.gastosPorSetor[setor as keyof typeof dadosDashboard.gastosPorSetor]);
+                        const gastoTotal = Number(dadosDashboard.gastosPorSetor[setor as keyof typeof dadosDashboard.gastosPorSetor] || 0);
                         const ticketMedio = quantidadeNumerica > 0 ? gastoTotal / quantidadeNumerica : 0;
                         
                         return (
