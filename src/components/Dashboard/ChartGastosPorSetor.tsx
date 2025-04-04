@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
 interface ChartGastosPorSetorProps {
@@ -11,141 +12,78 @@ interface ChartGastosPorSetorProps {
 }
 
 const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
-  const [language, setLanguage] = useState('pt');
-  
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('app-language');
-    if (savedLanguage && (savedLanguage === 'pt' || savedLanguage === 'en')) {
-      setLanguage(savedLanguage);
-    }
-  }, []);
+  // Calculate total expenses
+  const totalGastos = Object.values(dados.gastosPorSetor).reduce((acc, val) => acc + val, 0);
 
+  // Prepare data for pie chart - show top departments by expense
   const chartData = Object.entries(dados.gastosPorSetor)
-    .filter(([_, valor]) => valor > 0) // Filter out zero values
     .map(([setor, valor]) => ({
       name: setor,
       value: valor,
-    }));
+      percentual: ((valor / totalGastos) * 100).toFixed(1)
+    }))
+    .sort((a, b) => b.value - a.value) // Sort by value descending
+    .slice(0, 7); // Top 7 departments
 
-  // Custom colors with higher contrast for better accessibility
-  const COLORS = {
-    'Saúde': '#ef4444',           // Red from Tailwind
-    'Educação': '#10b981',        // Green from Tailwind
-    'Administrativo': '#f59e0b',  // Yellow from Tailwind
-    'Transporte': '#f97316'       // Orange from Tailwind
-  };
-
-  const cardTitle = language === 'pt' ? 'Gastos por Secretaria' : 'Expenses by Department';
-  const totalGastos = chartData.reduce((sum, item) => sum + item.value, 0);
-
-  // Custom tooltip component with improved styling
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const percentage = totalGastos > 0 
-        ? ((payload[0].value / totalGastos) * 100).toFixed(2) 
-        : '0.00';
-        
-      return (
-        <div className="bg-background border border-border p-3 rounded-md shadow-lg">
-          <p className="font-semibold text-base">{payload[0].name}</p>
-          <p className="text-sm mb-1">{formatCurrency(payload[0].value)}</p>
-          <p className="text-xs text-muted-foreground">
-            {percentage}%
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Custom legend
-  const renderLegend = (props: any) => {
-    const { payload } = props;
-    return (
-      <ul className="flex flex-wrap justify-center mt-3 gap-4">
-        {payload.map((entry: any, index: number) => {
-          // Calculate percentage with fixed 2 decimal places
-          const percentage = totalGastos > 0 
-            ? ((entry.payload.value / totalGastos) * 100).toFixed(2)
-            : '0.00';
-            
-          return (
-            <li key={`item-${index}`} className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-sm font-medium">{entry.value} ({percentage}%)</span>
-            </li>
-          );
-        })}
-      </ul>
-    );
-  };
+  // Add "Others" category for remaining departments
+  const outrosGastos = totalGastos - chartData.reduce((sum, item) => sum + item.value, 0);
   
-  // Show empty state when there's no data
-  if (chartData.length === 0) {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[300px] flex flex-col items-center justify-center">
-          <p className="text-muted-foreground text-center">
-            {language === 'pt' ? 'Não há dados disponíveis' : 'No data available'}
-          </p>
-        </CardContent>
-      </Card>
-    );
+  if (outrosGastos > 0) {
+    chartData.push({
+      name: 'Outros',
+      value: outrosGastos,
+      percentual: ((outrosGastos / totalGastos) * 100).toFixed(1)
+    });
   }
-  
+
+  // Colors for pie chart segments
+  const COLORS = [
+    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', 
+    '#ec4899', '#f97316', '#6366f1', '#64748b'
+  ];
+
+  const cardTitle = 'Gastos por Secretária';
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="aspect-square h-[250px] w-full">
+        <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value: any, name: string, props: any) => {
+                      const item = props.payload;
+                      return [
+                        formatCurrency(value),
+                        `${item.percentual}% do total`
+                      ];
+                    }}
+                  />
+                }
+              />
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={90}
-                paddingAngle={4}
+                outerRadius={100}
                 dataKey="value"
-                stroke="var(--background)"
-                strokeWidth={2}
-                animationDuration={800}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(2)}%`}
                 labelLine={false}
               >
-                {chartData.map((entry) => (
+                {chartData.map((entry, index) => (
                   <Cell 
-                    key={`cell-${entry.name}`} 
-                    fill={COLORS[entry.name as keyof typeof COLORS]} 
-                    className="hover:opacity-80 transition-opacity"
+                    key={`cell-${index}`} 
+                    fill={COLORS[index % COLORS.length]} 
                   />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                content={renderLegend}
-                layout="vertical"
-                verticalAlign="bottom"
-              />
             </PieChart>
           </ResponsiveContainer>
-        </div>
-        
-        <div className="mt-3 text-center">
-          <p className="text-sm text-muted-foreground">
-            {language === 'pt' ? 'Total de Gastos' : 'Total Expenses'}: 
-            <span className="font-semibold ml-1">{formatCurrency(totalGastos)}</span>
-          </p>
-        </div>
+        </ChartContainer>
       </CardContent>
     </Card>
   );

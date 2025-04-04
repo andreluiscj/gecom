@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
 interface ChartTicketMedioProps {
@@ -11,41 +12,20 @@ interface ChartTicketMedioProps {
 }
 
 const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
+  // Transform data for the area chart
   const chartData = Object.entries(dados.ticketMedioPorSetor)
-    .filter(([setor, _]) => ['Saúde', 'Educação', 'Administrativo', 'Transporte'].includes(setor)) // Limitamos para os 4 principais
+    .filter(([_, valor]) => valor > 0)
     .map(([setor, valor]) => ({
       name: setor,
       valor: valor,
     }));
 
+  // Sort data by value for better visualization
+  chartData.sort((a, b) => a.valor - b.valor);
+  
+  // Card title
   const cardTitle = 'Ticket Médio por Secretaria';
-  const mediaGeral = chartData.length > 0 
-    ? chartData.reduce((sum, item) => sum + item.valor, 0) / chartData.length 
-    : 0;
-
-  // Custom colors
-  const COLORS = {
-    'Saúde': '#ef4444',
-    'Educação': '#10b981',
-    'Administrativo': '#f59e0b',
-    'Transporte': '#f97316'
-  };
-
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background border border-border p-3 rounded-md shadow-lg">
-          <p className="font-semibold text-base">{payload[0].payload.name}</p>
-          <p className="text-sm">
-            Valor Médio: {formatCurrency(payload[0].value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
+  
   // Show empty state when there's no data with values
   const hasData = chartData.some(item => item.valor > 0);
   
@@ -64,55 +44,66 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
     );
   }
 
+  // Get gradients for area fill
+  const getGradient = () => {
+    return (
+      <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+        <stop offset="95%" stopColor="#8884d8" stopOpacity={0.2}/>
+      </linearGradient>
+    );
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="aspect-[1.5] h-80">
+        <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart 
+            <AreaChart
               data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
+              <defs>
+                {getGradient()}
+              </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
               <XAxis 
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false}
-                tick={{ fontSize: 12 }}
+                height={60}
+                tick={{ fontSize: 11 }}
+                tickMargin={10}
               />
               <YAxis 
                 axisLine={false} 
                 tickLine={false} 
                 tickFormatter={(value) => formatCurrency(value)}
                 width={80}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11 }}
               />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend formatter={(value: string) => 'Valor Médio'} />
-              <Bar 
+              <ChartTooltip 
+                content={
+                  <ChartTooltipContent 
+                    formatter={(value: any) => formatCurrency(value)}
+                  />
+                }
+                cursor={{stroke: '#f3f4f6', strokeWidth: 1}}
+              />
+              <Area 
+                type="monotone" 
                 dataKey="valor" 
                 name="Valor Médio"
-                radius={[4, 4, 0, 0]} // Rounded corners on top
-              >
-                {chartData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={COLORS[entry.name as keyof typeof COLORS]} 
-                  />
-                ))}
-              </Bar>
-            </BarChart>
+                stroke="#8884d8" 
+                fillOpacity={1} 
+                fill="url(#colorValor)"
+              />
+            </AreaChart>
           </ResponsiveContainer>
-        </div>
-        
-        <div className="mt-2 text-center">
-          <p className="text-sm text-muted-foreground">
-            Média Geral: <span className="font-semibold">{formatCurrency(mediaGeral)}</span>
-          </p>
-        </div>
+        </ChartContainer>
       </CardContent>
     </Card>
   );

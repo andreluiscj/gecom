@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts';
 
 interface ChartPedidosPorSetorProps {
   dados: {
@@ -11,21 +11,23 @@ interface ChartPedidosPorSetorProps {
 }
 
 const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) => {
-  const [language, setLanguage] = useState('pt');
-  
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('app-language');
-    if (savedLanguage && (savedLanguage === 'pt' || savedLanguage === 'en')) {
-      setLanguage(savedLanguage);
-    }
-  }, []);
+  // Transform the data for the chart and filter out zero values
+  const chartData = Object.entries(dados.pedidosPorSetor)
+    .filter(([_, quantidade]) => quantidade > 0)
+    .map(([setor, quantidade]) => ({
+      name: setor,
+      quantidade: quantidade,
+    }))
+    .sort((a, b) => b.quantidade - a.quantidade) // Sort by quantity descending
+    .slice(0, 10); // Show only top 10 departments for better visualization
 
-  const chartData = Object.entries(dados.pedidosPorSetor).map(([setor, quantidade]) => ({
-    name: setor,
-    quantidade: quantidade,
-  }));
+  const cardTitle = 'DFDs por Secretária';
 
-  const cardTitle = language === 'pt' ? 'DFDs por Secretária' : 'DFDs by Department';
+  // Colors for bars - different shades of blue
+  const colors = [
+    '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe',
+    '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a', '#172554'
+  ];
 
   return (
     <Card>
@@ -35,38 +37,53 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
       <CardContent>
         <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} barGap={8}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+            <BarChart 
+              data={chartData} 
+              layout="vertical"
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
               <XAxis 
-                dataKey="name" 
+                type="number" 
                 axisLine={false} 
                 tickLine={false} 
                 tick={{ fontSize: 12, fill: '#333' }}
               />
               <YAxis 
+                type="category"
+                dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                width={30}
+                width={100}
                 tick={{ fontSize: 12, fill: '#333' }}
               />
               <ChartTooltip 
-                content={<ChartTooltipContent />}
-              />
-              <Legend 
-                formatter={(value: string) => language === 'pt' ? 'Quantidade de DFDs' : 'Number of DFDs'}
+                content={
+                  <ChartTooltipContent 
+                    labelKey="name"
+                    nameKey="name"
+                  />
+                }
+                cursor={{fill: 'rgba(0, 0, 0, 0.05)'}}
               />
               <Bar 
                 dataKey="quantidade" 
-                name={language === 'pt' ? 'Quantidade de DFDs' : 'Number of DFDs'} 
-                fill="rgba(59, 130, 246, 0.8)" 
-                radius={[4, 4, 0, 0]} 
-                label={{
-                  position: 'top',
-                  fill: '#333',
-                  fontSize: 12,
-                  fontWeight: '500'
-                }}
-              />
+                name="Quantidade de DFDs" 
+                radius={[0, 4, 4, 0]}
+                barSize={20}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={colors[index % colors.length]} 
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
