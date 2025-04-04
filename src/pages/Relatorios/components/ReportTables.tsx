@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, formatPercentage } from '@/utils/formatters';
 
 interface ReportTablesProps {
   tiposRelatorio: string[];
@@ -40,36 +40,42 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                     </tr>
                   </thead>
                   <tbody className="bg-background divide-y divide-border">
-                    {Object.entries(dadosDashboard.gastosPorSetor).map(([setor, valor], index) => (
-                      <tr key={index}>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                          {setor}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          {formatCurrency(dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto])}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          {formatCurrency(valor as number)}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          {((valor as number) / dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto] * 100).toFixed(2)}%
-                        </td>
-                      </tr>
-                    ))}
+                    {Object.entries(dadosDashboard.gastosPorSetor).map(([setor, valor], index) => {
+                      const valorNumerico = Number(valor);
+                      const orcamento = dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto];
+                      const percentualUsado = orcamento > 0 ? (valorNumerico / orcamento * 100) : 0;
+                      
+                      return (
+                        <tr key={index}>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
+                            {setor}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
+                            {formatCurrency(orcamento)}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
+                            {formatCurrency(valorNumerico)}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
+                            {formatPercentage(percentualUsado)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                   <tfoot className="bg-muted">
                     <tr>
-                      <th className="px-4 py-2 text-left text-sm font-medium">
+                      <th className="px-4 py-3 text-left text-sm font-medium">
                         {translations.total}
                       </th>
-                      <th className="px-4 py-2 text-right text-sm font-medium">
+                      <th className="px-4 py-3 text-right text-sm font-medium">
                         {formatCurrency(Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0))}
                       </th>
-                      <th className="px-4 py-2 text-right text-sm font-medium">
+                      <th className="px-4 py-3 text-right text-sm font-medium">
                         {formatCurrency(dadosDashboard.gastosTotais)}
                       </th>
-                      <th className="px-4 py-2 text-right text-sm font-medium">
-                        {(dadosDashboard.gastosTotais / (Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0) as number) * 100).toFixed(2)}%
+                      <th className="px-4 py-3 text-right text-sm font-medium">
+                        {formatPercentage((dadosDashboard.gastosTotais / Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0)) * 100)}
                       </th>
                     </tr>
                   </tfoot>
@@ -103,22 +109,28 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                       </tr>
                     </thead>
                     <tbody className="bg-background divide-y divide-border">
-                      {Object.entries(dadosDashboard.pedidosPorSetor).map(([setor, quantidade], index) => (
-                        <tr key={index}>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                            {setor}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                            {quantidade as number}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                            {formatCurrency(dadosDashboard.gastosPorSetor[setor as keyof typeof dadosDashboard.gastosPorSetor])}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                            {formatCurrency(dadosDashboard.ticketMedioPorSetor[setor as keyof typeof dadosDashboard.ticketMedioPorSetor])}
-                          </td>
-                        </tr>
-                      ))}
+                      {Object.entries(dadosDashboard.pedidosPorSetor).map(([setor, quantidade], index) => {
+                        const quantidadeNumerica = Number(quantidade);
+                        const gastoTotal = Number(dadosDashboard.gastosPorSetor[setor as keyof typeof dadosDashboard.gastosPorSetor]);
+                        const ticketMedio = quantidadeNumerica > 0 ? gastoTotal / quantidadeNumerica : 0;
+                        
+                        return (
+                          <tr key={index}>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
+                              {setor}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
+                              {quantidadeNumerica}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
+                              {formatCurrency(gastoTotal)}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
+                              {formatCurrency(ticketMedio)}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
