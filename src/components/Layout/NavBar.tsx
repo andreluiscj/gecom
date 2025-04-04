@@ -37,19 +37,9 @@ interface NavBarProps {
 
 const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
   const navigate = useNavigate();
-  const [isHighContrast, setIsHighContrast] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
-  
-  useEffect(() => {
-    // Apply high contrast mode
-    if (isHighContrast) {
-      document.documentElement.classList.add('high-contrast');
-    } else {
-      document.documentElement.classList.remove('high-contrast');
-    }
-  }, [isHighContrast]);
   
   // Initialize and handle dark mode
   useEffect(() => {
@@ -64,11 +54,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
       document.documentElement.classList.remove('dark-theme');
     }
   }, []);
-  
-  const toggleContrast = () => {
-    setIsHighContrast(!isHighContrast);
-    toast.success(isHighContrast ? "Modo de contraste padrão ativado" : "Modo de alto contraste ativado");
-  };
   
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
@@ -116,8 +101,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
     logout: "Sair",
     deleteAccount: "Excluir conta",
     new: "novas",
-    contrast: "Contraste",
-    highContrast: "Alto contraste",
     theme: isDarkMode ? "Modo claro" : "Modo escuro",
     settings: "Configurações",
     myAccount: "Minha Conta",
@@ -171,19 +154,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
           )}
         </Button>
 
-        {/* Contrast Toggle Button */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={toggleContrast} 
-          className="text-muted-foreground hover:text-foreground"
-          aria-label={texts.contrast}
-        >
-          <div className={`p-1 ${isHighContrast ? 'bg-white text-black' : 'bg-black text-white'} rounded`}>
-            <span className="text-xs">Aa</span>
-          </div>
-        </Button>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
@@ -229,7 +199,7 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <div className="flex h-full w-full items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-primary text-primary-foreground dark:bg-primary/80 dark:text-white font-medium">
                 A
               </div>
             </Button>
@@ -261,7 +231,7 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="flex justify-center mb-4">
-              <div className="h-24 w-24 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold">
+              <div className="h-24 w-24 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold dark:bg-primary/80 dark:text-white">
                 A
               </div>
             </div>

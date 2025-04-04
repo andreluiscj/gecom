@@ -11,10 +11,12 @@ interface ChartTicketMedioProps {
 }
 
 const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
-  const chartData = Object.entries(dados.ticketMedioPorSetor).map(([setor, valor]) => ({
-    name: setor,
-    valor: valor,
-  }));
+  const chartData = Object.entries(dados.ticketMedioPorSetor)
+    .filter(([setor, _]) => ['Saúde', 'Educação', 'Administrativo', 'Transporte'].includes(setor)) // Limitamos para os 4 principais
+    .map(([setor, valor]) => ({
+      name: setor,
+      valor: valor,
+    }));
 
   const cardTitle = 'Ticket Médio por Secretaria';
   const mediaGeral = chartData.length > 0 

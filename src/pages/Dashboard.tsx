@@ -38,15 +38,8 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [municipioId, setMunicipioId] = useState<string | null>(null);
   const [municipio, setMunicipio] = useState<Municipio | null>(null);
-  const [language, setLanguage] = useState('pt'); // Estado para o idioma
   
   useEffect(() => {
-    // Verifica idioma
-    const savedLanguage = localStorage.getItem('app-language');
-    if (savedLanguage) {
-      setLanguage(savedLanguage);
-    }
-    
     // Recupera o município selecionado do localStorage
     const selectedMunicipioId = localStorage.getItem('municipio-selecionado');
     
@@ -72,14 +65,14 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <DashboardHeader municipio={municipio} language={language} />
+      <DashboardHeader municipio={municipio} />
       
       <DashboardStats estatisticasCartoes={estatisticasCartoes} />
       
       <DashboardTabs 
         dadosDashboard={dadosDashboard}
         municipio={municipio}
-        language={language}
+        language="pt"
       />
     </div>
   );

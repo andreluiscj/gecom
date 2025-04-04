@@ -9,37 +9,21 @@ import { DadosDashboard, Municipio } from '@/types';
 interface DashboardTabsProps {
   dadosDashboard: DadosDashboard;
   municipio: Municipio;
-  language: string;
+  language: string; // Mantemos para compatibilidade, mas não usamos mais
 }
-
-const getTranslation = (key: string, language: string) => {
-  const translations: Record<string, Record<string, string>> = {
-    graphicsTab: {
-      pt: 'Gráficos',
-      en: 'Charts'
-    },
-    summaryTab: {
-      pt: 'Resumo',
-      en: 'Summary'
-    }
-  };
-  
-  return translations[key]?.[language] || translations[key]?.['pt'] || key;
-};
 
 const DashboardTabs: React.FC<DashboardTabsProps> = ({ 
   dadosDashboard, 
-  municipio,
-  language 
+  municipio
 }) => {
   return (
     <Tabs defaultValue="graficos" className="pt-2">
       <TabsList className="mb-4">
         <TabsTrigger value="graficos">
-          <LayoutDashboard className="h-4 w-4 mr-2" /> {getTranslation('graphicsTab', language)}
+          <LayoutDashboard className="h-4 w-4 mr-2" /> Gráficos
         </TabsTrigger>
         <TabsTrigger value="resumo">
-          <FileText className="h-4 w-4 mr-2" /> {getTranslation('summaryTab', language)}
+          <FileText className="h-4 w-4 mr-2" /> Resumo
         </TabsTrigger>
       </TabsList>
       
@@ -51,7 +35,7 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
         <DashboardSummary 
           dadosDashboard={dadosDashboard} 
           municipio={municipio} 
-          language={language} 
+          language="pt" 
         />
       </TabsContent>
     </Tabs>
