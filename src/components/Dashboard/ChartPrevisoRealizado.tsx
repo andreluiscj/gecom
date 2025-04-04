@@ -40,7 +40,7 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
               margin={{
                 top: 20,
                 right: 30,
-                left: 20,
+                left: 120, // Increased left margin to ensure department names are fully visible
                 bottom: 5,
               }}
             >
@@ -59,6 +59,7 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
                 tickLine={false} 
                 width={110}
                 tick={{ fontSize: 11 }}
+                interval={0} // Ensure all labels are shown
               />
               <ChartTooltip 
                 content={

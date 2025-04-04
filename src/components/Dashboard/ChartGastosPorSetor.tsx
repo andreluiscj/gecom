@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Cell, Pie, PieChart, ResponsiveContainer, Label } from 'recharts';
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
 interface ChartGastosPorSetorProps {
@@ -33,9 +33,6 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
 
   const cardTitle = 'Gastos por Secretária';
 
-  // Format the total value for the center label
-  const totalFormattedValue = formatCurrency(totalGastos);
-
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -45,6 +42,24 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
         <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={140}
+                innerRadius={60}
+                fill="#8884d8"
+                dataKey="value"
+                paddingAngle={2}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]} 
+                  />
+                ))}
+              </Pie>
               <ChartTooltip
                 content={
                   <ChartTooltipContent
@@ -58,30 +73,6 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
                   />
                 }
               />
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                dataKey="value"
-                labelLine={false}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={COLORS[index % COLORS.length]} 
-                  />
-                ))}
-                <Label
-                  value={totalFormattedValue}
-                  position="center"
-                  fill="#333"
-                  style={{
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                  }}
-                />
-              </Pie>
             </PieChart>
           </ResponsiveContainer>
         </ChartContainer>
