@@ -19,8 +19,8 @@ export function gerarId() {
   return uuidv4();
 }
 
-// Import functions from extended-mockData without initializing anything with them
-import { obterPedidosFicticios as _obterPedidosFicticios } from './extended-mockData';
+// Import functions from extended-mockData modules
+import { obterPedidosFicticios as _obterPedidosFicticios } from './pedidos/mockPedidos';
 
 // Now initialize the pedidos list after importing the function
 const todosPedidos: PedidoCompra[] = [];
@@ -57,7 +57,7 @@ export function removerPedido(id: string, setor?: Setor) {
 }
 
 // Função para calcular dados para o dashboard - importada de extended-mockData.ts
-export { calcularDadosDashboard } from './extended-mockData';
+export { calcularDadosDashboard } from './dashboard/dashboardCalculator';
 
 // Função para obter todos os pedidos
 export function obterPedidos(): PedidoCompra[] {
@@ -78,7 +78,7 @@ export function formatarData(data: Date): string {
 }
 
 // Função para obter estatísticas dos cartões - importada de extended-mockData.ts
-export { obterEstatisticasCartoes } from './extended-mockData';
+export { obterEstatisticasCartoes } from './dashboard/statisticsCalculator';
 
 // Função para filtrar pedidos com base em critérios
 export function filtrarPedidos(pedidos: PedidoCompra[], filtros: any) {
