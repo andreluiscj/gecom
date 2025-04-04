@@ -161,7 +161,7 @@ export function obterEstatisticasCartoes(municipioId?: string | null): Estatisti
 }
 
 // Gerar pedidos fictícios para cada setor nos últimos 3 meses
-const gerarPedidosFicticios = (): PedidoCompra[] => {
+export const obterPedidosFicticios = (): PedidoCompra[] => {
   const pedidos: PedidoCompra[] = [];
   const setores: Setor[] = ['Saúde', 'Educação', 'Administrativo', 'Transporte'];
   const status: PedidoStatus[] = ['Pendente', 'Aprovado', 'Reprovado'];
@@ -310,12 +310,3 @@ const gerarPedidosFicticios = (): PedidoCompra[] => {
   
   return pedidos;
 };
-
-// Gerar os pedidos fictícios
-const pedidosFicticios = gerarPedidosFicticios();
-
-// Exporte os pedidos fictícios
-export const obterPedidosFicticios = () => pedidosFicticios;
-
-// Exporte a função original também para manter compatibilidade
-export * from '@/data/mockData';

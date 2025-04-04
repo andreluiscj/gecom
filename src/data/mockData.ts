@@ -2,7 +2,6 @@
 import { addDays, addHours, format, subMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { DadosDashboard, PedidoCompra, Item, Setor } from '@/types';
-import { obterPedidosFicticios } from './extended-mockData';
 
 // Array com os fundos monetários disponíveis
 export const fundosMonetarios = [
@@ -20,8 +19,26 @@ export function gerarId() {
   return uuidv4();
 }
 
-// Lista de pedidos - inicializada com dados fictícios
-const todosPedidos: PedidoCompra[] = [...obterPedidosFicticios()];
+// Import functions from extended-mockData without initializing anything with them
+import { obterPedidosFicticios as _obterPedidosFicticios } from './extended-mockData';
+
+// Now initialize the pedidos list after importing the function
+const todosPedidos: PedidoCompra[] = [];
+
+// Function to initialize the data - will be called when needed
+export function initializeMockData() {
+  if (todosPedidos.length === 0) {
+    const ficticios = _obterPedidosFicticios();
+    todosPedidos.push(...ficticios);
+  }
+  return todosPedidos;
+}
+
+// Make sure data is initialized before first use
+initializeMockData();
+
+// Re-export the function for external use
+export const obterPedidosFicticios = _obterPedidosFicticios;
 
 // Função para adicionar um novo pedido
 export function adicionarPedido(pedido: PedidoCompra) {
