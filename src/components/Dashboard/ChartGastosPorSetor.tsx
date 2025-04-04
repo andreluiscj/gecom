@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
+import { Cell, Pie, PieChart, ResponsiveContainer, Label } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
 interface ChartGastosPorSetorProps {
@@ -15,34 +15,26 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
   // Calculate total expenses
   const totalGastos = Object.values(dados.gastosPorSetor).reduce((acc, val) => acc + val, 0);
 
-  // Prepare data for pie chart - show top departments by expense
+  // Prepare data for pie chart - show all departments by expense
   const chartData = Object.entries(dados.gastosPorSetor)
     .map(([setor, valor]) => ({
       name: setor,
       value: valor,
       percentual: ((valor / totalGastos) * 100).toFixed(1)
     }))
-    .sort((a, b) => b.value - a.value) // Sort by value descending
-    .slice(0, 7); // Top 7 departments
-
-  // Add "Others" category for remaining departments
-  const outrosGastos = totalGastos - chartData.reduce((sum, item) => sum + item.value, 0);
-  
-  if (outrosGastos > 0) {
-    chartData.push({
-      name: 'Outros',
-      value: outrosGastos,
-      percentual: ((outrosGastos / totalGastos) * 100).toFixed(1)
-    });
-  }
+    .sort((a, b) => b.value - a.value);
 
   // Colors for pie chart segments
   const COLORS = [
     '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', 
-    '#ec4899', '#f97316', '#6366f1', '#64748b'
+    '#ec4899', '#f97316', '#6366f1', '#64748b', '#0ea5e9',
+    '#14b8a6', '#a855f7', '#d946ef', '#84cc16', '#eab308'
   ];
 
   const cardTitle = 'Gastos por Secretária';
+
+  // Format the total value for the center label
+  const totalFormattedValue = formatCurrency(totalGastos);
 
   return (
     <Card>
@@ -80,6 +72,15 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
                     fill={COLORS[index % COLORS.length]} 
                   />
                 ))}
+                <Label
+                  value={totalFormattedValue}
+                  position="center"
+                  fill="#333"
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                  }}
+                />
               </Pie>
             </PieChart>
           </ResponsiveContainer>

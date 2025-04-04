@@ -15,9 +15,10 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
   // Transform data for the area chart
   const chartData = Object.entries(dados.ticketMedioPorSetor)
     .filter(([_, valor]) => valor > 0)
-    .map(([setor, valor]) => ({
+    .map(([setor, valor], index) => ({
       name: setor,
       valor: valor,
+      idx: index // Add index for X-axis
     }));
 
   // Sort data by value for better visualization
@@ -64,19 +65,17 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
             >
               <defs>
                 {getGradient()}
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
               <XAxis 
-                dataKey="name" 
+                dataKey="idx" 
                 axisLine={false} 
                 tickLine={false}
-                height={60}
-                tick={{ fontSize: 11 }}
-                tickMargin={10}
+                tick={false} // Hide X-axis ticks
               />
               <YAxis 
                 axisLine={false} 
@@ -88,7 +87,13 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
               <ChartTooltip 
                 content={
                   <ChartTooltipContent 
-                    formatter={(value: any) => formatCurrency(value)}
+                    formatter={(value: any, name: string, props: any) => {
+                      const item = props.payload;
+                      return [
+                        formatCurrency(value),
+                        `${item.name}`
+                      ];
+                    }}
                   />
                 }
                 cursor={{stroke: '#f3f4f6', strokeWidth: 1}}

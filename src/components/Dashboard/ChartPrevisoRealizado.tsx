@@ -22,8 +22,7 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
       percentual: Math.round((dados.gastosPorSetor[setor] / dados.orcamentoPrevisto[setor]) * 100)
     }))
     .filter(item => item.previsto > 0) // Filter out items with zero budget
-    .sort((a, b) => b.previsto - a.previsto) // Sort by budget descending
-    .slice(0, 8); // Show only top 8 departments for better visualization
+    .sort((a, b) => b.previsto - a.previsto); // Sort by budget descending
 
   const cardTitle = 'Orçamento Previsto vs. Realizado';
 

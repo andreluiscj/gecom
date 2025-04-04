@@ -18,15 +18,15 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
       name: setor,
       quantidade: quantidade,
     }))
-    .sort((a, b) => b.quantidade - a.quantidade) // Sort by quantity descending
-    .slice(0, 10); // Show only top 10 departments for better visualization
+    .sort((a, b) => b.quantidade - a.quantidade); // Sort by quantity descending
 
   const cardTitle = 'DFDs por Secretária';
 
   // Colors for bars - different shades of blue
   const colors = [
     '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe',
-    '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a', '#172554'
+    '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a', '#172554',
+    '#4f46e5', '#4338ca', '#3730a3', '#312e81', '#1e1b4b'
   ];
 
   return (
@@ -66,7 +66,6 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
                 content={
                   <ChartTooltipContent 
                     labelKey="name"
-                    nameKey="name"
                   />
                 }
                 cursor={{fill: 'rgba(0, 0, 0, 0.05)'}}
