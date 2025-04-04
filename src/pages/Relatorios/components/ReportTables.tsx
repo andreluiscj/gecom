@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { formatCurrency } from '@/utils/formatters';
 
 interface ReportTablesProps {
   tiposRelatorio: string[];
@@ -45,10 +46,10 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                           {setor}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          R$ {dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto].toLocaleString()}
+                          {formatCurrency(dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto])}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          R$ {(valor as number).toLocaleString()}
+                          {formatCurrency(valor as number)}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
                           {((valor as number) / dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto] * 100).toFixed(2)}%
@@ -62,10 +63,10 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                         {translations.total}
                       </th>
                       <th className="px-4 py-2 text-right text-sm font-medium">
-                        R$ {Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0).toLocaleString()}
+                        {formatCurrency(Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0))}
                       </th>
                       <th className="px-4 py-2 text-right text-sm font-medium">
-                        R$ {dadosDashboard.gastosTotais.toLocaleString()}
+                        {formatCurrency(dadosDashboard.gastosTotais)}
                       </th>
                       <th className="px-4 py-2 text-right text-sm font-medium">
                         {(dadosDashboard.gastosTotais / (Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0) as number) * 100).toFixed(2)}%
@@ -111,10 +112,10 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                             {quantidade as number}
                           </td>
                           <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                            R$ {dadosDashboard.gastosPorSetor[setor as keyof typeof dadosDashboard.gastosPorSetor].toLocaleString('pt-BR')}
+                            {formatCurrency(dadosDashboard.gastosPorSetor[setor as keyof typeof dadosDashboard.gastosPorSetor])}
                           </td>
                           <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                            R$ {dadosDashboard.ticketMedioPorSetor[setor as keyof typeof dadosDashboard.ticketMedioPorSetor].toLocaleString('pt-BR')}
+                            {formatCurrency(dadosDashboard.ticketMedioPorSetor[setor as keyof typeof dadosDashboard.ticketMedioPorSetor])}
                           </td>
                         </tr>
                       ))}

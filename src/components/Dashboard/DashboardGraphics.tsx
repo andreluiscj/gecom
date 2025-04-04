@@ -12,17 +12,17 @@ interface DashboardGraphicsProps {
 
 const DashboardGraphics: React.FC<DashboardGraphicsProps> = ({ dados }) => {
   return (
-    <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div className="space-y-6 animate-fade-in">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartPrevisoRealizado dados={dados} />
         <ChartGastosPorSetor dados={dados} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartPedidosPorSetor dados={dados} />
         <ChartTicketMedio dados={dados} />
       </div>
-    </>
+    </div>
   );
 };
 

@@ -25,29 +25,29 @@ const StatCard: React.FC<StatCardProps> = ({
     if (typeof icon === 'string') {
       switch (icon) {
         case 'Building':
-          return <Building className="h-4 w-4 text-white" />;
+          return <Building className="h-5 w-5 text-white" />;
         case 'Wallet':
-          return <Wallet className="h-4 w-4 text-white" />;
+          return <Wallet className="h-5 w-5 text-white" />;
         case 'ShoppingCart':
-          return <ShoppingCart className="h-4 w-4 text-white" />;
+          return <ShoppingCart className="h-5 w-5 text-white" />;
         case 'Receipt':
-          return <Receipt className="h-4 w-4 text-white" />;
+          return <Receipt className="h-5 w-5 text-white" />;
         default:
-          return <Wallet className="h-4 w-4 text-white" />;
+          return <Wallet className="h-5 w-5 text-white" />;
       }
     } else {
       const Icon = icon;
-      return <Icon className="h-4 w-4 text-white" />;
+      return <Icon className="h-5 w-5 text-white" />;
     }
   };
 
   return (
-    <Card>
+    <Card className="border shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardContent className="p-6">
         <div className="flex items-center">
           <div
             className={cn(
-              'flex h-7 w-7 items-center justify-center rounded-lg',
+              'flex h-10 w-10 items-center justify-center rounded-lg shadow-sm',
               colorClass
             )}
           >

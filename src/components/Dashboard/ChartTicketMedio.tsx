@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
 interface ChartTicketMedioProps {
@@ -24,17 +24,14 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
   // Sort data by value for better visualization
   chartData.sort((a, b) => a.valor - b.valor);
   
-  // Card title
-  const cardTitle = 'Ticket Médio por Secretaria';
-  
   // Show empty state when there's no data with values
   const hasData = chartData.some(item => item.valor > 0);
   
   if (!hasData) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-2 border-b">
+          <CardTitle className="text-lg font-semibold">Ticket Médio por Secretaria</CardTitle>
         </CardHeader>
         <CardContent className="h-[300px] flex flex-col items-center justify-center">
           <p className="text-muted-foreground text-center">
@@ -63,11 +60,11 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-2 border-b">
+        <CardTitle className="text-lg font-semibold">Ticket Médio por Secretaria</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
@@ -97,7 +94,7 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
                     formatter={(value: any, name: string, props: any) => {
                       const item = props.payload;
                       return [
-                        <div key="tooltip-value" className="flex flex-col">
+                        <div key="tooltip-value" className="flex flex-col gap-1">
                           <span className="font-medium">{item.name}</span>
                           <span>Ticket Médio: {formatCurrency(value)}</span>
                         </div>,

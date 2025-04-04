@@ -4,12 +4,18 @@ export const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
   }).format(value);
 };
 
 // Formatar data
 export const formatDate = (date: Date): string => {
-  return new Intl.DateTimeFormat('pt-BR').format(date);
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(date);
 };
 
 // Formatar data e hora
@@ -32,4 +38,9 @@ export const calcularPorcentagem = (valor: number, total: number): number => {
 // Formatar porcentagem
 export const formatPercentage = (value: number): string => {
   return `${value.toFixed(1)}%`;
+};
+
+// Formatar números grandes
+export const formatNumber = (value: number): string => {
+  return new Intl.NumberFormat('pt-BR').format(value);
 };

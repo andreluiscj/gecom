@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Legend, Tooltip } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
 interface ChartPrevisoRealizadoProps {
@@ -24,14 +24,12 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
     .filter(item => item.previsto > 0) // Filter out items with zero budget
     .sort((a, b) => b.previsto - a.previsto); // Sort by budget descending
 
-  const cardTitle = 'Orçamento Previsto vs. Realizado';
-
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-2 border-b">
+        <CardTitle className="text-lg font-semibold">Orçamento Previsto vs. Realizado</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
@@ -40,7 +38,7 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
               margin={{
                 top: 20,
                 right: 30,
-                left: 140, // Increased left margin to ensure department names are fully visible
+                left: 180, // Increased left margin to ensure department names are fully visible
                 bottom: 5,
               }}
             >
@@ -57,10 +55,10 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                width={130} // Increased width for longer department names
+                width={170} // Increased width for longer department names
                 tick={{ 
                   fontSize: 11,
-                  width: 120,
+                  width: 160,
                   textAnchor: 'end', // Push text to the right edge of the available space
                 }}
                 interval={0} // Ensure all labels are shown
@@ -69,8 +67,8 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
                 content={
                   <ChartTooltipContent 
                     formatter={(value: any, name: string) => {
-                      if (name === 'previsto') return formatCurrency(value);
-                      if (name === 'realizado') return formatCurrency(value);
+                      if (name === 'previsto') return [formatCurrency(value), 'Orçamento Previsto'];
+                      if (name === 'realizado') return [formatCurrency(value), 'Valor Realizado'];
                       return value;
                     }}
                   />
@@ -93,6 +91,14 @@ const ChartPrevisoRealizado: React.FC<ChartPrevisoRealizadoProps> = ({ dados }) 
                 name="realizado"
                 radius={[0, 4, 4, 0]}
                 barSize={16}
+              />
+              <Legend 
+                formatter={(value) => {
+                  if (value === 'previsto') return 'Orçamento Previsto';
+                  if (value === 'realizado') return 'Valor Realizado';
+                  return value;
+                }}
+                wrapperStyle={{ paddingTop: 10 }}
               />
             </BarChart>
           </ResponsiveContainer>

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 
 interface ChartPedidosPorSetorProps {
   dados: {
@@ -20,8 +20,6 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
     }))
     .sort((a, b) => b.quantidade - a.quantidade); // Sort by quantity descending
 
-  const cardTitle = 'DFDs por Secretária';
-
   // Colors for bars - different shades of blue
   const colors = [
     '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe',
@@ -30,11 +28,11 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
   ];
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-2 border-b">
+        <CardTitle className="text-lg font-semibold">DFDs por Secretária</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
@@ -43,7 +41,7 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
               margin={{
                 top: 20,
                 right: 30,
-                left: 150, // Increased left margin for department names
+                left: 180, // Increased left margin for department names
                 bottom: 5,
               }}
             >
@@ -59,13 +57,12 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                width={140} // Increased width for longer department names
+                width={170} // Increased width for longer department names
                 tick={{ 
                   fontSize: 12, 
                   fill: '#333',
-                  width: 140,
+                  width: 160,
                   textAnchor: 'end', // Align text to the right side of the available space
-                  lineHeight: 16,
                 }}
                 interval={0} // Force show all labels
               />
@@ -73,6 +70,7 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
                 content={
                   <ChartTooltipContent 
                     labelKey="name"
+                    formatter={(value: any) => [`${value} DFDs`, null]}
                   />
                 }
                 cursor={{fill: 'rgba(0, 0, 0, 0.05)'}}

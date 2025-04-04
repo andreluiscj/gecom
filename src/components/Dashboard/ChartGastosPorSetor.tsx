@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from '@/components/ui/chart';
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
@@ -31,24 +31,22 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
     '#14b8a6', '#a855f7', '#d946ef', '#84cc16', '#eab308'
   ];
 
-  const cardTitle = 'Gastos por Secretária';
-
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-2 border-b">
+        <CardTitle className="text-lg font-semibold">Gastos por Secretária</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 0, right: 0, bottom: 60, left: 0 }}>
+            <PieChart margin={{ top: 10, right: 10, bottom: 70, left: 10 }}>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="40%"
                 labelLine={false}
-                outerRadius={100} // Reduced outer radius to fit better in container
-                innerRadius={50}
+                outerRadius={90} 
+                innerRadius={40}
                 fill="#8884d8"
                 dataKey="value"
                 paddingAngle={2}
@@ -66,8 +64,12 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
                     formatter={(value: any, name: string, props: any) => {
                       const item = props.payload;
                       return [
-                        formatCurrency(value),
-                        `${item.name}: ${item.percentual}% do total`
+                        <div key="tooltip-value" className="flex flex-col gap-1">
+                          <span className="font-medium">{item.name}</span>
+                          <span>{formatCurrency(value)}</span>
+                          <span className="text-xs text-muted-foreground">{item.percentual}% do total</span>
+                        </div>,
+                        null
                       ];
                     }}
                   />
@@ -75,11 +77,11 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
               />
               <ChartLegend 
                 content={
-                  <div className="flex flex-wrap justify-center mt-24 gap-x-4 gap-y-2 px-4 max-h-36 overflow-y-auto">
+                  <div className="flex flex-wrap justify-center mt-20 gap-x-4 gap-y-2 px-4 max-h-36 overflow-y-auto">
                     {chartData.map((entry, index) => (
                       <div key={index} className="flex items-center">
                         <div 
-                          className="w-3 h-3 mr-1" 
+                          className="w-3 h-3 mr-1 rounded-sm" 
                           style={{ backgroundColor: COLORS[index % COLORS.length] }}
                         />
                         <span className="text-xs">{entry.name}</span>
