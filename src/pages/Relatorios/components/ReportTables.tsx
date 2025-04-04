@@ -51,7 +51,7 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                           R$ {(valor as number).toLocaleString('pt-BR')}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          {((valor as number / dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto]) * 100).toFixed(2)}%
+                          {(((valor as number) / dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto]) * 100).toFixed(2)}%
                         </td>
                       </tr>
                     ))}
@@ -68,7 +68,7 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                         R$ {dadosDashboard.gastosTotais.toLocaleString('pt-BR')}
                       </th>
                       <th className="px-4 py-2 text-right text-sm font-medium">
-                        {(dadosDashboard.gastosTotais / Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0) * 100).toFixed(2)}%
+                        {((dadosDashboard.gastosTotais / (Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0) as number)) * 100).toFixed(2)}%
                       </th>
                     </tr>
                   </tfoot>
