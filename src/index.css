@@ -47,7 +47,7 @@
     --sidebar-ring: 221 83% 53%;
   }
 
-  .dark {
+  .dark-theme {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -60,7 +60,8 @@
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    /* Changed from yellow to dark blue */
+    --secondary: 221 70% 20%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
@@ -144,6 +145,17 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-semibold tracking-tight;
+  }
+  
+  /* Light theme and dark theme variables */
+  .light-theme {
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+  }
+  
+  .dark-theme {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
   }
 }
 
@@ -273,4 +285,17 @@
   --chart-educacao: 0, 255, 0; /* bright green for educacao */
   --chart-administrativo: 255, 255, 0; /* yellow for administrativo */
   --chart-transporte: 0, 0, 255; /* blue for transporte */
+}
+
+/* Theme toggle styles */
+.theme-toggle-button {
+  @apply flex items-center justify-center rounded-full w-10 h-10 transition-colors;
+}
+
+.dark-theme .theme-toggle-button {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+.light-theme .theme-toggle-button {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
 }
