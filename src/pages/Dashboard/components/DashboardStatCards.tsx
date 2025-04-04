@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowDown, ArrowUp, ShoppingCart, Wallet, CheckCircle, TrendingUp, LucideIcon } from 'lucide-react';
+import { ArrowDown, ArrowUp, ShoppingCart, Wallet, Receipt, Building, CheckCircle, TrendingUp, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CardData {
@@ -9,7 +9,7 @@ interface CardData {
   valor: string | number;
   percentualMudanca: number;
   icon: string;
-  cor: string;
+  classeCor: string;
 }
 
 interface DashboardStatCardsProps {
@@ -24,6 +24,10 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({ cartoes }) => {
         return <ShoppingCart className="h-5 w-5 text-white" />;
       case 'Wallet':
         return <Wallet className="h-5 w-5 text-white" />;
+      case 'Receipt':
+        return <Receipt className="h-5 w-5 text-white" />;
+      case 'Building':
+        return <Building className="h-5 w-5 text-white" />;
       case 'CheckCircle':
         return <CheckCircle className="h-5 w-5 text-white" />;
       case 'TrendingUp':
@@ -42,7 +46,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({ cartoes }) => {
               <div
                 className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-lg shadow-sm',
-                  card.cor
+                  card.classeCor
                 )}
               >
                 {renderIcon(card.icon)}

@@ -118,6 +118,43 @@ export function obterDadosDashboard() {
       { nome: "Educação", valor: 325000.00, cor: "#3b82f6" },
       { nome: "Administrativo", valor: 290000.00, cor: "#8b5cf6" },
       { nome: "Transporte", valor: 280678.90, cor: "#f59e0b" }
-    ]
+    ],
+    
+    // Add the missing properties that are referenced in the components
+    orcamentoPrevisto: {
+      'Saúde': 500000.00,
+      'Educação': 400000.00,
+      'Administrativo': 300000.00,
+      'Transporte': 300000.00,
+      'Obras': 250000.00,
+      'Segurança Pública': 200000.00,
+      'Assistência Social': 180000.00,
+      'Meio Ambiente': 150000.00,
+      'Fazenda': 120000.00,
+      'Turismo': 100000.00,
+      'Cultura': 90000.00,
+      'Esportes e Lazer': 80000.00,
+      'Planejamento': 70000.00,
+      'Comunicação': 60000.00,
+      'Ciência e Tecnologia': 50000.00
+    },
+    
+    gastosPorSetor: {
+      'Saúde': 450000.00,
+      'Educação': 325000.00,
+      'Administrativo': 290000.00,
+      'Transporte': 280678.90,
+      'Obras': 200000.00,
+      'Segurança Pública': 150000.00,
+      'Assistência Social': 120000.00,
+      'Meio Ambiente': 100000.00,
+      'Fazenda': 90000.00,
+      'Turismo': 70000.00,
+      'Cultura': 60000.00,
+      'Esportes e Lazer': 50000.00,
+      'Planejamento': 40000.00,
+      'Comunicação': 30000.00,
+      'Ciência e Tecnologia': 25000.00
+    }
   };
 }

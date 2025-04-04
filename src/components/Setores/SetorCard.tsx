@@ -26,7 +26,7 @@ const SetorCard: React.FC<SetorCardProps> = ({
       <CardHeader>
         <div className="flex items-center space-x-2">
           <div className={cn("p-2 rounded-md", colorClass)}>
-            {React.cloneElement(icone as React.ReactElement, { className: "h-5 w-5 text-white" })}
+            {icone}
           </div>
           <CardTitle>{titulo}</CardTitle>
         </div>
