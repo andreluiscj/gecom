@@ -13,6 +13,7 @@ import DetalheSetor from "./pages/Setores/DetalheSetor";
 import TarefasSelecao from "./pages/Tarefas/TarefasSelecao";
 import TarefasKanban from "./pages/Tarefas/TarefasKanban";
 import MunicipioSelection from "./pages/Admin/MunicipioSelection";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import Login from "./pages/Login";
 import { useEffect } from "react";
 
@@ -35,7 +36,7 @@ const App = () => {
     const path = window.location.pathname;
     if (path === '/' || path === '/index') {
       if (localStorage.getItem('user-authenticated') === 'true') {
-        window.location.href = '/admin';
+        window.location.href = '/dashboard';
       } else {
         window.location.href = '/login';
       }
@@ -65,6 +66,7 @@ const App = () => {
                 <AppLayout />
               </ProtectedRoute>
             }>
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/pedidos" element={<ListaPedidos />} />
               <Route path="/pedidos/novo" element={<NovoPedido />} />
               <Route path="/tarefas" element={<TarefasSelecao />} />
