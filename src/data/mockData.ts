@@ -22,20 +22,18 @@ export function gerarId() {
 // Initialize todosPedidos
 const todosPedidos: PedidoCompra[] = [];
 
-// Import functions from extended-mockData modules
-import { obterPedidosFicticios } from './pedidos/mockPedidos';
-
 // Function to initialize the data - will be called when needed
 export function initializeMockData() {
-  if (todosPedidos.length === 0) {
-    const ficticios = obterPedidosFicticios();
-    todosPedidos.push(...ficticios);
-  }
+  // Reset todosPedidos array to start with a clean slate
+  todosPedidos.length = 0;
   return todosPedidos;
 }
 
 // Make sure data is initialized before first use
 initializeMockData();
+
+// Import functions from extended-mockData modules
+import { obterPedidosFicticios } from './pedidos/mockPedidos';
 
 // Re-export the function for external use
 export { obterPedidosFicticios };

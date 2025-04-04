@@ -29,24 +29,28 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
 
   // Custom colors with higher contrast for better accessibility
   const COLORS = {
-    'Saúde': 'rgb(220, 38, 38)',       // Stronger red
-    'Educação': 'rgb(16, 185, 129)',    // Stronger green
-    'Administrativo': 'rgb(245, 158, 11)', // Stronger yellow
-    'Transporte': 'rgb(249, 115, 22)'   // Stronger orange
+    'Saúde': '#ef4444',           // Red from Tailwind
+    'Educação': '#10b981',        // Green from Tailwind
+    'Administrativo': '#f59e0b',  // Yellow from Tailwind
+    'Transporte': '#f97316'       // Orange from Tailwind
   };
 
-  const cardTitle = language === 'pt' ? 'Gastos por Secretária' : 'Expenses by Department';
+  const cardTitle = language === 'pt' ? 'Gastos por Secretaria' : 'Expenses by Department';
   const totalGastos = chartData.reduce((sum, item) => sum + item.value, 0);
 
   // Custom tooltip component with improved styling
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+      const percentage = totalGastos > 0 
+        ? ((payload[0].value / totalGastos) * 100).toFixed(2) 
+        : '0.00';
+        
       return (
         <div className="bg-background border border-border p-3 rounded-md shadow-lg">
           <p className="font-semibold text-base">{payload[0].name}</p>
           <p className="text-sm mb-1">{formatCurrency(payload[0].value)}</p>
           <p className="text-xs text-muted-foreground">
-            {((payload[0].value / totalGastos) * 100).toFixed(1)}%
+            {percentage}%
           </p>
         </div>
       );
@@ -59,20 +63,27 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
     const { payload } = props;
     return (
       <ul className="flex flex-wrap justify-center mt-3 gap-4">
-        {payload.map((entry: any, index: number) => (
-          <li key={`item-${index}`} className="flex items-center gap-2">
-            <div
-              className="w-4 h-4 rounded"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-sm font-medium">{entry.value}</span>
-          </li>
-        ))}
+        {payload.map((entry: any, index: number) => {
+          // Calculate percentage with fixed 2 decimal places
+          const percentage = totalGastos > 0 
+            ? ((entry.payload.value / totalGastos) * 100).toFixed(2)
+            : '0.00';
+            
+          return (
+            <li key={`item-${index}`} className="flex items-center gap-2">
+              <div
+                className="w-4 h-4 rounded"
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="text-sm font-medium">{entry.value} ({percentage}%)</span>
+            </li>
+          );
+        })}
       </ul>
     );
   };
   
-  // Check if there is data to display
+  // Show empty state when there's no data
   if (chartData.length === 0) {
     return (
       <Card>
@@ -108,6 +119,8 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
                 stroke="var(--background)"
                 strokeWidth={2}
                 animationDuration={800}
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(2)}%`}
+                labelLine={false}
               >
                 {chartData.map((entry) => (
                   <Cell 

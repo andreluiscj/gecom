@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
 interface ChartTicketMedioProps {
@@ -26,8 +25,51 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
     valor: valor,
   }));
 
-  const cardTitle = language === 'pt' ? 'Ticket Médio por Secretária' : 'Average Ticket by Department';
-  const mediaGeral = chartData.reduce((sum, item) => sum + item.valor, 0) / chartData.length;
+  const cardTitle = language === 'pt' ? 'Ticket Médio por Secretaria' : 'Average Ticket by Department';
+  const mediaGeral = chartData.length > 0 
+    ? chartData.reduce((sum, item) => sum + item.valor, 0) / chartData.length 
+    : 0;
+
+  // Custom colors
+  const COLORS = {
+    'Saúde': '#ef4444',
+    'Educação': '#10b981',
+    'Administrativo': '#f59e0b',
+    'Transporte': '#f97316'
+  };
+
+  // Custom tooltip
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background border border-border p-3 rounded-md shadow-lg">
+          <p className="font-semibold text-base">{payload[0].payload.name}</p>
+          <p className="text-sm">
+            {language === 'pt' ? 'Valor Médio' : 'Average Value'}: {formatCurrency(payload[0].value)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Show empty state when there's no data with values
+  const hasData = chartData.some(item => item.valor > 0);
+  
+  if (!hasData) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[300px] flex flex-col items-center justify-center">
+          <p className="text-muted-foreground text-center">
+            {language === 'pt' ? 'Não há dados disponíveis' : 'No data available'}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -35,15 +77,12 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
         <CardTitle className="text-md font-semibold">{cardTitle}</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="aspect-[1.5] h-80">
+        <div className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="colorTicket" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="rgba(var(--chart-color-success), 0.8)" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="rgba(var(--chart-color-success), 0.2)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
+            <BarChart 
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+            >
               <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
               <XAxis 
                 dataKey="name" 
@@ -58,27 +97,25 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
                 width={80}
                 tick={{ fontSize: 12 }}
               />
-              <ChartTooltip 
-                content={
-                  <ChartTooltipContent 
-                    formatter={(value: any) => formatCurrency(value)}
-                  />
-                }
-              />
+              <Tooltip content={<CustomTooltip />} />
               <Legend 
                 formatter={(value: string) => language === 'pt' ? 'Valor Médio' : 'Average Value'}
               />
-              <Area 
-                type="monotone" 
+              <Bar 
                 dataKey="valor" 
-                name={language === 'pt' ? 'Valor Médio' : 'Average Value'} 
-                stroke="rgba(var(--chart-color-success), 1)" 
-                fillOpacity={1} 
-                fill="url(#colorTicket)" 
-              />
-            </AreaChart>
+                name={language === 'pt' ? 'Valor Médio' : 'Average Value'}
+                radius={[4, 4, 0, 0]} // Rounded corners on top
+              >
+                {chartData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={COLORS[entry.name as keyof typeof COLORS]} 
+                  />
+                ))}
+              </Bar>
+            </BarChart>
           </ResponsiveContainer>
-        </ChartContainer>
+        </div>
         
         <div className="mt-2 text-center">
           <p className="text-sm text-muted-foreground">

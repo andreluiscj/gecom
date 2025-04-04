@@ -8,28 +8,28 @@ const MESES_ANTERIORES = [
   new Date(), // Mês atual
 ];
 
-// Dados mock para gastos por setor nos últimos 3 meses
+// Dados zerados para gastos por setor nos últimos 3 meses
 const gastosPorSetorEMes = {
-  'Saúde': [125000, 142000, 138000],
-  'Educação': [98000, 105000, 112000],
-  'Administrativo': [78000, 74000, 82000],
-  'Transporte': [45000, 56000, 51000],
+  'Saúde': [0, 0, 0],
+  'Educação': [0, 0, 0],
+  'Administrativo': [0, 0, 0],
+  'Transporte': [0, 0, 0],
 };
 
-// Dados mock para orçamento previsto por setor
+// Dados zerados para orçamento previsto por setor
 const orcamentoPrevistoPorSetor = {
-  'Saúde': 150000,
-  'Educação': 120000,
-  'Administrativo': 90000,
-  'Transporte': 60000,
+  'Saúde': 0,
+  'Educação': 0,
+  'Administrativo': 0,
+  'Transporte': 0,
 };
 
-// Dados mock para número de pedidos por setor nos últimos 3 meses
+// Dados zerados para número de pedidos por setor nos últimos 3 meses
 const pedidosPorSetorEMes = {
-  'Saúde': [24, 28, 26],
-  'Educação': [18, 20, 22],
-  'Administrativo': [15, 14, 17],
-  'Transporte': [10, 12, 11],
+  'Saúde': [0, 0, 0],
+  'Educação': [0, 0, 0],
+  'Administrativo': [0, 0, 0],
+  'Transporte': [0, 0, 0],
 };
 
 // Função para calcular dados para o dashboard
