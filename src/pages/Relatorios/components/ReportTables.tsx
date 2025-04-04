@@ -45,10 +45,10 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                           {setor}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          R$ {dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto].toLocaleString('pt-BR')}
+                          R$ {dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto].toLocaleString()}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                          R$ {(valor as number).toLocaleString('pt-BR')}
+                          R$ {(valor as number).toLocaleString()}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
                           {((valor as number) / dadosDashboard.orcamentoPrevisto[setor as keyof typeof dadosDashboard.orcamentoPrevisto] * 100).toFixed(2)}%
@@ -62,10 +62,10 @@ const ReportTables: React.FC<ReportTablesProps> = ({ tiposRelatorio, dadosDashbo
                         {translations.total}
                       </th>
                       <th className="px-4 py-2 text-right text-sm font-medium">
-                        R$ {Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0).toLocaleString('pt-BR')}
+                        R$ {Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0).toLocaleString()}
                       </th>
                       <th className="px-4 py-2 text-right text-sm font-medium">
-                        R$ {dadosDashboard.gastosTotais.toLocaleString('pt-BR')}
+                        R$ {dadosDashboard.gastosTotais.toLocaleString()}
                       </th>
                       <th className="px-4 py-2 text-right text-sm font-medium">
                         {(dadosDashboard.gastosTotais / (Object.values(dadosDashboard.orcamentoPrevisto).reduce((a: number, b: number) => a + b, 0) as number) * 100).toFixed(2)}%
