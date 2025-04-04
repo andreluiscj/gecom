@@ -10,11 +10,11 @@ import {
 import { obterDadosDashboard } from '@/data/extended-mockData';
 import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
 import { Link } from 'react-router-dom';
-import { obterTodosPedidos } from '@/data/mockData';
+import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
 
 const ListaSetores: React.FC = () => {
   const dadosDashboard = obterDadosDashboard();
-  const todosPedidos = obterTodosPedidos();
+  const todosPedidos = obterPedidosFicticios();
 
   const setores = [
     {
@@ -139,10 +139,13 @@ const ListaSetores: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {setores.map((setor) => {
-          const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setor.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 1000000;
-          const gastosRealizados = dadosDashboard.gastosPorSetor[setor.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 450000;
-          const percentualGasto = calcularPorcentagem(gastosRealizados, orcamentoPrevisto);
           const totalDFDs = getPedidosForSetor(setor.titulo);
+          // Only show budget data if there are pedidos for this sector
+          const gastosRealizados = dadosDashboard.gastosPorSetor[setor.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 0;
+          const hasPedidos = totalDFDs > 0 && gastosRealizados > 0;
+          
+          const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setor.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 0;
+          const percentualGasto = calcularPorcentagem(gastosRealizados, orcamentoPrevisto);
           
           return (
             <Link to={setor.href} key={setor.id} className="block">
@@ -161,23 +164,29 @@ const ListaSetores: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="font-medium">Orçamento Utilizado</span>
-                      <span className="text-sm text-muted-foreground">
-                        {formatCurrency(gastosRealizados)} de {formatCurrency(orcamentoPrevisto)}
-                      </span>
+                  {hasPedidos ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-medium">Orçamento Utilizado</span>
+                        <span className="text-sm text-muted-foreground">
+                          {formatCurrency(gastosRealizados)} de {formatCurrency(orcamentoPrevisto)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-muted-foreground">Progresso</span>
+                        <span className="font-medium">{percentualGasto.toFixed(1)}%</span>
+                      </div>
+                      <Progress 
+                        value={percentualGasto > 100 ? 100 : percentualGasto} 
+                        className="h-2" 
+                        color={percentualGasto > 90 ? "bg-red-500" : percentualGasto > 70 ? "bg-yellow-500" : ""}
+                      />
                     </div>
-                    <div className="flex justify-between items-center text-xs mb-1">
-                      <span className="text-muted-foreground">Progresso</span>
-                      <span className="font-medium">{percentualGasto.toFixed(1)}%</span>
+                  ) : (
+                    <div className="text-sm text-muted-foreground pt-2">
+                      Nenhum pedido registrado para esta secretária
                     </div>
-                    <Progress 
-                      value={percentualGasto > 100 ? 100 : percentualGasto} 
-                      className="h-2" 
-                      color={percentualGasto > 90 ? "bg-red-500" : percentualGasto > 70 ? "bg-yellow-500" : ""}
-                    />
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </Link>

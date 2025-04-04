@@ -3,22 +3,21 @@ import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
 import { Setor } from '@/types';
 import { obterDadosDashboard } from '@/data/extended-mockData';
-import { obterPedidosPorSetor, obterTodosPedidos } from '@/data/mockData';
+import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
 import { 
   HeartPulse, BookOpen, Building2, Bus, Shield, Heart,
   Leaf, Coins, Briefcase, Music, Globe, Award, PieChart,
-  Radio, MapPin, LucideIcon
+  Radio, MapPin
 } from 'lucide-react';
 
 const DetalheSetor: React.FC = () => {
   const { setor } = useParams<{ setor: string }>();
   const dadosDashboard = obterDadosDashboard();
-  const todosPedidos = obterTodosPedidos();
+  const todosPedidos = obterPedidosFicticios();
   
   interface SetorDefinition {
     id: string;
@@ -130,8 +129,9 @@ const DetalheSetor: React.FC = () => {
   const pedidos = todosPedidos.filter(p => p.setor === setorConfig.titulo);
   const totalPedidos = pedidos.length;
 
-  const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setorConfig.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 1000000;
-  const totalGasto = dadosDashboard.gastosPorSetor[setorConfig.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 450000;
+  // Only calculate budget data if there are pedidos for this setor
+  const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setorConfig.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 0;
+  const totalGasto = dadosDashboard.gastosPorSetor[setorConfig.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 0;
   const percentualGasto = calcularPorcentagem(totalGasto, orcamentoPrevisto);
 
   return (
@@ -148,34 +148,42 @@ const DetalheSetor: React.FC = () => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Orçamento Utilizado</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">
-              {formatCurrency(totalGasto)} de {formatCurrency(orcamentoPrevisto)}
-            </span>
-            <span className="text-sm font-medium">{percentualGasto.toFixed(1)}%</span>
-          </div>
-          <Progress 
-            value={percentualGasto > 100 ? 100 : percentualGasto} 
-            className="h-2" 
-            color={percentualGasto > 90 ? "bg-red-500" : percentualGasto > 70 ? "bg-yellow-500" : ""}
-          />
-        </CardContent>
-      </Card>
+      {totalPedidos > 0 && totalGasto > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Orçamento Utilizado</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">
+                {formatCurrency(totalGasto)} de {formatCurrency(orcamentoPrevisto)}
+              </span>
+              <span className="text-sm font-medium">{percentualGasto.toFixed(1)}%</span>
+            </div>
+            <Progress 
+              value={percentualGasto > 100 ? 100 : percentualGasto} 
+              className="h-2" 
+              color={percentualGasto > 90 ? "bg-red-500" : percentualGasto > 70 ? "bg-yellow-500" : ""}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
           <CardTitle>DFDs da Secretária de {setorConfig.titulo}</CardTitle>
         </CardHeader>
         <CardContent>
-          <PedidosTable 
-            pedidos={pedidos} 
-            titulo={`Documentos de Formalização de Demanda - ${totalPedidos} ${totalPedidos === 1 ? 'pedido' : 'pedidos'}`} 
-          />
+          {totalPedidos > 0 ? (
+            <PedidosTable 
+              pedidos={pedidos} 
+              titulo={`Documentos de Formalização de Demanda - ${totalPedidos} ${totalPedidos === 1 ? 'pedido' : 'pedidos'}`} 
+            />
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum pedido de compra registrado para esta secretária
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

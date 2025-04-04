@@ -26,6 +26,11 @@ const todosPedidos: PedidoCompra[] = [];
 export function initializeMockData() {
   // Reset todosPedidos array to start with a clean slate
   todosPedidos.length = 0;
+  
+  // Load fictional orders when initializing
+  const ficticios = obterPedidosFicticios();
+  todosPedidos.push(...ficticios);
+  
   return todosPedidos;
 }
 
@@ -56,7 +61,7 @@ export function removerPedido(id: string, setor?: Setor) {
 
 // Função para obter todos os pedidos
 export function obterPedidos(): PedidoCompra[] {
-  return todosPedidos;
+  return todosPedidos.length > 0 ? todosPedidos : obterPedidosFicticios();
 }
 
 // Função para obter todos os pedidos (alias para compatibilidade)
@@ -64,7 +69,8 @@ export const obterTodosPedidos = obterPedidos;
 
 // Função para obter pedidos por setor
 export function obterPedidosPorSetor(setor: Setor): PedidoCompra[] {
-  return todosPedidos.filter(pedido => pedido.setor === setor);
+  const pedidos = obterTodosPedidos();
+  return pedidos.filter(pedido => pedido.setor === setor);
 }
 
 // Função auxiliar para formatar data

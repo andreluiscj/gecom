@@ -4,16 +4,15 @@ import { obterDadosDashboard } from '@/data/extended-mockData';
 import { formatDate, formatCurrency, formatPercentage } from '@/utils/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 import DashboardStatCards from './components/DashboardStatCards';
-import { obterTodosPedidos } from '@/data/mockData';
+import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
 
 const Dashboard: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState('resumo');
   const dashboardData = obterDadosDashboard();
-  const todosPedidos = obterTodosPedidos();
+  const todosPedidos = obterPedidosFicticios();
   
   // Calcular dados de resumo de forma consistente com outras telas
   const { resumoFinanceiro } = dashboardData;
@@ -176,15 +175,15 @@ const Dashboard: React.FC = () => {
                       <dl className="space-y-2">
                         <div className="flex justify-between">
                           <dt className="text-sm">Saúde</dt>
-                          <dd className="text-sm font-medium">{formatCurrency(resumoFinanceiro.orcamentoUtilizado * 0.35)}</dd>
+                          <dd className="text-sm font-medium">{formatCurrency(dashboardData.gastosPorSetor['Saúde'] || 0)}</dd>
                         </div>
                         <div className="flex justify-between">
                           <dt className="text-sm">Educação</dt>
-                          <dd className="text-sm font-medium">{formatCurrency(resumoFinanceiro.orcamentoUtilizado * 0.25)}</dd>
+                          <dd className="text-sm font-medium">{formatCurrency(dashboardData.gastosPorSetor['Educação'] || 0)}</dd>
                         </div>
                         <div className="flex justify-between">
                           <dt className="text-sm">Infraestrutura</dt>
-                          <dd className="text-sm font-medium">{formatCurrency(resumoFinanceiro.orcamentoUtilizado * 0.15)}</dd>
+                          <dd className="text-sm font-medium">{formatCurrency(dashboardData.gastosPorSetor['Obras'] || 0)}</dd>
                         </div>
                       </dl>
                     </CardContent>
