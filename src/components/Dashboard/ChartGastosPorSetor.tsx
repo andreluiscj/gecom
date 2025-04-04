@@ -41,14 +41,14 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
       <CardContent>
         <ChartContainer config={{}} className="aspect-[1.5] h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart margin={{ top: 0, right: 0, bottom: 60, left: 0 }}>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="40%"
                 labelLine={false}
-                outerRadius={120}
-                innerRadius={60}
+                outerRadius={100} // Reduced outer radius to fit better in container
+                innerRadius={50}
                 fill="#8884d8"
                 dataKey="value"
                 paddingAngle={2}
@@ -75,7 +75,7 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
               />
               <ChartLegend 
                 content={
-                  <div className="flex flex-wrap justify-center mt-32 gap-x-4 gap-y-2 px-4">
+                  <div className="flex flex-wrap justify-center mt-24 gap-x-4 gap-y-2 px-4 max-h-36 overflow-y-auto">
                     {chartData.map((entry, index) => (
                       <div key={index} className="flex items-center">
                         <div 

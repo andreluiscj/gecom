@@ -43,7 +43,7 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
               margin={{
                 top: 20,
                 right: 30,
-                left: 140, // Increased left margin for department names
+                left: 150, // Increased left margin for department names
                 bottom: 5,
               }}
             >
@@ -59,12 +59,13 @@ const ChartPedidosPorSetor: React.FC<ChartPedidosPorSetorProps> = ({ dados }) =>
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                width={130} // Increased width for longer department names
+                width={140} // Increased width for longer department names
                 tick={{ 
                   fontSize: 12, 
                   fill: '#333',
-                  width: 120,
+                  width: 140,
                   textAnchor: 'end', // Align text to the right side of the available space
+                  lineHeight: 16,
                 }}
                 interval={0} // Force show all labels
               />

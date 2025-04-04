@@ -45,17 +45,18 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
     );
   }
 
-  // Get gradients for area fill with blue colors
+  // Get gradients for area fill with enhanced blue colors
   const getGradient = () => {
     return (
       <>
         <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.9}/>
-          <stop offset="60%" stopColor="#3B82F6" stopOpacity={0.6}/>
-          <stop offset="95%" stopColor="#93C5FD" stopOpacity={0.2}/>
+          <stop offset="5%" stopColor="#2563eb" stopOpacity={0.95}/>
+          <stop offset="30%" stopColor="#3b82f6" stopOpacity={0.8}/>
+          <stop offset="60%" stopColor="#60a5fa" stopOpacity={0.6}/>
+          <stop offset="95%" stopColor="#93c5fd" stopOpacity={0.3}/>
         </linearGradient>
         <filter id="shadow" height="200%">
-          <feDropShadow dx="0" dy="3" stdDeviation="6" floodColor="#3B82F6" floodOpacity="0.1"/>
+          <feDropShadow dx="0" dy="3" stdDeviation="6" floodColor="#3B82F6" floodOpacity="0.2"/>
         </filter>
       </>
     );
@@ -96,8 +97,11 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
                     formatter={(value: any, name: string, props: any) => {
                       const item = props.payload;
                       return [
-                        formatCurrency(value),
-                        `${item.name}`
+                        <div key="tooltip-value" className="flex flex-col">
+                          <span className="font-medium">{item.name}</span>
+                          <span>Ticket Médio: {formatCurrency(value)}</span>
+                        </div>,
+                        null
                       ];
                     }}
                   />
@@ -108,7 +112,7 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
                 type="monotone" 
                 dataKey="valor" 
                 name="Valor Médio"
-                stroke="#0EA5E9" 
+                stroke="#2563eb" 
                 strokeWidth={2}
                 fillOpacity={1} 
                 fill="url(#colorValor)"
