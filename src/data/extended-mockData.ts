@@ -1,5 +1,3 @@
 
-// Re-exporting functions from their respective modules
-export { calcularDadosDashboard } from './dashboard/dashboardCalculator';
-export { obterEstatisticasCartoes } from './dashboard/statisticsCalculator';
+// Re-exporting just the function for the mock orders
 export { obterPedidosFicticios } from './pedidos/mockPedidos';

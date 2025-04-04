@@ -1,7 +1,7 @@
 
 import { addDays, addHours, format, subMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
-import { DadosDashboard, PedidoCompra, Item, Setor } from '@/types';
+import { PedidoCompra, Item, Setor } from '@/types';
 
 // Array com os fundos monetários disponíveis
 export const fundosMonetarios = [
@@ -32,7 +32,7 @@ export function initializeMockData() {
 // Make sure data is initialized before first use
 initializeMockData();
 
-// Import functions from extended-mockData modules
+// Import functions from pedidos module
 import { obterPedidosFicticios } from './pedidos/mockPedidos';
 
 // Re-export the function for external use
@@ -54,9 +54,6 @@ export function removerPedido(id: string, setor?: Setor) {
   return false;
 }
 
-// Função para calcular dados para o dashboard - importada de extended-mockData.ts
-export { calcularDadosDashboard } from './dashboard/dashboardCalculator';
-
 // Função para obter todos os pedidos
 export function obterPedidos(): PedidoCompra[] {
   return todosPedidos;
@@ -74,9 +71,6 @@ export function obterPedidosPorSetor(setor: Setor): PedidoCompra[] {
 export function formatarData(data: Date): string {
   return format(data, 'dd/MM/yyyy');
 }
-
-// Função para obter estatísticas dos cartões - importada de extended-mockData.ts
-export { obterEstatisticasCartoes } from './dashboard/statisticsCalculator';
 
 // Função para filtrar pedidos com base em critérios
 export function filtrarPedidos(pedidos: PedidoCompra[], filtros: any) {

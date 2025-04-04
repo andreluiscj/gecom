@@ -6,10 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AppLayout from "./components/Layout/AppLayout";
 import NotFound from "./pages/NotFound";
-import Dashboard from "./pages/Dashboard";
 import ListaPedidos from "./pages/Pedidos/ListaPedidos";
 import NovoPedido from "./pages/Pedidos/NovoPedido";
-import Relatorios from "./pages/Relatorios/Relatorios";
 import ListaSetores from "./pages/Setores/ListaSetores";
 import DetalheSetor from "./pages/Setores/DetalheSetor";
 import TarefasSelecao from "./pages/Tarefas/TarefasSelecao";
@@ -67,10 +65,8 @@ const App = () => {
                 <AppLayout />
               </ProtectedRoute>
             }>
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/pedidos" element={<ListaPedidos />} />
               <Route path="/pedidos/novo" element={<NovoPedido />} />
-              <Route path="/relatorios" element={<Relatorios />} />
               <Route path="/tarefas" element={<TarefasSelecao />} />
               <Route path="/tarefas/:secretaria" element={<TarefasKanban />} />
               <Route path="/setores" element={<ListaSetores />} />
