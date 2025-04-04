@@ -2,13 +2,19 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { HeartPulse, BookOpen, Building2, Bus } from 'lucide-react';
-import { calcularDadosDashboard } from '@/data/extended-mockData';
+import { 
+  HeartPulse, BookOpen, Building2, Bus, Shield, Heart, 
+  Leaf, Coins, Briefcase, Music, Globe, Award, PieChart, 
+  Radio, MapPin 
+} from 'lucide-react';
+import { obterDadosDashboard } from '@/data/extended-mockData';
 import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
 import { Link } from 'react-router-dom';
+import { obterTodosPedidos } from '@/data/mockData';
 
 const ListaSetores: React.FC = () => {
-  const dadosDashboard = calcularDadosDashboard();
+  const dadosDashboard = obterDadosDashboard();
+  const todosPedidos = obterTodosPedidos();
 
   const setores = [
     {
@@ -39,7 +45,88 @@ const ListaSetores: React.FC = () => {
       colorClass: 'bg-transporte-DEFAULT',
       href: '/setores/transporte',
     },
+    {
+      id: 'obras',
+      titulo: 'Obras',
+      icone: <Briefcase className="h-5 w-5 text-white" />,
+      colorClass: 'bg-blue-500',
+      href: '/setores/obras',
+    },
+    {
+      id: 'seguranca',
+      titulo: 'Segurança Pública',
+      icone: <Shield className="h-5 w-5 text-white" />,
+      colorClass: 'bg-red-500',
+      href: '/setores/seguranca',
+    },
+    {
+      id: 'social',
+      titulo: 'Assistência Social',
+      icone: <Heart className="h-5 w-5 text-white" />,
+      colorClass: 'bg-purple-500',
+      href: '/setores/social',
+    },
+    {
+      id: 'ambiente',
+      titulo: 'Meio Ambiente',
+      icone: <Leaf className="h-5 w-5 text-white" />,
+      colorClass: 'bg-green-500',
+      href: '/setores/ambiente',
+    },
+    {
+      id: 'fazenda',
+      titulo: 'Fazenda',
+      icone: <Coins className="h-5 w-5 text-white" />,
+      colorClass: 'bg-yellow-600',
+      href: '/setores/fazenda',
+    },
+    {
+      id: 'turismo',
+      titulo: 'Turismo',
+      icone: <Globe className="h-5 w-5 text-white" />,
+      colorClass: 'bg-cyan-500',
+      href: '/setores/turismo',
+    },
+    {
+      id: 'cultura',
+      titulo: 'Cultura',
+      icone: <Music className="h-5 w-5 text-white" />,
+      colorClass: 'bg-pink-500',
+      href: '/setores/cultura',
+    },
+    {
+      id: 'esportes',
+      titulo: 'Esportes e Lazer',
+      icone: <Award className="h-5 w-5 text-white" />,
+      colorClass: 'bg-orange-500',
+      href: '/setores/esportes',
+    },
+    {
+      id: 'planejamento',
+      titulo: 'Planejamento',
+      icone: <PieChart className="h-5 w-5 text-white" />,
+      colorClass: 'bg-indigo-500',
+      href: '/setores/planejamento',
+    },
+    {
+      id: 'comunicacao',
+      titulo: 'Comunicação',
+      icone: <Radio className="h-5 w-5 text-white" />,
+      colorClass: 'bg-blue-400',
+      href: '/setores/comunicacao',
+    },
+    {
+      id: 'ciencia',
+      titulo: 'Ciência e Tecnologia',
+      icone: <MapPin className="h-5 w-5 text-white" />,
+      colorClass: 'bg-teal-500',
+      href: '/setores/ciencia',
+    },
   ];
+
+  const getPedidosForSetor = (titulo: string) => {
+    return todosPedidos.filter(pedido => pedido.setor === titulo).length;
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -52,10 +139,10 @@ const ListaSetores: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {setores.map((setor) => {
-          const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setor.titulo as keyof typeof dadosDashboard.orcamentoPrevisto];
-          const gastosRealizados = dadosDashboard.gastosPorSetor[setor.titulo as keyof typeof dadosDashboard.gastosPorSetor];
+          const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setor.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 1000000;
+          const gastosRealizados = dadosDashboard.gastosPorSetor[setor.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 450000;
           const percentualGasto = calcularPorcentagem(gastosRealizados, orcamentoPrevisto);
-          const totalDFDs = dadosDashboard.pedidosPorSetor[setor.titulo as keyof typeof dadosDashboard.pedidosPorSetor];
+          const totalDFDs = getPedidosForSetor(setor.titulo);
           
           return (
             <Link to={setor.href} key={setor.id} className="block">

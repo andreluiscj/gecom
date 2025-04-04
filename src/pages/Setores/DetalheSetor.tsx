@@ -6,79 +6,142 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
 import { Setor } from '@/types';
-import { calcularDadosDashboard } from '@/data/extended-mockData';
-import { obterPedidosPorSetor } from '@/data/mockData';
+import { obterDadosDashboard } from '@/data/extended-mockData';
+import { obterPedidosPorSetor, obterTodosPedidos } from '@/data/mockData';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
-import { HeartPulse, BookOpen, Building2, Bus } from 'lucide-react';
-import StatCard from '@/components/Dashboard/StatCard';
+import { 
+  HeartPulse, BookOpen, Building2, Bus, Shield, Heart,
+  Leaf, Coins, Briefcase, Music, Globe, Award, PieChart,
+  Radio, MapPin, LucideIcon
+} from 'lucide-react';
 
 const DetalheSetor: React.FC = () => {
   const { setor } = useParams<{ setor: string }>();
-  const dadosDashboard = calcularDadosDashboard();
+  const dadosDashboard = obterDadosDashboard();
+  const todosPedidos = obterTodosPedidos();
   
-  const setorMapeado = useMemo<Setor | undefined>(() => {
-    switch (setor) {
-      case 'saude':
-        return 'Saúde';
-      case 'educacao':
-        return 'Educação';
-      case 'administrativo':
-        return 'Administrativo';
-      case 'transporte':
-        return 'Transporte';
-      default:
-        return undefined;
-    }
-  }, [setor]);
+  interface SetorDefinition {
+    id: string;
+    titulo: Setor;
+    icone: React.ReactNode;
+    colorClass: string;
+  }
 
-  if (!setorMapeado) {
+  const SETORES_CONFIG: SetorDefinition[] = [
+    {
+      id: 'saude',
+      titulo: 'Saúde',
+      icone: <HeartPulse className="h-6 w-6 text-white" />,
+      colorClass: 'bg-saude-DEFAULT',
+    },
+    {
+      id: 'educacao',
+      titulo: 'Educação',
+      icone: <BookOpen className="h-6 w-6 text-white" />,
+      colorClass: 'bg-educacao-DEFAULT',
+    },
+    {
+      id: 'administrativo',
+      titulo: 'Administrativo',
+      icone: <Building2 className="h-6 w-6 text-white" />,
+      colorClass: 'bg-administrativo-DEFAULT',
+    },
+    {
+      id: 'transporte',
+      titulo: 'Transporte',
+      icone: <Bus className="h-6 w-6 text-white" />,
+      colorClass: 'bg-transporte-DEFAULT',
+    },
+    {
+      id: 'obras',
+      titulo: 'Obras',
+      icone: <Briefcase className="h-6 w-6 text-white" />,
+      colorClass: 'bg-blue-500',
+    },
+    {
+      id: 'seguranca',
+      titulo: 'Segurança Pública',
+      icone: <Shield className="h-6 w-6 text-white" />,
+      colorClass: 'bg-red-500',
+    },
+    {
+      id: 'social',
+      titulo: 'Assistência Social',
+      icone: <Heart className="h-6 w-6 text-white" />,
+      colorClass: 'bg-purple-500',
+    },
+    {
+      id: 'ambiente',
+      titulo: 'Meio Ambiente',
+      icone: <Leaf className="h-6 w-6 text-white" />,
+      colorClass: 'bg-green-500',
+    },
+    {
+      id: 'fazenda',
+      titulo: 'Fazenda',
+      icone: <Coins className="h-6 w-6 text-white" />,
+      colorClass: 'bg-yellow-600',
+    },
+    {
+      id: 'turismo',
+      titulo: 'Turismo',
+      icone: <Globe className="h-6 w-6 text-white" />,
+      colorClass: 'bg-cyan-500',
+    },
+    {
+      id: 'cultura',
+      titulo: 'Cultura',
+      icone: <Music className="h-6 w-6 text-white" />,
+      colorClass: 'bg-pink-500',
+    },
+    {
+      id: 'esportes',
+      titulo: 'Esportes e Lazer',
+      icone: <Award className="h-6 w-6 text-white" />,
+      colorClass: 'bg-orange-500',
+    },
+    {
+      id: 'planejamento',
+      titulo: 'Planejamento',
+      icone: <PieChart className="h-6 w-6 text-white" />,
+      colorClass: 'bg-indigo-500',
+    },
+    {
+      id: 'comunicacao',
+      titulo: 'Comunicação',
+      icone: <Radio className="h-6 w-6 text-white" />,
+      colorClass: 'bg-blue-400',
+    },
+    {
+      id: 'ciencia',
+      titulo: 'Ciência e Tecnologia',
+      icone: <MapPin className="h-6 w-6 text-white" />,
+      colorClass: 'bg-teal-500',
+    },
+  ];
+  
+  const setorConfig = useMemo(() => SETORES_CONFIG.find(s => s.id === setor), [setor]);
+
+  if (!setorConfig) {
     return <div>Setor não encontrado</div>;
   }
 
-  const pedidos = obterPedidosPorSetor(setorMapeado);
+  // Get actual pedidos for this setor from the system
+  const pedidos = todosPedidos.filter(p => p.setor === setorConfig.titulo);
   const totalPedidos = pedidos.length;
-  const totalGasto = dadosDashboard.gastosPorSetor[setorMapeado];
-  const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setorMapeado];
+
+  const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setorConfig.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 1000000;
+  const totalGasto = dadosDashboard.gastosPorSetor[setorConfig.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 450000;
   const percentualGasto = calcularPorcentagem(totalGasto, orcamentoPrevisto);
-
-  const getSetorIcone = () => {
-    switch (setorMapeado) {
-      case 'Saúde':
-        return <HeartPulse className="h-6 w-6 text-white" />;
-      case 'Educação':
-        return <BookOpen className="h-6 w-6 text-white" />;
-      case 'Administrativo':
-        return <Building2 className="h-6 w-6 text-white" />;
-      case 'Transporte':
-        return <Bus className="h-6 w-6 text-white" />;
-      default:
-        return null;
-    }
-  };
-
-  const getSetorCor = () => {
-    switch (setorMapeado) {
-      case 'Saúde':
-        return 'bg-saude-DEFAULT';
-      case 'Educação':
-        return 'bg-educacao-DEFAULT';
-      case 'Administrativo':
-        return 'bg-administrativo-DEFAULT';
-      case 'Transporte':
-        return 'bg-transporte-DEFAULT';
-      default:
-        return 'bg-blue-500';
-    }
-  };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center space-x-3">
-        <div className={`p-3 rounded-full ${getSetorCor()}`}>
-          {getSetorIcone()}
+        <div className={`p-3 rounded-full ${setorConfig.colorClass}`}>
+          {setorConfig.icone}
         </div>
         <div>
-          <h1 className="text-3xl font-bold mb-1">Secretária de {setorMapeado}</h1>
+          <h1 className="text-3xl font-bold mb-1">Secretária de {setorConfig.titulo}</h1>
           <p className="text-muted-foreground">
             Visão geral dos recursos e demandas da secretária
           </p>
@@ -106,12 +169,12 @@ const DetalheSetor: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>DFDs da Secretária de {setorMapeado}</CardTitle>
+          <CardTitle>DFDs da Secretária de {setorConfig.titulo}</CardTitle>
         </CardHeader>
         <CardContent>
           <PedidosTable 
             pedidos={pedidos} 
-            titulo={`Documentos de Formalização de Demanda`} 
+            titulo={`Documentos de Formalização de Demanda - ${totalPedidos} ${totalPedidos === 1 ? 'pedido' : 'pedidos'}`} 
           />
         </CardContent>
       </Card>

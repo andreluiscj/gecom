@@ -11,7 +11,6 @@ interface SetorCardProps {
   descricao: string;
   icone: React.ReactNode;
   colorClass: string;
-  bgClass: string;
   href: string;
 }
 
@@ -20,14 +19,15 @@ const SetorCard: React.FC<SetorCardProps> = ({
   descricao,
   icone,
   colorClass,
-  bgClass,
   href,
 }) => {
   return (
-    <Card className={cn("transition-all hover:shadow-lg hover:-translate-y-1", bgClass)}>
+    <Card className="transition-all hover:shadow-lg hover:-translate-y-1">
       <CardHeader>
         <div className="flex items-center space-x-2">
-          <div className={cn("p-2 rounded-md", colorClass)}>{icone}</div>
+          <div className={cn("p-2 rounded-md", colorClass)}>
+            {React.cloneElement(icone as React.ReactElement, { className: "h-5 w-5 text-white" })}
+          </div>
           <CardTitle>{titulo}</CardTitle>
         </div>
       </CardHeader>

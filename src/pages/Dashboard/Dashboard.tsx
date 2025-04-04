@@ -1,22 +1,28 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { obterDadosDashboard } from '@/data/extended-mockData';
 import { formatDate, formatCurrency, formatPercentage } from '@/utils/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 import DashboardStatCards from './components/DashboardStatCards';
+import { obterTodosPedidos } from '@/data/mockData';
 
 const Dashboard: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState('resumo');
   const dashboardData = obterDadosDashboard();
+  const todosPedidos = obterTodosPedidos();
   
-  // Calcular dados de resumo
-  const { resumoFinanceiro, pedidosRecentes } = dashboardData;
+  // Calcular dados de resumo de forma consistente com outras telas
+  const { resumoFinanceiro } = dashboardData;
   const percentualUtilizado = resumoFinanceiro.percentualUtilizado;
+  
+  // Dados reais do sistema
+  const pedidosPendentes = useMemo(() => todosPedidos.filter(pedido => pedido.status === 'Pendente').length, [todosPedidos]);
+  const pedidosAprovados = useMemo(() => todosPedidos.filter(pedido => pedido.status === 'Aprovado').length, [todosPedidos]);
+  const pedidosEmAndamento = useMemo(() => todosPedidos.filter(pedido => pedido.status === 'Em Andamento').length, [todosPedidos]);
   
   // Determinar se o orçamento está em risco
   const orcamentoEmRisco = percentualUtilizado > 70;
@@ -48,7 +54,38 @@ const Dashboard: React.FC = () => {
         </TabsList>
         
         <TabsContent value="resumo" className="space-y-6">
-          <DashboardStatCards cartoes={dashboardData.cartoes} />
+          <DashboardStatCards 
+            cartoes={[
+              {
+                titulo: "Total de Pedidos",
+                valor: todosPedidos.length.toString(),
+                percentualMudanca: 12.5,
+                icone: "ShoppingCart",
+                classeCor: "bg-blue-500",
+              },
+              {
+                titulo: "Pedidos Pendentes",
+                valor: pedidosPendentes.toString(),
+                percentualMudanca: 8.2,
+                icone: "Receipt",
+                classeCor: "bg-yellow-500",
+              },
+              {
+                titulo: "Pedidos Aprovados",
+                valor: pedidosAprovados.toString(),
+                percentualMudanca: 5.7,
+                icone: "Wallet",
+                classeCor: "bg-green-500",
+              },
+              {
+                titulo: "Pedidos em Andamento",
+                valor: pedidosEmAndamento.toString(),
+                percentualMudanca: -3.4,
+                icone: "Building",
+                classeCor: "bg-purple-500",
+              },
+            ]}
+          />
           
           {/* Resumo Orçamentário em tela cheia */}
           <Card className="w-full">
