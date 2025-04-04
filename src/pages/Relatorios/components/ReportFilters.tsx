@@ -39,7 +39,7 @@ interface ReportFiltersProps {
   setor: string;
   setSetor: (setor: string) => void;
   periodosAtivos: Record<string, boolean>;
-  setPeriodosAtivos: (periodos: Record<string, boolean>) => void;
+  setPeriodosAtivos: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   tiposRelatorio: string[];
   setTiposRelatorio: (tipos: string[]) => void;
   language: string;
