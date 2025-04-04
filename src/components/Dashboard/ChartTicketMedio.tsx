@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
@@ -11,12 +11,21 @@ interface ChartTicketMedioProps {
 }
 
 const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
+  const [language, setLanguage] = useState('pt');
+  
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('app-language');
+    if (savedLanguage && (savedLanguage === 'pt' || savedLanguage === 'en')) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
+
   const chartData = Object.entries(dados.ticketMedioPorSetor).map(([setor, valor]) => ({
     name: setor,
     valor: valor,
   }));
 
-  const cardTitle = 'Ticket Médio por Secretaria';
+  const cardTitle = language === 'pt' ? 'Ticket Médio por Secretaria' : 'Average Ticket by Department';
   const mediaGeral = chartData.length > 0 
     ? chartData.reduce((sum, item) => sum + item.valor, 0) / chartData.length 
     : 0;
@@ -36,7 +45,7 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
         <div className="bg-background border border-border p-3 rounded-md shadow-lg">
           <p className="font-semibold text-base">{payload[0].payload.name}</p>
           <p className="text-sm">
-            Valor Médio: {formatCurrency(payload[0].value)}
+            {language === 'pt' ? 'Valor Médio' : 'Average Value'}: {formatCurrency(payload[0].value)}
           </p>
         </div>
       );
@@ -55,7 +64,7 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
         </CardHeader>
         <CardContent className="h-[300px] flex flex-col items-center justify-center">
           <p className="text-muted-foreground text-center">
-            Não há dados disponíveis
+            {language === 'pt' ? 'Não há dados disponíveis' : 'No data available'}
           </p>
         </CardContent>
       </Card>
@@ -90,11 +99,11 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend 
-                formatter={(value: string) => 'Valor Médio'}
+                formatter={(value: string) => language === 'pt' ? 'Valor Médio' : 'Average Value'}
               />
               <Bar 
                 dataKey="valor" 
-                name="Valor Médio"
+                name={language === 'pt' ? 'Valor Médio' : 'Average Value'}
                 radius={[4, 4, 0, 0]} // Rounded corners on top
               >
                 {chartData.map((entry, index) => (
@@ -110,7 +119,7 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
         
         <div className="mt-2 text-center">
           <p className="text-sm text-muted-foreground">
-            Média Geral: <span className="font-semibold">{formatCurrency(mediaGeral)}</span>
+            {language === 'pt' ? 'Média Geral' : 'General Average'}: <span className="font-semibold">{formatCurrency(mediaGeral)}</span>
           </p>
         </div>
       </CardContent>

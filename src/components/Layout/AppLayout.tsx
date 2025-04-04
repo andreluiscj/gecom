@@ -1,18 +1,47 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
 
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isHighContrast, setIsHighContrast] = useState(false);
+  const [language, setLanguage] = useState('pt');
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+  
+  // Check for high contrast mode when component mounts
+  useEffect(() => {
+    const checkHighContrast = () => {
+      const highContrastMode = document.documentElement.classList.contains('high-contrast');
+      setIsHighContrast(highContrastMode);
+    };
+    
+    checkHighContrast();
+    
+    // Set up an observer for class changes on the html element
+    const observer = new MutationObserver(checkHighContrast);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+  
+  // Verificar o idioma armazenado no localStorage
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('app-language');
+    if (savedLanguage && (savedLanguage === 'pt' || savedLanguage === 'en')) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${isHighContrast ? 'high-contrast' : ''}`}>
       <Sidebar isOpen={isSidebarOpen} />
       <div className={`transition-all duration-300 ${isSidebarOpen ? 'pl-64' : 'pl-0'}`}>
         <NavBar toggleSidebar={toggleSidebar} />
