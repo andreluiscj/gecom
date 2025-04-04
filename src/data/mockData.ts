@@ -19,16 +19,16 @@ export function gerarId() {
   return uuidv4();
 }
 
-// Import functions from extended-mockData modules
-import { obterPedidosFicticios as _obterPedidosFicticios } from './pedidos/mockPedidos';
-
-// Now initialize the pedidos list after importing the function
+// Initialize todosPedidos
 const todosPedidos: PedidoCompra[] = [];
+
+// Import functions from extended-mockData modules
+import { obterPedidosFicticios } from './pedidos/mockPedidos';
 
 // Function to initialize the data - will be called when needed
 export function initializeMockData() {
   if (todosPedidos.length === 0) {
-    const ficticios = _obterPedidosFicticios();
+    const ficticios = obterPedidosFicticios();
     todosPedidos.push(...ficticios);
   }
   return todosPedidos;
@@ -38,7 +38,7 @@ export function initializeMockData() {
 initializeMockData();
 
 // Re-export the function for external use
-export const obterPedidosFicticios = _obterPedidosFicticios;
+export { obterPedidosFicticios };
 
 // Função para adicionar um novo pedido
 export function adicionarPedido(pedido: PedidoCompra) {

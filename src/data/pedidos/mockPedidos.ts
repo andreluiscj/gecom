@@ -1,7 +1,10 @@
 
 import { PedidoCompra, Item, Setor, PedidoStatus } from '@/types';
 import { MESES_ANTERIORES, gastosPorSetorEMes, pedidosPorSetorEMes } from '../dashboard/dashboardCalculator';
-import { gerarId } from '@/data/mockData';
+import { v4 as uuidv4 } from 'uuid';
+
+// Function to generate IDs (local copy to avoid circular dependency)
+const gerarIdLocal = () => uuidv4();
 
 // Gerar pedidos fictícios para cada setor nos últimos 3 meses
 export const obterPedidosFicticios = (): PedidoCompra[] => {
@@ -59,7 +62,7 @@ export const obterPedidosFicticios = (): PedidoCompra[] => {
           const nomeProduto = produtosDoSetor[Math.floor(Math.random() * produtosDoSetor.length)];
           
           const item = {
-            id: gerarId(),
+            id: gerarIdLocal(),
             nome: nomeProduto,
             quantidade,
             valorUnitario,
@@ -83,35 +86,35 @@ export const obterPedidosFicticios = (): PedidoCompra[] => {
         
         // Descrições por setor
         const descricoesPorSetor = {
-          'Saúde': [
-            'Compra de materiais para unidade básica de saúde',
-            'Aquisição de medicamentos para farmácia municipal',
-            'Equipamentos para centro de especialidades médicas',
-            'Materiais para campanha de vacinação',
-            'Insumos hospitalares para pronto atendimento'
-          ],
-          'Educação': [
-            'Material didático para ano letivo',
-            'Mobiliário para nova escola municipal',
-            'Equipamentos para laboratório de informática',
-            'Materiais para projeto de leitura',
-            'Instrumentos para aulas de música'
-          ],
-          'Administrativo': [
-            'Suprimentos para departamento administrativo',
-            'Equipamentos para nova sede',
-            'Material de escritório para secretarias',
-            'Mobiliário para sala de reuniões',
-            'Equipamentos de informática para setor de RH'
-          ],
-          'Transporte': [
-            'Peças para manutenção da frota municipal',
-            'Pneus para veículos da prefeitura',
-            'Combustível para transporte escolar',
-            'Sinalização para vias urbanas',
-            'Equipamentos para garagem municipal'
-          ]
-        };
+            'Saúde': [
+              'Compra de materiais para unidade básica de saúde',
+              'Aquisição de medicamentos para farmácia municipal',
+              'Equipamentos para centro de especialidades médicas',
+              'Materiais para campanha de vacinação',
+              'Insumos hospitalares para pronto atendimento'
+            ],
+            'Educação': [
+              'Material didático para ano letivo',
+              'Mobiliário para nova escola municipal',
+              'Equipamentos para laboratório de informática',
+              'Materiais para projeto de leitura',
+              'Instrumentos para aulas de música'
+            ],
+            'Administrativo': [
+              'Suprimentos para departamento administrativo',
+              'Equipamentos para nova sede',
+              'Material de escritório para secretarias',
+              'Mobiliário para sala de reuniões',
+              'Equipamentos de informática para setor de RH'
+            ],
+            'Transporte': [
+              'Peças para manutenção da frota municipal',
+              'Pneus para veículos da prefeitura',
+              'Combustível para transporte escolar',
+              'Sinalização para vias urbanas',
+              'Equipamentos para garagem municipal'
+            ]
+          };
         
         const descricoesPossiveis = descricoesPorSetor[setor];
         const descricao = descricoesPossiveis[Math.floor(Math.random() * descricoesPossiveis.length)];
@@ -135,7 +138,7 @@ export const obterPedidosFicticios = (): PedidoCompra[] => {
         
         // Criar o pedido
         const pedido: PedidoCompra = {
-          id: gerarId(),
+          id: gerarIdLocal(),
           dataCompra,
           descricao,
           itens,
