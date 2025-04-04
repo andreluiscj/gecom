@@ -76,91 +76,91 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       title: 'Saúde',
       path: '/setores/saude',
       icon: <HeartPulse className="h-5 w-5" />,
-      color: 'bg-saude-DEFAULT text-white',
+      color: 'text-white',
     },
     {
       title: 'Educação',
       path: '/setores/educacao',
       icon: <BookOpen className="h-5 w-5" />,
-      color: 'bg-educacao-DEFAULT text-white',
+      color: 'text-white',
     },
     {
       title: 'Administração',
       path: '/setores/administrativo',
       icon: <Building2 className="h-5 w-5" />,
-      color: 'bg-administrativo-DEFAULT text-white',
+      color: 'text-white',
     },
     {
       title: 'Transporte',
       path: '/setores/transporte',
       icon: <Bus className="h-5 w-5" />,
-      color: 'bg-transporte-DEFAULT text-white',
+      color: 'text-white',
     },
     {
       title: 'Obras',
       path: '/setores/obras',
       icon: <Briefcase className="h-5 w-5" />,
-      color: 'bg-blue-500 text-white',
+      color: 'text-white',
     },
     {
       title: 'Segurança Pública',
       path: '/setores/seguranca',
       icon: <Shield className="h-5 w-5" />,
-      color: 'bg-red-500 text-white',
+      color: 'text-white',
     },
     {
       title: 'Assistência Social',
       path: '/setores/social',
       icon: <Heart className="h-5 w-5" />,
-      color: 'bg-purple-500 text-white',
+      color: 'text-white',
     },
     {
       title: 'Meio Ambiente',
       path: '/setores/ambiente',
       icon: <Leaf className="h-5 w-5" />,
-      color: 'bg-green-500 text-white',
+      color: 'text-white',
     },
     {
       title: 'Fazenda',
       path: '/setores/fazenda',
       icon: <Coins className="h-5 w-5" />,
-      color: 'bg-yellow-600 text-white',
+      color: 'text-white',
     },
     {
       title: 'Turismo',
       path: '/setores/turismo',
       icon: <Globe className="h-5 w-5" />,
-      color: 'bg-cyan-500 text-white',
+      color: 'text-white',
     },
     {
       title: 'Cultura',
       path: '/setores/cultura',
       icon: <Music className="h-5 w-5" />,
-      color: 'bg-pink-500 text-white',
+      color: 'text-white',
     },
     {
       title: 'Esportes e Lazer',
       path: '/setores/esportes',
       icon: <Award className="h-5 w-5" />,
-      color: 'bg-orange-500 text-white',
+      color: 'text-white',
     },
     {
       title: 'Planejamento',
       path: '/setores/planejamento',
       icon: <PieChart className="h-5 w-5" />,
-      color: 'bg-indigo-500 text-white',
+      color: 'text-white',
     },
     {
       title: 'Comunicação',
       path: '/setores/comunicacao',
       icon: <Radio className="h-5 w-5" />,
-      color: 'bg-blue-400 text-white',
+      color: 'text-white',
     },
     {
       title: 'Ciência e Tecnologia',
       path: '/setores/ciencia',
       icon: <MapPin className="h-5 w-5" />,
-      color: 'bg-teal-500 text-white',
+      color: 'text-white',
     },
   ];
 
@@ -232,7 +232,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                         : 'hover:bg-sidebar-accent hover:shadow-sm'
                     )}
                   >
-                    <div className={`${subItem.color} p-1 rounded-md mr-2.5`}>
+                    <div className="mr-2.5">
                       {subItem.icon}
                     </div>
                     <span>{subItem.title}</span>

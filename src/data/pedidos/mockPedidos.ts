@@ -22,8 +22,8 @@ const gerarPedidoFicticio = (
     status,
     valorTotal,
     itens,
-    fundoMonetario: `Fundo Municipal de ${setor}`, // Added required property
-    createdAt: new Date(), // Added required property
+    fundoMonetario: `Fundo Municipal de ${setor}`,
+    createdAt: new Date(),
     observacoes: `Observações sobre o pedido de ${descricao}`,
     fonteRecurso: `Fundo Municipal de ${setor}`,
     responsavel: {

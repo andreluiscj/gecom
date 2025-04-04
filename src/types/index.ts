@@ -16,6 +16,14 @@ export type Setor =
   | 'Comunicação'
   | 'Ciência e Tecnologia';
 
+export type PedidoStatus =
+  | 'Pendente'
+  | 'Em Análise'
+  | 'Aprovado'
+  | 'Em Andamento'
+  | 'Concluído'
+  | 'Rejeitado';
+
 export interface Item {
   id: string;
   nome: string;
@@ -35,7 +43,18 @@ export interface PedidoCompra {
   solicitante?: string;
   valorTotal: number;
   itens: Item[];
-  status?: string; // pendente, em_analise, aprovado, em_processo, concluido, rejeitado
+  status?: PedidoStatus;
+  fundoMonetario?: string;
+  createdAt?: Date;
+  observacoes?: string;
+  fonteRecurso?: string;
+  responsavel?: {
+    id: string;
+    nome: string;
+    email: string;
+    cargo: string;
+  };
+  anexos?: any[];
 }
 
 export interface DadosSetor {
@@ -45,4 +64,41 @@ export interface DadosSetor {
   contato: string;
   orcamentoAnual: number;
   orcamentoUtilizado: number;
+}
+
+export interface Municipio {
+  id: string;
+  nome: string;
+  estado: string;
+  populacao: number;
+  orcamento: number;
+}
+
+export interface DadosDashboard {
+  resumoFinanceiro: {
+    orcamentoAnual: number;
+    orcamentoUtilizado: number;
+    percentualUtilizado: number;
+    totalPedidos: number;
+  };
+  cartoes: Array<{
+    titulo: string;
+    valor: number;
+    percentualMudanca: number;
+    icon: string;
+    cor: string;
+  }>;
+  pedidosRecentes: PedidoCompra[];
+  dadosMensais: {
+    [mes: string]: number;
+  };
+  distribuicaoSetor: {
+    [setor in Setor]?: number;
+  };
+  orcamentoPrevisto: {
+    [setor in Setor]?: number;
+  };
+  gastosPorSetor: {
+    [setor in Setor]?: number;
+  };
 }

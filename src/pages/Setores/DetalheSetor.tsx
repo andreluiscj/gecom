@@ -1,18 +1,20 @@
 
 import React, { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
-import { Setor } from '@/types';
+import { Setor, PedidoCompra } from '@/types';
 import { obterDadosDashboard } from '@/data/extended-mockData';
 import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
-import PedidosTable from '@/components/Pedidos/PedidosTable';
+import { formatarData } from '@/data/mockData';
+import { Button } from '@/components/ui/button';
 import { 
   HeartPulse, BookOpen, Building2, Bus, Shield, Heart,
   Leaf, Coins, Briefcase, Music, Globe, Award, PieChart,
-  Radio, MapPin
+  Radio, MapPin, Eye
 } from 'lucide-react';
+import { getSetorIcon, getSetorColor } from '@/utils/iconHelpers';
 
 const DetalheSetor: React.FC = () => {
   const { setor } = useParams<{ setor: string }>();
@@ -130,8 +132,8 @@ const DetalheSetor: React.FC = () => {
   const totalPedidos = pedidos.length;
 
   // Only calculate budget data if there are pedidos for this setor
-  const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setorConfig.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 0;
-  const totalGasto = dadosDashboard.gastosPorSetor[setorConfig.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 0;
+  const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto?.[setorConfig.titulo] || 0;
+  const totalGasto = dadosDashboard.gastosPorSetor?.[setorConfig.titulo] || 0;
   const percentualGasto = calcularPorcentagem(totalGasto, orcamentoPrevisto);
 
   return (
@@ -175,10 +177,43 @@ const DetalheSetor: React.FC = () => {
         </CardHeader>
         <CardContent>
           {totalPedidos > 0 ? (
-            <PedidosTable 
-              pedidos={pedidos} 
-              titulo={`Documentos de Formalização de Demanda - ${totalPedidos} ${totalPedidos === 1 ? 'pedido' : 'pedidos'}`} 
-            />
+            <div className="space-y-4">
+              <p className="text-muted-foreground mb-4">
+                {totalPedidos} {totalPedidos === 1 ? 'pedido' : 'pedidos'} de compra registrado(s)
+              </p>
+              <div className="divide-y">
+                {pedidos.map((pedido) => (
+                  <div key={pedido.id} className="py-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{pedido.descricao}</h3>
+                        <div className="flex mt-1 text-sm text-muted-foreground space-x-4">
+                          <span>Data: {formatarData(pedido.dataCompra)}</span>
+                          <span>Valor: {formatCurrency(pedido.valorTotal)}</span>
+                          {pedido.status && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs ${
+                              pedido.status === 'Aprovado' || pedido.status === 'Concluído' 
+                                ? 'bg-green-100 text-green-800' 
+                                : pedido.status === 'Rejeitado' 
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {pedido.status}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Link to={`/pedidos/${pedido.id}`}>
+                        <Button variant="outline" size="sm" className="gap-1">
+                          <Eye className="h-4 w-4" />
+                          Visualizar
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               Nenhum pedido de compra registrado para esta secretária
