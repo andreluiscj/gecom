@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -41,7 +40,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
   const [openProfile, setOpenProfile] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   
-  // Initialize and handle dark mode
   useEffect(() => {
     const isDark = localStorage.getItem('dark-mode') === 'true';
     setIsDarkMode(isDark);
@@ -73,19 +71,15 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
   };
 
   const handleLogout = () => {
-    // Remove o município selecionado e a autenticação do localStorage
     localStorage.removeItem('municipio-selecionado');
     localStorage.removeItem('user-authenticated');
     
-    // Exibe notificação
     toast.success("Sessão encerrada com sucesso!");
     
-    // Redireciona para a página de login
     navigate('/login');
   };
   
   const handleDeleteAccount = () => {
-    // Simulating account deletion
     toast.success("Conta excluída com sucesso!");
     localStorage.removeItem('municipio-selecionado');
     localStorage.removeItem('user-authenticated');
@@ -93,7 +87,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
     setOpenDeleteConfirm(false);
   };
 
-  // Translated texts
   const texts = {
     search: "Buscar pedidos, fornecedores...",
     preferences: "Preferências",
@@ -139,7 +132,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
           <HelpCircle className="h-5 w-5" />
         </Button>
         
-        {/* Theme Toggle Button */}
         <Button 
           variant="ghost" 
           size="icon" 
@@ -199,7 +191,7 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <div className="flex h-full w-full items-center justify-center rounded-full bg-primary text-primary-foreground dark:bg-primary/80 dark:text-white font-medium">
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300 font-medium">
                 A
               </div>
             </Button>
@@ -220,7 +212,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
         </DropdownMenu>
       </div>
       
-      {/* Profile Dialog */}
       <Dialog open={openProfile} onOpenChange={setOpenProfile}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -231,7 +222,7 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="flex justify-center mb-4">
-              <div className="h-24 w-24 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold dark:bg-primary/80 dark:text-white">
+              <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-2xl font-bold dark:bg-gray-700 dark:text-gray-300">
                 A
               </div>
             </div>
@@ -258,7 +249,6 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
       <Dialog open={openDeleteConfirm} onOpenChange={setOpenDeleteConfirm}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

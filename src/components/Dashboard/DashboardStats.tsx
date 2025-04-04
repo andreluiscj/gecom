@@ -29,7 +29,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ estatisticasCartoes }) 
           key={index}
           title={stat.titulo}
           value={stat.valor}
-          percentChange={stat.percentualMudanca}
+          percentChange={parseFloat(stat.percentualMudanca.toFixed(1))}
           icon={getLucideIcon(stat.icon)}
           colorClass={stat.cor}
         />

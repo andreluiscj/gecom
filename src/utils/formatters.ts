@@ -31,5 +31,5 @@ export const calcularPorcentagem = (valor: number, total: number): number => {
 
 // Formatar porcentagem
 export const formatPercentage = (value: number): string => {
-  return `${value.toFixed(2)}%`;
+  return `${value.toFixed(1)}%`;
 };

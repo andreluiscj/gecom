@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowDown, ArrowUp, Wallet, Building, ShoppingCart, Receipt, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatPercentage } from '@/utils/formatters';
 
 interface StatCardProps {
   title: string;
@@ -24,19 +25,19 @@ const StatCard: React.FC<StatCardProps> = ({
     if (typeof icon === 'string') {
       switch (icon) {
         case 'Building':
-          return <Building className="h-6 w-6 text-white" />;
+          return <Building className="h-5 w-5 text-white" />;
         case 'Wallet':
-          return <Wallet className="h-6 w-6 text-white" />;
+          return <Wallet className="h-5 w-5 text-white" />;
         case 'ShoppingCart':
-          return <ShoppingCart className="h-6 w-6 text-white" />;
+          return <ShoppingCart className="h-5 w-5 text-white" />;
         case 'Receipt':
-          return <Receipt className="h-6 w-6 text-white" />;
+          return <Receipt className="h-5 w-5 text-white" />;
         default:
-          return <Wallet className="h-6 w-6 text-white" />;
+          return <Wallet className="h-5 w-5 text-white" />;
       }
     } else {
       const Icon = icon;
-      return <Icon className="h-6 w-6 text-white" />;
+      return <Icon className="h-5 w-5 text-white" />;
     }
   };
 
@@ -46,7 +47,7 @@ const StatCard: React.FC<StatCardProps> = ({
         <div className="flex items-center">
           <div
             className={cn(
-              'flex h-12 w-12 items-center justify-center rounded-lg',
+              'flex h-10 w-10 items-center justify-center rounded-lg',
               colorClass
             )}
           >
@@ -69,7 +70,7 @@ const StatCard: React.FC<StatCardProps> = ({
               percentChange > 0 ? 'text-green-500' : 'text-red-500'
             )}
           >
-            {Math.abs(percentChange)}%
+            {typeof percentChange === 'number' ? Math.abs(parseFloat(percentChange.toFixed(2))) : 0}%
           </span>
           <span className="ml-2 text-muted-foreground">do mês passado</span>
         </div>
