@@ -9,12 +9,13 @@ import { DadosDashboard, Municipio } from '@/types';
 interface DashboardTabsProps {
   dadosDashboard: DadosDashboard;
   municipio: Municipio;
-  language: string; // Mantemos para compatibilidade, mas não usamos mais
+  language?: string; // Tornamos opcional
 }
 
 const DashboardTabs: React.FC<DashboardTabsProps> = ({ 
   dadosDashboard, 
-  municipio
+  municipio,
+  language = 'pt'
 }) => {
   return (
     <Tabs defaultValue="graficos" className="pt-2">
@@ -35,7 +36,7 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
         <DashboardSummary 
           dadosDashboard={dadosDashboard} 
           municipio={municipio} 
-          language="pt" 
+          language={language} 
         />
       </TabsContent>
     </Tabs>

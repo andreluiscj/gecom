@@ -1,6 +1,21 @@
 
 // Tipos dos setores
-export type Setor = 'Saúde' | 'Educação' | 'Administrativo' | 'Transporte';
+export type Setor = 
+  | 'Saúde' 
+  | 'Educação' 
+  | 'Administrativo' 
+  | 'Transporte'
+  | 'Obras'
+  | 'Segurança Pública'
+  | 'Assistência Social'
+  | 'Meio Ambiente'
+  | 'Fazenda'
+  | 'Turismo'
+  | 'Cultura'
+  | 'Esportes e Lazer'
+  | 'Planejamento'
+  | 'Comunicação'
+  | 'Ciência e Tecnologia';
 
 // Interface para Pedido de Compra
 export interface PedidoCompra {
@@ -11,8 +26,17 @@ export interface PedidoCompra {
   valorTotal: number;
   fundoMonetario: string;
   setor: Setor;
-  status: 'Pendente' | 'Aprovado' | 'Reprovado';
+  status: PedidoStatus;
   createdAt: Date;
+  observacoes?: string;
+  fonteRecurso?: string;
+  responsavel?: {
+    id: string;
+    nome: string;
+    email: string;
+    cargo: string;
+  };
+  anexos?: any[];
 }
 
 // Interface para Item de Pedido
@@ -76,7 +100,13 @@ export interface Pedido {
 }
 
 // Tipo para PedidoStatus - Adicionado para resolver o erro
-export type PedidoStatus = 'Pendente' | 'Aprovado' | 'Reprovado';
+export type PedidoStatus = 
+  | 'Pendente' 
+  | 'Aprovado' 
+  | 'Reprovado'
+  | 'Em Andamento'
+  | 'Concluído'
+  | 'Em Análise';
 
 // Interface para FiltroPedido - Adicionada para resolver o erro
 export interface FiltroPedido {

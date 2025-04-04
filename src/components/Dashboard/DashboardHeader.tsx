@@ -4,10 +4,10 @@ import { Municipio } from '@/types';
 
 interface DashboardHeaderProps {
   municipio: Municipio;
-  language: string;
+  language?: string;
 }
 
-const getTranslation = (key: string, language: string) => {
+const getTranslation = (key: string, language: string = 'pt') => {
   const translations: Record<string, Record<string, string>> = {
     dashboardTitle: {
       pt: 'Dashboard',
@@ -22,7 +22,7 @@ const getTranslation = (key: string, language: string) => {
   return translations[key]?.[language] || translations[key]?.['pt'] || key;
 };
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ municipio, language }) => {
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ municipio, language = 'pt' }) => {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">{getTranslation('dashboardTitle', language)} - {municipio.nome}</h1>

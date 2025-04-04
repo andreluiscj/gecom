@@ -72,7 +72,6 @@ const Dashboard: React.FC = () => {
       <DashboardTabs 
         dadosDashboard={dadosDashboard}
         municipio={municipio}
-        language="pt"
       />
     </div>
   );
