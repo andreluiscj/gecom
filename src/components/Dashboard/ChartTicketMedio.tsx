@@ -45,13 +45,19 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
     );
   }
 
-  // Get gradients for area fill
+  // Get gradients for area fill with blue colors
   const getGradient = () => {
     return (
-      <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-        <stop offset="95%" stopColor="#8884d8" stopOpacity={0.2}/>
-      </linearGradient>
+      <>
+        <linearGradient id="colorValor" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.9}/>
+          <stop offset="60%" stopColor="#3B82F6" stopOpacity={0.6}/>
+          <stop offset="95%" stopColor="#93C5FD" stopOpacity={0.2}/>
+        </linearGradient>
+        <filter id="shadow" height="200%">
+          <feDropShadow dx="0" dy="3" stdDeviation="6" floodColor="#3B82F6" floodOpacity="0.1"/>
+        </filter>
+      </>
     );
   };
 
@@ -70,7 +76,7 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
               <defs>
                 {getGradient()}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
               <XAxis 
                 dataKey="idx" 
                 axisLine={false} 
@@ -102,9 +108,11 @@ const ChartTicketMedio: React.FC<ChartTicketMedioProps> = ({ dados }) => {
                 type="monotone" 
                 dataKey="valor" 
                 name="Valor Médio"
-                stroke="#8884d8" 
+                stroke="#0EA5E9" 
+                strokeWidth={2}
                 fillOpacity={1} 
                 fill="url(#colorValor)"
+                filter="url(#shadow)"
               />
             </AreaChart>
           </ResponsiveContainer>

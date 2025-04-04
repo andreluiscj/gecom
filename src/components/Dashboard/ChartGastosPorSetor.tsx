@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/utils/formatters';
 
@@ -45,9 +45,9 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
               <Pie
                 data={chartData}
                 cx="50%"
-                cy="50%"
+                cy="40%"
                 labelLine={false}
-                outerRadius={140}
+                outerRadius={120}
                 innerRadius={60}
                 fill="#8884d8"
                 dataKey="value"
@@ -67,10 +67,25 @@ const ChartGastosPorSetor: React.FC<ChartGastosPorSetorProps> = ({ dados }) => {
                       const item = props.payload;
                       return [
                         formatCurrency(value),
-                        `${item.percentual}% do total`
+                        `${item.name}: ${item.percentual}% do total`
                       ];
                     }}
                   />
+                }
+              />
+              <ChartLegend 
+                content={
+                  <div className="flex flex-wrap justify-center mt-32 gap-x-4 gap-y-2 px-4">
+                    {chartData.map((entry, index) => (
+                      <div key={index} className="flex items-center">
+                        <div 
+                          className="w-3 h-3 mr-1" 
+                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                        />
+                        <span className="text-xs">{entry.name}</span>
+                      </div>
+                    ))}
+                  </div>
                 }
               />
             </PieChart>
