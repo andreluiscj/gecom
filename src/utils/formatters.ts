@@ -29,6 +29,14 @@ export const formatDateTime = (date: Date): string => {
   }).format(date);
 };
 
+// Formato simples de data (dia/mês)
+export const formatarDataSimples = (date: Date): string => {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+  }).format(date);
+};
+
 // Calculador de porcentagem
 export const calcularPorcentagem = (valor: number, total: number): number => {
   if (total === 0) return 0;

@@ -13,6 +13,7 @@ const municipios: Municipio[] = [
     nome: 'Pai Pedro',
     estado: 'MG',
     populacao: 6083,
+    orcamento: 28500000,
     orcamentoAnual: 28500000,
     prefeito: 'Maria Silva',
   },
@@ -21,6 +22,7 @@ const municipios: Municipio[] = [
     nome: 'Janaúba',
     estado: 'MG',
     populacao: 72018,
+    orcamento: 145300000,
     orcamentoAnual: 145300000,
     prefeito: 'José Santos',
   },
@@ -29,6 +31,7 @@ const municipios: Municipio[] = [
     nome: 'Espinosa',
     estado: 'MG',
     populacao: 31113,
+    orcamento: 87600000,
     orcamentoAnual: 87600000,
     prefeito: 'Carlos Oliveira',
   }

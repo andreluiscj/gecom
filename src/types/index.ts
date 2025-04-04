@@ -72,6 +72,8 @@ export interface Municipio {
   estado: string;
   populacao: number;
   orcamento: number;
+  prefeito: string;
+  orcamentoAnual: number;
 }
 
 export interface DadosDashboard {
@@ -101,4 +103,8 @@ export interface DadosDashboard {
   gastosPorSetor: {
     [setor in Setor]?: number;
   };
+  pedidosPorSetor: {
+    [setor in Setor]?: number;
+  };
+  gastosTotais: number;
 }
