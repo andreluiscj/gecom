@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,14 +11,6 @@ const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Check if user is already authenticated
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [navigate]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

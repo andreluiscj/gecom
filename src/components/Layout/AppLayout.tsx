@@ -1,12 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
 
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const navigate = useNavigate();
+  
+  // Check authentication when component mounts
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
+    if (!isAuthenticated) {
+      // If not authenticated, redirect to login
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
