@@ -10,7 +10,7 @@ import { PedidoCompra, Setor } from '@/types';
 import { Button } from '@/components/ui/button';
 import { getSetorIcon, getSetorColor } from '@/utils/iconHelpers';
 import { Progress } from '@/components/ui/progress';
-import { ExternalLink } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 interface TaskProps {
   pedido: PedidoCompra;
@@ -62,6 +62,7 @@ const Task: React.FC<TaskProps> = ({ pedido }) => {
           className="w-full mt-2"
           onClick={() => navigate(`/pedidos/${pedido.id}`)}
         >
+          <Eye className="h-4 w-4 mr-1" /> 
           Visualizar
         </Button>
         <Button 
@@ -70,7 +71,7 @@ const Task: React.FC<TaskProps> = ({ pedido }) => {
           className="w-full mt-2"
           onClick={() => navigate(`/pedidos/workflow/${pedido.id}`)}
         >
-          <ExternalLink className="h-4 w-4 mr-1" /> Fluxo
+          Fluxo
         </Button>
       </div>
     </div>
