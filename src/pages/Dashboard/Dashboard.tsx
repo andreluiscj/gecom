@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { obterDadosDashboard } from '@/data/extended-mockData';
 import { formatDate, formatCurrency, formatPercentage } from '@/utils/formatters';
@@ -14,8 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Setor } from '@/types';
 
-// Palette for charts
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
+const COLORS = ['#0EA5E9', '#3B82F6', '#1D4ED8', '#1E40AF', '#0F172A', '#2563EB', '#60A5FA', '#93C5FD'];
 
 const Dashboard: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState('resumo');
@@ -23,16 +21,13 @@ const Dashboard: React.FC = () => {
   const dashboardData = obterDadosDashboard();
   const todosPedidos = obterPedidosFicticios();
   
-  // Calcular dados de resumo de forma consistente com outras telas
   const { resumoFinanceiro, gastosPorSetor, orcamentoPrevisto } = dashboardData;
   const percentualUtilizado = resumoFinanceiro.percentualUtilizado;
   
-  // Dados reais do sistema
   const pedidosPendentes = useMemo(() => todosPedidos.filter(pedido => pedido.status === 'Pendente').length, [todosPedidos]);
   const pedidosAprovados = useMemo(() => todosPedidos.filter(pedido => pedido.status === 'Aprovado').length, [todosPedidos]);
   const pedidosEmAndamento = useMemo(() => todosPedidos.filter(pedido => pedido.status === 'Em Andamento').length, [todosPedidos]);
   
-  // Get all pedidos grouped by department status
   const pedidosPorStatus = useMemo(() => {
     const statusCounts = todosPedidos.reduce((acc, pedido) => {
       acc[pedido.status] = (acc[pedido.status] || 0) + 1;
@@ -42,7 +37,6 @@ const Dashboard: React.FC = () => {
     return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
   }, [todosPedidos]);
 
-  // Get all pedidos grouped by department
   const pedidosPorSetor = useMemo(() => {
     const setorCounts = todosPedidos.reduce((acc, pedido) => {
       acc[pedido.setor] = (acc[pedido.setor] || 0) + 1;
@@ -55,7 +49,6 @@ const Dashboard: React.FC = () => {
       .slice(0, 5);
   }, [todosPedidos]);
 
-  // Create data for department budget comparison
   const dadosOrcamento = useMemo(() => {
     return Object.entries(orcamentoPrevisto)
       .map(([nome, previsto]) => {
@@ -72,7 +65,6 @@ const Dashboard: React.FC = () => {
       .slice(0, 5);
   }, [orcamentoPrevisto, gastosPorSetor]);
 
-  // Determine if the budget is at risk
   const orcamentoEmRisco = percentualUtilizado > 70;
 
   return (
@@ -136,7 +128,6 @@ const Dashboard: React.FC = () => {
             ]}
           />
           
-          {/* Resumo Orçamentário em tela cheia */}
           <Card className="w-full">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-medium">Resumo Orçamentário</CardTitle>
@@ -283,7 +274,7 @@ const Dashboard: React.FC = () => {
                       cy="50%"
                       labelLine={false}
                       outerRadius={80}
-                      fill="#8884d8"
+                      fill="#0EA5E9"
                       dataKey="value"
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     >
@@ -314,7 +305,7 @@ const Dashboard: React.FC = () => {
                     <YAxis type="category" dataKey="name" width={100} />
                     <Tooltip formatter={(value) => [`${value} pedidos`, 'Quantidade']} />
                     <Legend />
-                    <Bar dataKey="value" fill="#8884d8" name="Pedidos" />
+                    <Bar dataKey="value" fill="#1D4ED8" name="Pedidos" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -330,24 +321,27 @@ const Dashboard: React.FC = () => {
                     data={dadosOrcamento}
                     margin={{ top: 20, right: 30, left: 30, bottom: 5 }}
                   >
-                    {/* Removed CartesianGrid to remove grid lines */}
                     <XAxis dataKey="nome" />
                     <YAxis 
                       tickFormatter={(value) => `R$ ${(value/1000).toFixed(0)}k`} 
                       ticks={[0, 150000, 300000, 450000, 600000]} 
+                      tickLine={false}
+                      axisLine={true}
+                      tickMargin={5}
+                      domain={[0, 600000]}
                     />
                     <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, '']} />
                     <Legend />
                     <Bar 
                       dataKey="previsto" 
                       name="Orçamento Previsto" 
-                      fill="#82ca9d" 
+                      fill="#60A5FA" 
                       radius={[5, 5, 0, 0]} 
                     />
                     <Bar 
                       dataKey="realizado" 
                       name="Realizado" 
-                      fill="#8884d8" 
+                      fill="#1E40AF" 
                       radius={[5, 5, 0, 0]} 
                     />
                   </BarChart>
@@ -381,7 +375,7 @@ const Dashboard: React.FC = () => {
                           cy="50%"
                           labelLine={false}
                           outerRadius={80}
-                          fill="#8884d8"
+                          fill="#3B82F6"
                           dataKey="value"
                           label={({ name, percent }) => `${name.substring(0, 8)}: ${(percent * 100).toFixed(0)}%`}
                         >
@@ -455,7 +449,7 @@ const Dashboard: React.FC = () => {
                           cy="50%"
                           labelLine={false}
                           outerRadius={60}
-                          fill="#8884d8"
+                          fill="#2563EB"
                           dataKey="value"
                           label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                         >
