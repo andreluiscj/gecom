@@ -44,7 +44,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
 }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [pedidoParaExcluir, setPedidoParaExcluir] = useState<PedidoCompra | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [pedidoDetalhes, setPedidoDetalhes] = useState<PedidoCompra | null>(null);
@@ -53,7 +53,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
     (pedido) =>
       (pedido.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pedido.fundoMonetario.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (statusFilter === '' || pedido.status === statusFilter)
+      (statusFilter === 'todos' || pedido.status === statusFilter)
   );
 
   const handleExcluir = (pedido: PedidoCompra) => {
@@ -96,7 +96,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os status</SelectItem>
+              <SelectItem value="todos">Todos os status</SelectItem>
               <SelectItem value="Pendente">Pendente</SelectItem>
               <SelectItem value="Aprovado">Aprovado</SelectItem>
               <SelectItem value="Reprovado">Reprovado</SelectItem>
