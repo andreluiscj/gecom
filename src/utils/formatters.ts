@@ -1,54 +1,42 @@
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-// Formatar moeda para real brasileiro
-export const formatCurrency = (value: number): string => {
+// Format currency to BRL
+export function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2
+    minimumFractionDigits: 2,
   }).format(value);
-};
+}
 
-// Formatar data
-export const formatDate = (date: Date): string => {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  }).format(date);
-};
+// Format date to dd/mm/yyyy
+export function formatDate(date: string | Date) {
+  if (!date) return '';
+  
+  const parsedDate = typeof date === 'string' ? new Date(date) : date;
+  return format(parsedDate, 'dd/MM/yyyy');
+}
 
-// Formatar data e hora
-export const formatDateTime = (date: Date): string => {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date);
-};
+// Format date and time
+export function formatDateTime(date: string | Date) {
+  if (!date) return '';
+  
+  const parsedDate = typeof date === 'string' ? new Date(date) : date;
+  return format(parsedDate, 'dd/MM/yyyy HH:mm');
+}
 
-// Formato simples de data (dia/mês)
-export const formatarDataSimples = (date: Date): string => {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-  }).format(date);
-};
-
-// Calculador de porcentagem
-export const calcularPorcentagem = (valor: number, total: number): number => {
-  if (total === 0) return 0;
-  return (valor / total) * 100;
-};
-
-// Formatar porcentagem
-export const formatPercentage = (value: number): string => {
+// Format number to percentage
+export function formatPercentage(value: number) {
   return `${value.toFixed(1)}%`;
-};
+}
 
-// Formatar números grandes
-export const formatNumber = (value: number): string => {
+// Format number with thousands separator
+export function formatNumber(value: number) {
   return new Intl.NumberFormat('pt-BR').format(value);
-};
+}
+
+// Format date to simple format (for Kanban cards)
+export function formatarDataSimples(date: Date) {
+  return format(date, 'dd/MM/yyyy');
+}

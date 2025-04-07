@@ -1,13 +1,16 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { obterPedidos } from '@/data/mockData';
-import { formatCurrency, formatarDataSimples } from '@/utils/formatters';
+import { formatCurrency, formatDate } from '@/utils/formatters';
 import { PedidoCompra, Setor } from '@/types';
 import { Button } from '@/components/ui/button';
 import { getSetorIcon, getSetorColor } from '@/utils/iconHelpers';
+import { Progress } from '@/components/ui/progress';
+import { ExternalLink } from 'lucide-react';
 
 interface TaskProps {
   pedido: PedidoCompra;
@@ -34,16 +37,42 @@ const Task: React.FC<TaskProps> = ({ pedido }) => {
         <div className={`p-1 rounded-full ${getSetorColor(pedido.setor)}`}>{getSetorIcon(pedido.setor)}</div>
         <span>{pedido.setor}</span>
       </div>
-      <div className="text-xs text-muted-foreground mt-2">{formatarDataSimples(pedido.dataCompra)}</div>
+      <div className="text-xs text-muted-foreground mt-2">{formatDate(pedido.dataCompra)}</div>
       <div className="text-sm font-semibold mt-2">{formatCurrency(pedido.valorTotal)}</div>
-      <Button 
-        size="sm" 
-        variant="outline" 
-        className="w-full mt-2"
-        onClick={() => navigate(`/pedidos/${pedido.id}`)}
-      >
-        Visualizar
-      </Button>
+      
+      {pedido.workflow && (
+        <div className="mt-3 mb-2">
+          <div className="flex justify-between text-xs mb-1">
+            <span>Progresso</span>
+            <span>{pedido.workflow.percentComplete}%</span>
+          </div>
+          <Progress 
+            value={pedido.workflow.percentComplete} 
+            className="h-1" 
+            color={pedido.workflow.percentComplete > 70 ? 'bg-green-500' : 
+                  pedido.workflow.percentComplete > 30 ? 'bg-yellow-500' : 'bg-red-500'}
+          />
+        </div>
+      )}
+      
+      <div className="flex space-x-2 mt-2">
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="w-full mt-2"
+          onClick={() => navigate(`/pedidos/${pedido.id}`)}
+        >
+          Visualizar
+        </Button>
+        <Button 
+          size="sm" 
+          variant="secondary" 
+          className="w-full mt-2"
+          onClick={() => navigate(`/pedidos/workflow/${pedido.id}`)}
+        >
+          <ExternalLink className="h-4 w-4 mr-1" /> Fluxo
+        </Button>
+      </div>
     </div>
   );
 };

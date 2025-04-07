@@ -4,13 +4,26 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { HeartPulse, BookOpen, Building2, Bus, ArrowRight, Briefcase, Shield, Heart, Leaf, Coins, Globe, Music, Award, PieChart, Radio, MapPin } from 'lucide-react';
+import { HeartPulse, BookOpen, Building2, Bus, ArrowRight, Briefcase, Shield, Heart, Leaf, Coins, Globe, Music, Award, PieChart, Radio, MapPin, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { obterPedidosPorSetor } from '@/data/mockData';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { formatDate, formatCurrency } from '@/utils/formatters';
+import { Progress } from '@/components/ui/progress';
 
 const TarefasSelecao: React.FC = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState('pt');
+  const [trigger, setTrigger] = useState(0);
+
+  useEffect(() => {
+    // Force re-render every 5 seconds to reflect any changes in data
+    const interval = setInterval(() => {
+      setTrigger(prev => prev + 1);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Verifica idioma
@@ -161,6 +174,18 @@ const TarefasSelecao: React.FC = () => {
   // Total de tarefas pendentes
   const totalPendentes = departamentos.reduce((sum, dept) => sum + dept.tarefasPendentes, 0);
 
+  const [setorSelecionado, setSetorSelecionado] = useState<string | null>(null);
+
+  const handleSetorClick = (key: string) => {
+    const setor = departamentos.find(d => d.key === key)?.nome as any;
+    setSetorSelecionado(setor);
+  };
+
+  // Get pedidos for the selected setor
+  const pedidosDoSetor = setorSelecionado 
+    ? obterPedidosPorSetor(setorSelecionado as any)
+    : [];
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -170,46 +195,129 @@ const TarefasSelecao: React.FC = () => {
         </p>
       </div>
 
-      <Card>
-        <CardHeader className="pb-0">
-          <CardTitle className="text-lg">{texts.departments}</CardTitle>
-          <CardDescription>
-            {language === 'pt' ? 
-              `${totalPendentes} pedidos pendentes distribuídos entre as secretarias` : 
-              `${totalPendentes} pending orders distributed among departments`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          {departamentosComTarefas.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {departamentosComTarefas.map((dept, index) => (
-                <div key={index} className={`p-4 rounded-lg border ${dept.bgClass}`}>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-md ${dept.colorClass}`}>
-                        {dept.icone}
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{dept.nome}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {dept.tarefasPendentes} {language === 'pt' ? 'pedidos' : 'orders'}
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/tarefas/${dept.key}`)}>
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+      {setorSelecionado ? (
+        <Card>
+          <CardHeader className="pb-0">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className={`p-2 rounded-md ${departamentos.find(d => d.nome === setorSelecionado)?.colorClass}`}>
+                  {departamentos.find(d => d.nome === setorSelecionado)?.icone}
                 </div>
-              ))}
+                <CardTitle className="text-lg">{setorSelecionado}</CardTitle>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSetorSelecionado(null)}>
+                Voltar
+              </Button>
             </div>
-          ) : (
-            <div className="flex items-center justify-center h-24">
-              <p className="text-muted-foreground">{texts.noTasks}</p>
+            <CardDescription className="mt-2">
+              {pedidosDoSetor.length} {language === 'pt' ? 'demandas cadastradas' : 'registered demands'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{language === 'pt' ? 'Descrição' : 'Description'}</TableHead>
+                    <TableHead>{language === 'pt' ? 'Data' : 'Date'}</TableHead>
+                    <TableHead>{language === 'pt' ? 'Valor' : 'Value'}</TableHead>
+                    <TableHead>{language === 'pt' ? 'Status' : 'Status'}</TableHead>
+                    <TableHead>{language === 'pt' ? 'Progresso' : 'Progress'}</TableHead>
+                    <TableHead>{language === 'pt' ? 'Ações' : 'Actions'}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pedidosDoSetor.map((pedido) => (
+                    <TableRow key={pedido.id}>
+                      <TableCell className="font-medium">{pedido.descricao}</TableCell>
+                      <TableCell>{formatDate(pedido.dataCompra)}</TableCell>
+                      <TableCell>{formatCurrency(pedido.valorTotal)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={
+                          pedido.status === 'Concluído' ? 'bg-green-100 text-green-800' : 
+                          pedido.status === 'Em Andamento' || pedido.status === 'Aprovado' ? 'bg-blue-100 text-blue-800' : 
+                          'bg-orange-100 text-orange-800'
+                        }>
+                          {pedido.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="w-32">
+                          <div className="h-2 w-full">
+                            <Progress 
+                              value={pedido.workflow?.percentComplete || 0} 
+                              className="h-2" 
+                              color={
+                                pedido.workflow?.percentComplete && pedido.workflow.percentComplete > 70 ? 'bg-green-500' : 
+                                pedido.workflow?.percentComplete && pedido.workflow.percentComplete > 30 ? 'bg-yellow-500' : 
+                                'bg-red-500'
+                              }
+                            />
+                          </div>
+                          <div className="text-xs text-muted-foreground text-right mt-1">
+                            {pedido.workflow?.percentComplete || 0}%
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/pedidos/${pedido.id}`)}>
+                            Visualizar
+                          </Button>
+                          <Button variant="secondary" size="sm" onClick={() => navigate(`/pedidos/workflow/${pedido.id}`)}>
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader className="pb-0">
+            <CardTitle className="text-lg">{texts.departments}</CardTitle>
+            <CardDescription>
+              {language === 'pt' ? 
+                `${totalPendentes} pedidos pendentes distribuídos entre as secretarias` : 
+                `${totalPendentes} pending orders distributed among departments`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {departamentosComTarefas.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {departamentosComTarefas.map((dept, index) => (
+                  <div key={index} className={`p-4 rounded-lg border ${dept.bgClass}`}>
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-md ${dept.colorClass}`}>
+                          {dept.icone}
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{dept.nome}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {dept.tarefasPendentes} {language === 'pt' ? 'pedidos' : 'orders'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => handleSetorClick(dept.key)}>
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-24">
+                <p className="text-muted-foreground">{texts.noTasks}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

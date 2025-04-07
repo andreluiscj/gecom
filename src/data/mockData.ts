@@ -2,6 +2,8 @@
 import { addDays, addHours, format, subMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { PedidoCompra, Item, Setor } from '@/types';
+import { updateWorkflowFromPedidoStatus, initializeWorkflow } from '@/utils/workflowHelpers';
+import { toast } from 'sonner';
 
 // Array com os fundos monetários disponíveis
 export const fundosMonetarios = [
@@ -45,8 +47,20 @@ export { obterPedidosFicticios };
 
 // Função para adicionar um novo pedido
 export function adicionarPedido(pedido: PedidoCompra) {
-  todosPedidos.push(pedido);
-  return pedido;
+  // Initialize workflow for new pedido if not already present
+  if (!pedido.workflow) {
+    pedido.workflow = initializeWorkflow();
+  }
+
+  // Update workflow based on status
+  const pedidoComWorkflow = updateWorkflowFromPedidoStatus(pedido);
+  
+  todosPedidos.push(pedidoComWorkflow);
+  
+  // Notify user that the DFD has been added
+  toast.success(`DFD "${pedido.descricao}" adicionada com sucesso e sincronizada com todas as páginas`);
+  
+  return pedidoComWorkflow;
 }
 
 // Função para remover um pedido
@@ -124,4 +138,77 @@ export function filtrarPedidos(pedidos: PedidoCompra[], filtros: any) {
     
     return true;
   });
+}
+
+// Função para atualizar status de um pedido
+export function atualizarStatusPedido(id: string, novoStatus: PedidoCompra['status']) {
+  const index = todosPedidos.findIndex(p => p.id === id);
+  
+  if (index !== -1) {
+    const pedidoAtualizado = {
+      ...todosPedidos[index],
+      status: novoStatus
+    };
+    
+    // Update the workflow based on the new status
+    const pedidoComWorkflowAtualizado = updateWorkflowFromPedidoStatus(pedidoAtualizado);
+    
+    todosPedidos[index] = pedidoComWorkflowAtualizado;
+    return pedidoComWorkflowAtualizado;
+  }
+  
+  return null;
+}
+
+// Função para atualizar uma etapa específica do workflow
+export function atualizarEtapaWorkflow(
+  pedidoId: string, 
+  etapaIndex: number, 
+  novoStatus: 'Concluído' | 'Em Andamento' | 'Pendente',
+  data?: Date
+) {
+  const index = todosPedidos.findIndex(p => p.id === pedidoId);
+  
+  if (index !== -1 && todosPedidos[index].workflow) {
+    const workflow = todosPedidos[index].workflow!;
+    
+    // Create a copy of steps
+    const novasEtapas = [...workflow.steps];
+    
+    if (novasEtapas[etapaIndex]) {
+      novasEtapas[etapaIndex] = {
+        ...novasEtapas[etapaIndex],
+        status: novoStatus,
+        date: data || (novoStatus === 'Concluído' ? new Date() : undefined),
+      };
+    }
+    
+    // Calculate new progress
+    const etapasConcluidas = novasEtapas.filter(e => e.status === 'Concluído').length;
+    const etapasEmAndamento = novasEtapas.filter(e => e.status === 'Em Andamento').length;
+    const percentualConcluido = Math.round(
+      (etapasConcluidas + (etapasEmAndamento * 0.5)) / novasEtapas.length * 100
+    );
+    
+    // Update the workflow
+    todosPedidos[index].workflow = {
+      ...workflow,
+      currentStep: etapasConcluidas + (etapasEmAndamento > 0 ? 1 : 0),
+      percentComplete: percentualConcluido,
+      steps: novasEtapas,
+    };
+
+    // Maybe update pedido status based on workflow progress
+    if (percentualConcluido === 100) {
+      todosPedidos[index].status = 'Concluído';
+    } else if (percentualConcluido > 50) {
+      todosPedidos[index].status = 'Em Andamento';
+    } else if (percentualConcluido > 0) {
+      todosPedidos[index].status = 'Aprovado';
+    }
+    
+    return todosPedidos[index];
+  }
+  
+  return null;
 }

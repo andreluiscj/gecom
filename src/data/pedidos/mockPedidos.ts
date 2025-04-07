@@ -2,6 +2,7 @@
 import { PedidoCompra, Item, Setor, PedidoStatus } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { addDays, subDays } from 'date-fns';
+import { initializeWorkflow, updateWorkflowStep } from '@/utils/workflowHelpers';
 
 // Function to generate IDs (local copy to avoid circular dependency)
 const gerarIdLocal = () => uuidv4();
@@ -14,7 +15,7 @@ const gerarPedidoFicticio = (
   dataCompra: Date,
   itens: Item[]
 ): PedidoCompra => {
-  return {
+  const pedido = {
     id: gerarIdLocal(),
     descricao,
     setor,
@@ -34,6 +35,39 @@ const gerarPedidoFicticio = (
     },
     anexos: []
   };
+
+  // Initialize workflow based on status
+  let workflow = initializeWorkflow();
+
+  if (status === 'Pendente') {
+    workflow = updateWorkflowStep(workflow, 0, 'Em Andamento');
+  } else if (status === 'Em Análise') {
+    workflow = updateWorkflowStep(workflow, 0, 'Concluído');
+    workflow = updateWorkflowStep(workflow, 1, 'Em Andamento');
+  } else if (status === 'Aprovado') {
+    workflow = updateWorkflowStep(workflow, 0, 'Concluído');
+    workflow = updateWorkflowStep(workflow, 1, 'Concluído');
+    workflow = updateWorkflowStep(workflow, 2, 'Em Andamento');
+  } else if (status === 'Em Andamento') {
+    workflow = updateWorkflowStep(workflow, 0, 'Concluído');
+    workflow = updateWorkflowStep(workflow, 1, 'Concluído');
+    workflow = updateWorkflowStep(workflow, 2, 'Concluído');
+    workflow = updateWorkflowStep(workflow, 3, 'Em Andamento');
+    workflow = updateWorkflowStep(workflow, 4, 'Pendente');
+  } else if (status === 'Concluído') {
+    for (let i = 0; i < workflow.totalSteps; i++) {
+      workflow = updateWorkflowStep(workflow, i, 'Concluído');
+    }
+  }
+
+  // For demonstration purposes, set a future date for the "Sessão Licitação" step
+  if (status !== 'Concluído' && status !== 'Pendente') {
+    const futureDate = addDays(new Date(), Math.floor(Math.random() * 30) + 1);
+    const licitacaoStepIndex = 6; // Index for "Sessão Licitação" step
+    workflow.steps[licitacaoStepIndex].date = futureDate;
+  }
+
+  return { ...pedido, workflow };
 };
 
 // Gerar pedidos fictícios para cada setor nos últimos 3 meses

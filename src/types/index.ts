@@ -24,6 +24,15 @@ export type PedidoStatus =
   | 'Concluído'
   | 'Rejeitado';
 
+export type WorkflowStepStatus = 'Concluído' | 'Em Andamento' | 'Pendente';
+
+export interface WorkflowStep {
+  id: string;
+  title: string;
+  status: WorkflowStepStatus;
+  date?: Date;
+}
+
 export interface Item {
   id: string;
   nome: string;
@@ -31,6 +40,13 @@ export interface Item {
   quantidade: number;
   valorUnitario: number;
   valorTotal: number;
+}
+
+export interface PedidoWorkflow {
+  currentStep: number;
+  totalSteps: number;
+  percentComplete: number;
+  steps: WorkflowStep[];
 }
 
 export interface PedidoCompra {
@@ -55,6 +71,7 @@ export interface PedidoCompra {
     cargo: string;
   };
   anexos?: any[];
+  workflow?: PedidoWorkflow;
 }
 
 export interface DadosSetor {
