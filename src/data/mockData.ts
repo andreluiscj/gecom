@@ -55,9 +55,18 @@ export function adicionarPedido(pedido: PedidoCompra) {
   // Update workflow based on status
   const pedidoComWorkflow = updateWorkflowFromPedidoStatus(pedido);
   
-  todosPedidos.push(pedidoComWorkflow);
+  // Check if the pedido already exists (in case of update)
+  const existingIndex = todosPedidos.findIndex(p => p.id === pedido.id);
   
-  // Notify user that the DFD has been added
+  if (existingIndex >= 0) {
+    // Update existing pedido
+    todosPedidos[existingIndex] = pedidoComWorkflow;
+  } else {
+    // Add new pedido
+    todosPedidos.push(pedidoComWorkflow);
+  }
+  
+  // Notify user that the DFD has been added and is reflected across the system
   toast.success(`DFD "${pedido.descricao}" adicionada com sucesso e sincronizada com todas as páginas`);
   
   return pedidoComWorkflow;

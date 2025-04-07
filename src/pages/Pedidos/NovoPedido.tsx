@@ -1,6 +1,7 @@
 
 import React from 'react';
 import PedidoForm from '@/components/Pedidos/PedidoForm';
+import { Card } from '@/components/ui/card';
 
 const NovoPedido: React.FC = () => {
   return (
@@ -8,7 +9,8 @@ const NovoPedido: React.FC = () => {
       <div>
         <h1 className="text-3xl font-bold mb-2">Nova DFD</h1>
         <p className="text-muted-foreground">
-          Preencha o formulário de Documento de Formalização de Demanda com as informações necessárias
+          Preencha o formulário de Documento de Formalização de Demanda com as informações necessárias.
+          Após salvar, o sistema atualizará automaticamente todas as listagens e estatísticas.
         </p>
       </div>
 

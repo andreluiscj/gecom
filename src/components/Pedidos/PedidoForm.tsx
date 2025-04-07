@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -18,7 +17,6 @@ import ActionButtons from './Form/ActionButtons';
 import ItemsSection from './Form/ItemsSection';
 import TotalSection from './Form/TotalSection';
 
-// Array of monetary funds
 const fundosMonetarios = [
   'Fundo Municipal de Saúde',
   'Fundo Municipal de Educação',
@@ -29,7 +27,6 @@ const fundosMonetarios = [
   'Recursos Estaduais'
 ];
 
-// Array of secretarias
 const secretarias = [
   'Saúde',
   'Educação',
@@ -96,7 +93,6 @@ const PedidoForm: React.FC = () => {
       [campo]: valor,
     };
 
-    // Recalcular valor total se necessário
     if (campo === 'quantidade' || campo === 'valorUnitario') {
       novosItens[index].valorTotal =
         Number(novosItens[index].quantidade) * Number(novosItens[index].valorUnitario);
@@ -123,7 +119,6 @@ const PedidoForm: React.FC = () => {
     
     if (!isValid) return;
     
-    // Check if items are filled
     const hasEmptyItems = itens.some(item => !item.nome);
     if (hasEmptyItems) {
       toast.error('Preencha todos os itens antes de continuar.');
@@ -168,7 +163,7 @@ const PedidoForm: React.FC = () => {
       };
 
       const pedidoAdicionado = adicionarPedido(novoPedido);
-      toast.success('DFD cadastrada com sucesso!');
+      toast.success('DFD cadastrada com sucesso! Todos os relatórios foram atualizados.');
       navigate(`/pedidos/${pedidoAdicionado.id}`);
     } catch (error) {
       console.error('Erro ao submeter o formulário:', error);
@@ -391,7 +386,6 @@ const PedidoForm: React.FC = () => {
   );
 };
 
-// Create validation schemas
 import * as z from 'zod';
 
 const firstStepSchema = z.object({

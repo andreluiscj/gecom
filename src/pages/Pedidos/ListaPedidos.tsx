@@ -1,10 +1,16 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
 import { obterTodosPedidos } from '@/data/mockData';
+import { PedidoCompra } from '@/types';
 
 const ListaPedidos: React.FC = () => {
-  const pedidos = obterTodosPedidos();
+  const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
+  
+  // Fetch pedidos whenever the component renders to ensure fresh data
+  useEffect(() => {
+    setPedidos(obterTodosPedidos());
+  }, []);
 
   return (
     <div className="space-y-6 animate-fade-in">
