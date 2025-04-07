@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -59,16 +60,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       icon: <FilePlus className="h-5 w-5" />,
     },
     {
-      title: 'Relatórios',
-      path: '/relatorios',
-      icon: <BarChart3 className="h-5 w-5" />,
-    },
-    {
       title: 'Tarefas',
       path: '/tarefas',
       icon: <CheckSquare className="h-5 w-5" />,
     }
   ];
+
+  // Removed the "Relatórios" option from menuItems
 
   const secretariasItems = [
     {
