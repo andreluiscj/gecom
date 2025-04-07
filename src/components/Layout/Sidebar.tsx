@@ -28,7 +28,7 @@ import {
   Globe,
   Radio,
   Award,
-  PieChart
+  PieChart as PieChartIcon
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -142,7 +142,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     {
       title: 'Planejamento',
       path: '/setores/planejamento',
-      icon: <PieChart className="h-5 w-5" />,
+      icon: <PieChartIcon className="h-5 w-5" />,
       color: 'text-white',
     },
     {

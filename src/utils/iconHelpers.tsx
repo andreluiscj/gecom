@@ -13,7 +13,7 @@ import {
   Globe,
   Music,
   Award,
-  PieChart,
+  PieChart as PieChartIcon,
   Radio,
   MapPin
 } from 'lucide-react';
@@ -46,7 +46,7 @@ export const getSetorIcon = (setor: string) => {
     case 'Esportes e Lazer':
       return <Award className="h-4 w-4 text-black" />;
     case 'Planejamento':
-      return <PieChart className="h-4 w-4 text-black" />;
+      return <PieChartIcon className="h-4 w-4 text-black" />;
     case 'Comunicação':
       return <Radio className="h-4 w-4 text-black" />;
     case 'Ciência e Tecnologia':

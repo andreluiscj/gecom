@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   HeartPulse, BookOpen, Building2, Bus, Shield, Heart,
-  Leaf, Coins, Briefcase, Music, Globe, Award, PieChart,
+  Leaf, Coins, Briefcase, Music, Globe, Award, PieChart as PieChartIcon,
   Radio, MapPin, Eye, BarChart3, List as ListIcon, FileText
 } from 'lucide-react';
 import { getSetorIcon, getSetorColor } from '@/utils/iconHelpers';
@@ -110,7 +110,7 @@ const DetalheSetor: React.FC = () => {
     {
       id: 'planejamento',
       titulo: 'Planejamento',
-      icone: <PieChart className="h-6 w-6 text-white" />,
+      icone: <PieChartIcon className="h-6 w-6 text-white" />,
       colorClass: 'bg-indigo-500',
     },
     {
