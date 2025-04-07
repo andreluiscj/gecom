@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -13,13 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PedidoCompra } from '@/types';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { Edit, FileText, Search, Trash2 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Eye, FileText, Search, Trash2, Download } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -27,7 +22,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -68,9 +62,8 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
     setPedidoParaExcluir(null);
   };
 
-  const handleVerDetalhes = (pedido: PedidoCompra) => {
-    setPedidoDetalhes(pedido);
-    setIsDialogOpen(true);
+  const handleVisualizar = (id: string) => {
+    navigate(`/pedidos/${id}`);
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -103,13 +96,13 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos os status</SelectItem>
+              <SelectItem value="">Todos os status</SelectItem>
               <SelectItem value="Pendente">Pendente</SelectItem>
               <SelectItem value="Aprovado">Aprovado</SelectItem>
               <SelectItem value="Reprovado">Reprovado</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => navigate('/pedidos/novo')}>Novo Pedido</Button>
+          <Button onClick={() => navigate('/pedidos/novo')}>Nova DFD</Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -122,7 +115,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
                 <TableHead>Valor</TableHead>
                 <TableHead>Fundo</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="text-right">Visualizar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -141,30 +134,14 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            Ações
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleVerDetalhes(pedido)}>
-                            <FileText className="h-4 w-4 mr-2" />
-                            Ver Detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/pedidos/editar/${pedido.id}`)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-red-600" 
-                            onClick={() => setPedidoParaExcluir(pedido)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleVisualizar(pedido.id)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Visualizar
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -206,74 +183,6 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
             </DialogContent>
           </Dialog>
         )}
-
-        {/* Dialog de detalhes do pedido */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-3xl">
-            {pedidoDetalhes && (
-              <>
-                <DialogHeader>
-                  <DialogTitle>Detalhes do Pedido</DialogTitle>
-                </DialogHeader>
-                <div className="grid grid-cols-2 gap-4 py-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Data da Compra</p>
-                    <p>{formatDate(pedidoDetalhes.dataCompra)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Setor</p>
-                    <p>{pedidoDetalhes.setor}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Fundo Monetário</p>
-                    <p>{pedidoDetalhes.fundoMonetario}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Status</p>
-                    <p className={getStatusBadgeClass(pedidoDetalhes.status)}>
-                      {pedidoDetalhes.status}
-                    </p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-sm font-medium text-muted-foreground">Descrição</p>
-                    <p>{pedidoDetalhes.descricao}</p>
-                  </div>
-                </div>
-                <div className="border-t pt-4">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Itens</p>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead className="text-right">Quantidade</TableHead>
-                        <TableHead className="text-right">Valor Unit.</TableHead>
-                        <TableHead className="text-right">Valor Total</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pedidoDetalhes.itens.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>{item.nome}</TableCell>
-                          <TableCell className="text-right">{item.quantidade}</TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(item.valorUnitario)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(item.valorTotal)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                <div className="border-t pt-4 flex justify-between">
-                  <p className="text-lg font-medium">Valor Total:</p>
-                  <p className="text-lg font-bold">{formatCurrency(pedidoDetalhes.valorTotal)}</p>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
       </CardContent>
     </Card>
   );

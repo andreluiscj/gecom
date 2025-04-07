@@ -2,20 +2,47 @@
 import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Info } from 'lucide-react';
+import { ArrowLeft, Download, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
-import { formatCurrency } from '@/utils/formatters';
-import { formatarData } from '@/data/mockData';
+import { formatCurrency, formatDate } from '@/utils/formatters';
 import { getSetorIcon } from '@/utils/iconHelpers';
 import { Badge } from '@/components/ui/badge';
+import { removerPedido } from '@/data/mockData';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { gerarPDF } from '@/utils/pdfGenerator';
 
 const VisualizarPedido: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
   
   const todosPedidos = obterPedidosFicticios();
   const pedido = useMemo(() => todosPedidos.find(p => p.id === id), [id, todosPedidos]);
+
+  const handleDelete = () => {
+    if (pedido) {
+      removerPedido(pedido.id, pedido.setor);
+      toast.success('DFD excluída com sucesso!');
+      navigate('/pedidos');
+    }
+    setConfirmDelete(false);
+  };
+
+  const handleDownloadPDF = () => {
+    if (pedido) {
+      gerarPDF(pedido);
+      toast.success('PDF gerado com sucesso!');
+    }
+  };
 
   if (!pedido) {
     return (
@@ -29,7 +56,6 @@ const VisualizarPedido: React.FC = () => {
         
         <Card>
           <CardContent className="p-6 text-center">
-            <Info className="h-12 w-12 mx-auto text-muted-foreground" />
             <p className="mt-4 text-muted-foreground">
               O pedido que você está procurando não existe ou foi removido.
             </p>
@@ -53,11 +79,23 @@ const VisualizarPedido: React.FC = () => {
   
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center gap-2 mb-4">
-        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold">Visualização do Pedido</h1>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-2xl font-bold">Visualização da DFD</h1>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setConfirmDelete(true)}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Excluir DFD
+          </Button>
+          <Button onClick={handleDownloadPDF}>
+            <Download className="h-4 w-4 mr-2" />
+            Baixar PDF
+          </Button>
+        </div>
       </div>
       
       <Card>
@@ -80,8 +118,8 @@ const VisualizarPedido: React.FC = () => {
               <h3 className="font-semibold mb-2">Informações Gerais</h3>
               <div className="space-y-1 text-sm">
                 <p className="flex justify-between">
-                  <span className="text-muted-foreground">Data da Compra:</span>
-                  <span>{formatarData(pedido.dataCompra)}</span>
+                  <span className="text-muted-foreground">Data do Pedido:</span>
+                  <span>{formatDate(pedido.dataCompra)}</span>
                 </p>
                 <p className="flex justify-between">
                   <span className="text-muted-foreground">Secretaria:</span>
@@ -89,7 +127,7 @@ const VisualizarPedido: React.FC = () => {
                 </p>
                 {pedido.solicitante && (
                   <p className="flex justify-between">
-                    <span className="text-muted-foreground">Solicitante:</span>
+                    <span className="text-muted-foreground">Responsável:</span>
                     <span>{pedido.solicitante}</span>
                   </p>
                 )}
@@ -97,6 +135,12 @@ const VisualizarPedido: React.FC = () => {
                   <p className="flex justify-between">
                     <span className="text-muted-foreground">Fundo Monetário:</span>
                     <span>{pedido.fundoMonetario}</span>
+                  </p>
+                )}
+                {pedido.localEntrega && (
+                  <p className="flex justify-between">
+                    <span className="text-muted-foreground">Local de Entrega:</span>
+                    <span>{pedido.localEntrega}</span>
                   </p>
                 )}
                 <p className="flex justify-between">
@@ -154,6 +198,26 @@ const VisualizarPedido: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Confirm delete dialog */}
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar exclusão</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir esta DFD? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDelete(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
