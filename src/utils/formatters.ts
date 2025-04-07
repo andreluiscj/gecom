@@ -1,3 +1,4 @@
+
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -39,4 +40,10 @@ export function formatNumber(value: number) {
 // Format date to simple format (for Kanban cards)
 export function formatarDataSimples(date: Date) {
   return format(date, 'dd/MM/yyyy');
+}
+
+// Calculate percentage
+export function calcularPorcentagem(valor: number, total: number): number {
+  if (total === 0) return 0;
+  return (valor / total) * 100;
 }
