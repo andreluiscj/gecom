@@ -25,7 +25,7 @@ const SetorCard: React.FC<SetorCardProps> = ({
     <Card className="transition-all hover:shadow-lg hover:-translate-y-1">
       <CardHeader>
         <div className="flex items-center space-x-2">
-          <div className={cn("p-2 rounded-md", colorClass)}>
+          <div className="p-2 rounded-md bg-white shadow-sm">
             {icone}
           </div>
           <CardTitle>{titulo}</CardTitle>

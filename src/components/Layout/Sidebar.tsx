@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -199,7 +198,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             </div>
           ))}
           
-          {/* Secretárias Dropdown */}
           <div className="mb-1">
             <button
               onClick={toggleSecretarias}

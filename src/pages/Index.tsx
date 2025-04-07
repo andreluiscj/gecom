@@ -6,13 +6,8 @@ const Index: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is authenticated
-    const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    } else {
-      navigate('/login');
-    }
+    // Removemos a verificação de autenticação para garantir que o usuário veja a tela de login
+    navigate('/login');
   }, [navigate]);
 
   return (

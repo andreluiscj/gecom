@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -20,106 +19,106 @@ const ListaSetores: React.FC = () => {
     {
       id: 'saude',
       titulo: 'Saúde',
-      icone: <HeartPulse className="h-5 w-5 text-white" />,
-      colorClass: 'bg-saude-DEFAULT',
+      icone: <HeartPulse className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/saude',
     },
     {
       id: 'educacao',
       titulo: 'Educação',
-      icone: <BookOpen className="h-5 w-5 text-white" />,
-      colorClass: 'bg-educacao-DEFAULT',
+      icone: <BookOpen className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/educacao',
     },
     {
       id: 'administrativo',
       titulo: 'Administrativo',
-      icone: <Building2 className="h-5 w-5 text-white" />,
-      colorClass: 'bg-administrativo-DEFAULT',
+      icone: <Building2 className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/administrativo',
     },
     {
       id: 'transporte',
       titulo: 'Transporte',
-      icone: <Bus className="h-5 w-5 text-white" />,
-      colorClass: 'bg-transporte-DEFAULT',
+      icone: <Bus className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/transporte',
     },
     {
       id: 'obras',
       titulo: 'Obras',
-      icone: <Briefcase className="h-5 w-5 text-white" />,
-      colorClass: 'bg-blue-500',
+      icone: <Briefcase className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/obras',
     },
     {
       id: 'seguranca',
       titulo: 'Segurança Pública',
-      icone: <Shield className="h-5 w-5 text-white" />,
-      colorClass: 'bg-red-500',
+      icone: <Shield className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/seguranca',
     },
     {
       id: 'social',
       titulo: 'Assistência Social',
-      icone: <Heart className="h-5 w-5 text-white" />,
-      colorClass: 'bg-purple-500',
+      icone: <Heart className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/social',
     },
     {
       id: 'ambiente',
       titulo: 'Meio Ambiente',
-      icone: <Leaf className="h-5 w-5 text-white" />,
-      colorClass: 'bg-green-500',
+      icone: <Leaf className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/ambiente',
     },
     {
       id: 'fazenda',
       titulo: 'Fazenda',
-      icone: <Coins className="h-5 w-5 text-white" />,
-      colorClass: 'bg-yellow-600',
+      icone: <Coins className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/fazenda',
     },
     {
       id: 'turismo',
       titulo: 'Turismo',
-      icone: <Globe className="h-5 w-5 text-white" />,
-      colorClass: 'bg-cyan-500',
+      icone: <Globe className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/turismo',
     },
     {
       id: 'cultura',
       titulo: 'Cultura',
-      icone: <Music className="h-5 w-5 text-white" />,
-      colorClass: 'bg-pink-500',
+      icone: <Music className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/cultura',
     },
     {
       id: 'esportes',
       titulo: 'Esportes e Lazer',
-      icone: <Award className="h-5 w-5 text-white" />,
-      colorClass: 'bg-orange-500',
+      icone: <Award className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/esportes',
     },
     {
       id: 'planejamento',
       titulo: 'Planejamento',
-      icone: <PieChart className="h-5 w-5 text-white" />,
-      colorClass: 'bg-indigo-500',
+      icone: <PieChart className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/planejamento',
     },
     {
       id: 'comunicacao',
       titulo: 'Comunicação',
-      icone: <Radio className="h-5 w-5 text-white" />,
-      colorClass: 'bg-blue-400',
+      icone: <Radio className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/comunicacao',
     },
     {
       id: 'ciencia',
       titulo: 'Ciência e Tecnologia',
-      icone: <MapPin className="h-5 w-5 text-white" />,
-      colorClass: 'bg-teal-500',
+      icone: <MapPin className="h-5 w-5 text-black" />,
+      colorClass: 'bg-white',
       href: '/setores/ciencia',
     },
   ];
@@ -140,7 +139,6 @@ const ListaSetores: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {setores.map((setor) => {
           const totalDFDs = getPedidosForSetor(setor.titulo);
-          // Only show budget data if there are pedidos for this sector
           const gastosRealizados = dadosDashboard.gastosPorSetor[setor.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 0;
           const hasPedidos = totalDFDs > 0 && gastosRealizados > 0;
           
@@ -151,7 +149,7 @@ const ListaSetores: React.FC = () => {
             <Link to={setor.href} key={setor.id} className="block">
               <Card className="h-full hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="pb-2 flex flex-row items-center space-x-4 border-b">
-                  <div className={`p-2 rounded-full ${setor.colorClass}`}>
+                  <div className={`p-2 rounded-full bg-white shadow-sm`}>
                     {setor.icone}
                   </div>
                   <CardTitle className="text-xl font-semibold">Secretária de {setor.titulo}</CardTitle>
