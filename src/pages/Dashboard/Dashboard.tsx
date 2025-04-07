@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { obterDadosDashboard } from '@/data/extended-mockData';
 import { formatDate, formatCurrency, formatPercentage } from '@/utils/formatters';
@@ -7,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 import DashboardStatCards from './components/DashboardStatCards';
 import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -329,13 +330,26 @@ const Dashboard: React.FC = () => {
                     data={dadosOrcamento}
                     margin={{ top: 20, right: 30, left: 30, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    {/* Removed CartesianGrid to remove grid lines */}
                     <XAxis dataKey="nome" />
-                    <YAxis tickFormatter={(value) => `R$ ${(value/1000).toFixed(0)}k`} />
+                    <YAxis 
+                      tickFormatter={(value) => `R$ ${(value/1000).toFixed(0)}k`} 
+                      ticks={[0, 150000, 300000, 450000, 600000]} 
+                    />
                     <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, '']} />
                     <Legend />
-                    <Bar dataKey="previsto" name="Orçamento Previsto" fill="#82ca9d" />
-                    <Bar dataKey="realizado" name="Realizado" fill="#8884d8" />
+                    <Bar 
+                      dataKey="previsto" 
+                      name="Orçamento Previsto" 
+                      fill="#82ca9d" 
+                      radius={[5, 5, 0, 0]} 
+                    />
+                    <Bar 
+                      dataKey="realizado" 
+                      name="Realizado" 
+                      fill="#8884d8" 
+                      radius={[5, 5, 0, 0]} 
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
