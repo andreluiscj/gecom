@@ -1,6 +1,5 @@
-
 import React, { useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
@@ -25,6 +24,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 const DetalheSetor: React.FC = () => {
   // Fix: Use id parameter instead of setor
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const dadosDashboard = obterDadosDashboard();
   const todosPedidos = obterPedidosFicticios();
   
@@ -171,6 +171,15 @@ const DetalheSetor: React.FC = () => {
   }, {} as Record<string, number>);
   
   const categoriasChartData = Object.entries(pedidosPorCategoria).map(([name, value]) => ({ name, value }));
+
+  // Funções de navegação para os novos redirecionamentos
+  const handleVisualizarPedido = (id: string) => {
+    navigate(`/pedidos/${id}`);
+  };
+  
+  const handleVisualizarWorkflow = (id: string) => {
+    navigate(`/pedidos/workflow/${id}`);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -345,12 +354,15 @@ const DetalheSetor: React.FC = () => {
                               )}
                             </div>
                           </div>
-                          <Link to={`/pedidos/${pedido.id}`}>
-                            <Button variant="outline" size="sm" className="gap-1">
-                              <Eye className="h-4 w-4" />
-                              Visualizar
-                            </Button>
-                          </Link>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="gap-1"
+                            onClick={() => handleVisualizarWorkflow(pedido.id)}
+                          >
+                            <Eye className="h-4 w-4" />
+                            Visualizar
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -443,11 +455,13 @@ const DetalheSetor: React.FC = () => {
                           </TableCell>
                           <TableCell>{formatCurrency(pedido.valorTotal)}</TableCell>
                           <TableCell className="text-right">
-                            <Link to={`/pedidos/${pedido.id}`}>
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </Link>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleVisualizarPedido(pedido.id)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
