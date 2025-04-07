@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { obterDadosDashboard } from '@/data/extended-mockData';
 import { formatDate, formatCurrency, formatPercentage } from '@/utils/formatters';
@@ -19,7 +18,6 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 
 const Dashboard: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState('resumo');
-  const [selectedSecretaria, setSelectedSecretaria] = useState<Setor | null>(null);
   
   const dashboardData = obterDadosDashboard();
   const todosPedidos = obterPedidosFicticios();
@@ -73,30 +71,6 @@ const Dashboard: React.FC = () => {
       .slice(0, 5);
   }, [orcamentoPrevisto, gastosPorSetor]);
 
-  // Filter orders based on selected department
-  const filteredPedidos = useMemo(() => {
-    if (!selectedSecretaria) return [];
-    return todosPedidos.filter(pedido => pedido.setor === selectedSecretaria);
-  }, [todosPedidos, selectedSecretaria]);
-  
-  // Department budget progress
-  const departmentProgress = useMemo(() => {
-    if (!selectedSecretaria) return { percentual: 0, previsto: 0, realizado: 0 };
-    const previsto = orcamentoPrevisto[selectedSecretaria] || 0;
-    const realizado = gastosPorSetor[selectedSecretaria] || 0;
-    const percentual = previsto > 0 ? (realizado / previsto) * 100 : 0;
-    return { percentual, previsto, realizado };
-  }, [selectedSecretaria, orcamentoPrevisto, gastosPorSetor]);
-
-  // List of all departments for tabs
-  const secretarias: Setor[] = [
-    'Saúde', 'Educação', 'Administrativo', 'Transporte', 
-    'Obras', 'Segurança Pública', 'Assistência Social', 
-    'Meio Ambiente', 'Fazenda', 'Turismo', 'Cultura', 
-    'Esportes e Lazer', 'Planejamento', 'Comunicação', 
-    'Ciência e Tecnologia'
-  ];
-
   // Determine if the budget is at risk
   const orcamentoEmRisco = percentualUtilizado > 70;
 
@@ -120,11 +94,10 @@ const Dashboard: React.FC = () => {
       )}
 
       <Tabs defaultValue="resumo" className="space-y-4" onValueChange={setSelectedTab}>
-        <TabsList className="grid sm:grid-cols-3 md:grid-cols-5 gap-2">
+        <TabsList className="grid sm:grid-cols-3 md:grid-cols-4 gap-2">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
           <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
-          <TabsTrigger value="secretarias">Secretarias</TabsTrigger>
           <TabsTrigger value="graficos">Gráficos</TabsTrigger>
         </TabsList>
         
@@ -528,168 +501,6 @@ const Dashboard: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-        
-        <TabsContent value="secretarias" className="space-y-4">
-          <Tabs defaultValue="Saúde" className="w-full">
-            <div className="mb-4 overflow-x-auto">
-              <TabsList className="flex gap-2 pb-2">
-                {secretarias.map((secretaria) => (
-                  <TabsTrigger 
-                    key={secretaria}
-                    value={secretaria}
-                    onClick={() => setSelectedSecretaria(secretaria)}
-                  >
-                    {secretaria}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-            
-            {secretarias.map((secretaria) => (
-              <TabsContent key={secretaria} value={secretaria} className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{secretaria}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {/* Progresso do orçamento */}
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Execução Orçamentária</h3>
-                        
-                        <div className="flex justify-between mb-1 text-sm font-medium">
-                          <div>Orçamento Utilizado</div>
-                          <div>{formatPercentage(departmentProgress.percentual)}</div>
-                        </div>
-                        
-                        <Progress 
-                          value={departmentProgress.percentual} 
-                          className="h-3"
-                          color={`${departmentProgress.percentual > 90 ? 'bg-red-500' : departmentProgress.percentual > 70 ? 'bg-yellow-500' : 'bg-green-500'}`}
-                        />
-                        
-                        <div className="flex justify-between text-sm text-muted-foreground">
-                          <span>Utilizado: {formatCurrency(departmentProgress.realizado)}</span>
-                          <span>Orçamento Total: {formatCurrency(departmentProgress.previsto)}</span>
-                        </div>
-                      </div>
-
-                      {/* Gráficos */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <h3 className="text-lg font-medium mb-4">Status dos Pedidos</h3>
-                          <div className="h-64">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <PieChart>
-                                <Pie
-                                  data={filteredPedidos.reduce((acc, pedido) => {
-                                    const status = pedido.status;
-                                    const existingStatus = acc.find(item => item.name === status);
-                                    if (existingStatus) {
-                                      existingStatus.value += 1;
-                                    } else {
-                                      acc.push({ name: status, value: 1 });
-                                    }
-                                    return acc;
-                                  }, [] as { name: string, value: number }[])}
-                                  cx="50%"
-                                  cy="50%"
-                                  labelLine={false}
-                                  outerRadius={80}
-                                  fill="#8884d8"
-                                  dataKey="value"
-                                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                >
-                                  {pedidosPorStatus.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                  ))}
-                                </Pie>
-                                <Tooltip formatter={(value) => [`${value} pedidos`, 'Quantidade']} />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h3 className="text-lg font-medium mb-4">Valor dos Pedidos por Mês</h3>
-                          <div className="h-64">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <BarChart 
-                                data={
-                                  filteredPedidos
-                                    .sort((a, b) => a.dataCompra.getTime() - b.dataCompra.getTime())
-                                    .reduce((acc, pedido) => {
-                                      const month = pedido.dataCompra.toLocaleDateString('pt-BR', { month: 'short' });
-                                      const existingMonth = acc.find(item => item.name === month);
-                                      if (existingMonth) {
-                                        existingMonth.value += pedido.valorTotal;
-                                      } else {
-                                        acc.push({ name: month, value: pedido.valorTotal });
-                                      }
-                                      return acc;
-                                    }, [] as { name: string, value: number }[])
-                                }
-                              >
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis tickFormatter={(value) => `R$ ${(value/1000).toFixed(0)}k`} />
-                                <Tooltip formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 'Valor']} />
-                                <Bar dataKey="value" fill="#8884d8" />
-                              </BarChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Tabela de pedidos */}
-                      <div className="mt-6">
-                        <h3 className="text-lg font-medium mb-4">Pedidos da Secretaria</h3>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Descrição</TableHead>
-                              <TableHead>Data</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Valor</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {filteredPedidos.length === 0 ? (
-                              <TableRow>
-                                <TableCell colSpan={4} className="text-center py-4">
-                                  Nenhum pedido encontrado para esta secretaria.
-                                </TableCell>
-                              </TableRow>
-                            ) : (
-                              filteredPedidos.map((pedido) => (
-                                <TableRow key={pedido.id}>
-                                  <TableCell className="font-medium">{pedido.descricao}</TableCell>
-                                  <TableCell>{pedido.dataCompra.toLocaleDateString('pt-BR')}</TableCell>
-                                  <TableCell>
-                                    <span className={`px-2 py-1 rounded-full text-xs 
-                                      ${pedido.status === 'Aprovado' ? 'bg-green-100 text-green-800' : 
-                                        pedido.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' : 
-                                        pedido.status === 'Em Andamento' ? 'bg-blue-100 text-blue-800' : 
-                                        pedido.status === 'Concluído' ? 'bg-purple-100 text-purple-800' : 
-                                        'bg-gray-100 text-gray-800'}`}
-                                    >
-                                      {pedido.status}
-                                    </span>
-                                  </TableCell>
-                                  <TableCell>{formatCurrency(pedido.valorTotal)}</TableCell>
-                                </TableRow>
-                              ))
-                            )}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            ))}
-          </Tabs>
         </TabsContent>
       </Tabs>
     </div>

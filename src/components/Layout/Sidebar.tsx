@@ -66,8 +66,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     }
   ];
 
-  // Removed the "Relatórios" option from menuItems
-
   const secretariasItems = [
     {
       title: 'Saúde',
