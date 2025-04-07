@@ -3,9 +3,16 @@ import { PedidoCompra, Item, Setor, PedidoStatus } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { addDays, subDays } from 'date-fns';
 import { initializeWorkflow, updateWorkflowStep } from '@/utils/workflowHelpers';
+import { nomesResponsaveis } from '@/data/mockData';
 
 // Function to generate IDs (local copy to avoid circular dependency)
 const gerarIdLocal = () => uuidv4();
+
+// Helper to get a random name from the list
+const getRandomResponsavel = () => {
+  const index = Math.floor(Math.random() * nomesResponsaveis.length);
+  return nomesResponsaveis[index];
+};
 
 const gerarPedidoFicticio = (
   setor: Setor, 
@@ -39,24 +46,48 @@ const gerarPedidoFicticio = (
   // Initialize workflow based on status
   let workflow = initializeWorkflow();
 
+  // Helper to add responsible person and completion date to completed steps
+  const addResponsavelAndConclusao = (workflow: any, stepIndex: number) => {
+    const step = workflow.steps[stepIndex];
+    if (step && step.status === 'Concluído') {
+      workflow.steps[stepIndex] = {
+        ...step,
+        responsavel: getRandomResponsavel(),
+        dataConclusao: subDays(new Date(), Math.floor(Math.random() * 10) + 1)
+      };
+    }
+    return workflow;
+  };
+
   if (status === 'Pendente') {
     workflow = updateWorkflowStep(workflow, 0, 'Em Andamento');
+    workflow.steps[0].responsavel = getRandomResponsavel();
   } else if (status === 'Em Análise') {
     workflow = updateWorkflowStep(workflow, 0, 'Concluído');
     workflow = updateWorkflowStep(workflow, 1, 'Em Andamento');
+    workflow = addResponsavelAndConclusao(workflow, 0);
+    workflow.steps[1].responsavel = getRandomResponsavel();
   } else if (status === 'Aprovado') {
     workflow = updateWorkflowStep(workflow, 0, 'Concluído');
     workflow = updateWorkflowStep(workflow, 1, 'Concluído');
     workflow = updateWorkflowStep(workflow, 2, 'Em Andamento');
+    workflow = addResponsavelAndConclusao(workflow, 0);
+    workflow = addResponsavelAndConclusao(workflow, 1);
+    workflow.steps[2].responsavel = getRandomResponsavel();
   } else if (status === 'Em Andamento') {
     workflow = updateWorkflowStep(workflow, 0, 'Concluído');
     workflow = updateWorkflowStep(workflow, 1, 'Concluído');
     workflow = updateWorkflowStep(workflow, 2, 'Concluído');
     workflow = updateWorkflowStep(workflow, 3, 'Em Andamento');
     workflow = updateWorkflowStep(workflow, 4, 'Pendente');
+    workflow = addResponsavelAndConclusao(workflow, 0);
+    workflow = addResponsavelAndConclusao(workflow, 1);
+    workflow = addResponsavelAndConclusao(workflow, 2);
+    workflow.steps[3].responsavel = getRandomResponsavel();
   } else if (status === 'Concluído') {
     for (let i = 0; i < workflow.totalSteps; i++) {
       workflow = updateWorkflowStep(workflow, i, 'Concluído');
+      workflow = addResponsavelAndConclusao(workflow, i);
     }
   }
 
@@ -65,6 +96,7 @@ const gerarPedidoFicticio = (
     const futureDate = addDays(new Date(), Math.floor(Math.random() * 30) + 1);
     const licitacaoStepIndex = 6; // Index for "Sessão Licitação" step
     workflow.steps[licitacaoStepIndex].date = futureDate;
+    workflow.steps[licitacaoStepIndex].responsavel = getRandomResponsavel();
   }
 
   return { ...pedido, workflow };

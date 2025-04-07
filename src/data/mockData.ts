@@ -1,3 +1,4 @@
+
 import { addDays, addHours, format, subMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { PedidoCompra, Item, Setor } from '@/types';
@@ -13,6 +14,20 @@ export const fundosMonetarios = [
   'Fundo Municipal de Assistência Social',
   'Fundo Municipal de Cultura',
   'Fundo Municipal de Meio Ambiente',
+];
+
+// Nomes de funcionários fictícios para uso como responsáveis
+export const nomesResponsaveis = [
+  'Ana Silva',
+  'Carlos Santos',
+  'Mariana Oliveira',
+  'Pedro Almeida',
+  'Juliana Costa',
+  'Roberto Pereira',
+  'Fernanda Lima',
+  'Lucas Martins',
+  'Patricia Souza',
+  'Bruno Rodrigues'
 ];
 
 // Função para gerar IDs únicos
@@ -172,7 +187,9 @@ export function atualizarEtapaWorkflow(
   pedidoId: string, 
   etapaIndex: number, 
   novoStatus: 'Concluído' | 'Em Andamento' | 'Pendente',
-  data?: Date
+  data?: Date,
+  responsavel?: string,
+  dataConclusao?: Date
 ) {
   const index = todosPedidos.findIndex(p => p.id === pedidoId);
   
@@ -186,7 +203,10 @@ export function atualizarEtapaWorkflow(
       novasEtapas[etapaIndex] = {
         ...novasEtapas[etapaIndex],
         status: novoStatus,
-        date: data || (novoStatus === 'Concluído' ? new Date() : undefined),
+        date: data || novasEtapas[etapaIndex].date,
+        responsavel: responsavel !== undefined ? responsavel : novasEtapas[etapaIndex].responsavel,
+        dataConclusao: dataConclusao !== undefined ? dataConclusao : novasEtapas[etapaIndex].dataConclusao || 
+          (novoStatus === 'Concluído' && !novasEtapas[etapaIndex].dataConclusao ? new Date() : undefined)
       };
     }
     

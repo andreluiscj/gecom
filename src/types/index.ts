@@ -66,6 +66,8 @@ export interface WorkflowStep {
   title: string;
   status: WorkflowStepStatus;
   date?: Date;
+  dataConclusao?: Date;   // New field: completion date
+  responsavel?: string;   // New field: responsible person
 }
 
 export interface Workflow {

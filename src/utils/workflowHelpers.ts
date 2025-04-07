@@ -35,7 +35,9 @@ export function updateWorkflowStep(
   workflow: PedidoCompra['workflow'], 
   stepIndex: number, 
   status: WorkflowStepStatus,
-  date?: Date
+  date?: Date,
+  responsavel?: string,
+  dataConclusao?: Date
 ): PedidoCompra['workflow'] {
   if (!workflow) return initializeWorkflow();
   
@@ -46,6 +48,8 @@ export function updateWorkflowStep(
       ...updatedSteps[stepIndex],
       status,
       date: date || (status === 'Concluído' ? new Date() : undefined),
+      responsavel: responsavel || updatedSteps[stepIndex].responsavel,
+      dataConclusao: dataConclusao || (status === 'Concluído' ? new Date() : updatedSteps[stepIndex].dataConclusao),
     };
   }
 
