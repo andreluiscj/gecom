@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -163,7 +164,7 @@ const PedidoForm: React.FC = () => {
       };
 
       const pedidoAdicionado = adicionarPedido(novoPedido);
-      toast.success('DFD cadastrada com sucesso! Todos os relatórios foram atualizados.');
+      toast.success('DFD cadastrada com sucesso! A DFD já está disponível na página da secretaria e nos relatórios do sistema.');
       navigate(`/pedidos/${pedidoAdicionado.id}`);
     } catch (error) {
       console.error('Erro ao submeter o formulário:', error);

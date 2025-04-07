@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react';
+
+import React, { useMemo, useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
 import { Setor, PedidoCompra } from '@/types';
 import { obterDadosDashboard } from '@/data/extended-mockData';
-import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
+import { obterPedidos } from '@/data/mockData';
 import { formatarData } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,7 +27,15 @@ const DetalheSetor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dadosDashboard = obterDadosDashboard();
-  const todosPedidos = obterPedidosFicticios();
+  
+  // Use state to store pedidos so we can update it when data changes
+  const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
+  
+  // Fetch pedidos whenever component mounts or whenever a new DFD might have been added
+  useEffect(() => {
+    const allPedidos = obterPedidos();
+    setPedidos(allPedidos);
+  }, []);
   
   interface SetorDefinition {
     id: string;
@@ -135,9 +144,9 @@ const DetalheSetor: React.FC = () => {
     return <div>Setor não encontrado</div>;
   }
 
-  // Get actual pedidos for this setor from the system
-  const pedidos = todosPedidos.filter(p => p.setor === setorConfig.titulo);
-  const totalPedidos = pedidos.length;
+  // Get actual pedidos for this setor from the system - filter from all pedidos
+  const setorPedidos = pedidos.filter(p => p.setor === setorConfig.titulo);
+  const totalPedidos = setorPedidos.length;
 
   // Only calculate budget data if there are pedidos for this setor
   const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto?.[setorConfig.titulo] || 0;
@@ -145,7 +154,7 @@ const DetalheSetor: React.FC = () => {
   const percentualGasto = calcularPorcentagem(totalGasto, orcamentoPrevisto);
   
   // Calculate status distribution for pedidos
-  const pedidosPorStatus = pedidos.reduce((acc, pedido) => {
+  const pedidosPorStatus = setorPedidos.reduce((acc, pedido) => {
     acc[pedido.status] = (acc[pedido.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -153,7 +162,7 @@ const DetalheSetor: React.FC = () => {
   const statusChartData = Object.entries(pedidosPorStatus).map(([name, value]) => ({ name, value }));
   
   // Generate monthly spending data
-  const gastosPortMes = pedidos.reduce((acc, pedido) => {
+  const gastosPortMes = setorPedidos.reduce((acc, pedido) => {
     const mes = pedido.dataCompra.toLocaleDateString('pt-BR', { month: 'short' });
     acc[mes] = (acc[mes] || 0) + pedido.valorTotal;
     return acc;
@@ -163,7 +172,7 @@ const DetalheSetor: React.FC = () => {
   
   // Generate category distribution data
   const categorias = ['Material Permanente', 'Material de Consumo', 'Serviços', 'Outros'];
-  const pedidosPorCategoria = pedidos.reduce((acc, pedido, index) => {
+  const pedidosPorCategoria = setorPedidos.reduce((acc, pedido, index) => {
     // This is a simplified example, in a real app you'd have actual categories
     const categoria = categorias[index % categorias.length];
     acc[categoria] = (acc[categoria] || 0) + pedido.valorTotal;

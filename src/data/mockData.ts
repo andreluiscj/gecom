@@ -1,4 +1,3 @@
-
 import { addDays, addHours, format, subMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { PedidoCompra, Item, Setor } from '@/types';
@@ -66,8 +65,7 @@ export function adicionarPedido(pedido: PedidoCompra) {
     todosPedidos.push(pedidoComWorkflow);
   }
   
-  // Notify user that the DFD has been added and is reflected across the system
-  toast.success(`DFD "${pedido.descricao}" adicionada com sucesso e sincronizada com todas as páginas`);
+  console.log(`DFD adicionada: ${pedido.descricao} para a secretaria ${pedido.setor}`);
   
   return pedidoComWorkflow;
 }
