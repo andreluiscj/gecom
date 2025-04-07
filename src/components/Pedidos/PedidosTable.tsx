@@ -14,15 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PedidoCompra } from '@/types';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { Eye, FileText, Search, Trash2, Download } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Eye, FileText, Search } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -30,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { removerPedido } from '@/data/mockData';
 import { toast } from 'sonner';
 
 interface PedidosTableProps {
@@ -44,23 +35,14 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
 }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('todos');
-  const [pedidoParaExcluir, setPedidoParaExcluir] = useState<PedidoCompra | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [pedidoDetalhes, setPedidoDetalhes] = useState<PedidoCompra | null>(null);
-
+  const [statusFilter, setStatusFilter] = useState<string>("todos");
+  
   const filteredPedidos = pedidos.filter(
     (pedido) =>
       (pedido.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pedido.fundoMonetario.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (statusFilter === 'todos' || pedido.status === statusFilter)
   );
-
-  const handleExcluir = (pedido: PedidoCompra) => {
-    removerPedido(pedido.id, pedido.setor);
-    toast.success('Pedido excluído com sucesso!');
-    setPedidoParaExcluir(null);
-  };
 
   const handleVisualizar = (id: string) => {
     navigate(`/pedidos/${id}`);
@@ -155,34 +137,6 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
             </TableBody>
           </Table>
         </div>
-
-        {/* Dialog de confirmação para excluir */}
-        {pedidoParaExcluir && (
-          <Dialog
-            open={Boolean(pedidoParaExcluir)}
-            onOpenChange={(open) => !open && setPedidoParaExcluir(null)}
-          >
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirmar exclusão</DialogTitle>
-                <DialogDescription>
-                  Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setPedidoParaExcluir(null)}>
-                  Cancelar
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => pedidoParaExcluir && handleExcluir(pedidoParaExcluir)}
-                >
-                  Excluir
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
       </CardContent>
     </Card>
   );

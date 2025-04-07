@@ -37,7 +37,15 @@ const secretarias = [
   'Transporte',
   'Assistência Social',
   'Cultura',
-  'Meio Ambiente'
+  'Meio Ambiente',
+  'Obras',
+  'Segurança Pública',
+  'Fazenda',
+  'Turismo',
+  'Esportes e Lazer',
+  'Planejamento',
+  'Comunicação',
+  'Ciência e Tecnologia'
 ];
 
 const PedidoForm: React.FC = () => {
@@ -161,7 +169,7 @@ const PedidoForm: React.FC = () => {
 
       const pedidoAdicionado = adicionarPedido(novoPedido);
       toast.success('DFD cadastrada com sucesso!');
-      navigate(`/pedidos/workflow/${pedidoAdicionado.id}`);
+      navigate(`/pedidos/${pedidoAdicionado.id}`);
     } catch (error) {
       console.error('Erro ao submeter o formulário:', error);
       toast.error('Erro ao cadastrar DFD. Tente novamente.');
@@ -183,24 +191,10 @@ const PedidoForm: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="dataCompra"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data do Pedido</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="setor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Secretaria Solicitante</FormLabel>
+                      <FormLabel>Identificação do Requisitante (Secretaria)</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -222,15 +216,13 @@ const PedidoForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="fundoMonetario"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Unidade Administrativa (Fundo)</FormLabel>
+                      <FormLabel>Unidade Administrativa Requisitante (Fundo)</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -252,7 +244,9 @@ const PedidoForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="responsavel"
@@ -266,17 +260,31 @@ const PedidoForm: React.FC = () => {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="dataCompra"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data do Pedido</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField
                 control={form.control}
-                name="descricao"
+                name="justificativa"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Descrição do Pedido</FormLabel>
+                    <FormLabel>Justificativa da Necessidade</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Descreva o pedido de compra..."
+                        placeholder="Justifique a necessidade deste pedido..."
                         className="resize-none"
                         {...field}
                       />
@@ -288,13 +296,13 @@ const PedidoForm: React.FC = () => {
 
               <FormField
                 control={form.control}
-                name="justificativa"
+                name="descricao"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Justificativa da Necessidade</FormLabel>
+                    <FormLabel>Descrição do Pedido</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Justifique a necessidade deste pedido..."
+                        placeholder="Descreva o pedido de compra..."
                         className="resize-none"
                         {...field}
                       />

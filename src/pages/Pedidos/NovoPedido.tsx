@@ -8,7 +8,7 @@ const NovoPedido: React.FC = () => {
       <div>
         <h1 className="text-3xl font-bold mb-2">Nova DFD</h1>
         <p className="text-muted-foreground">
-          Cadastre um novo Documento de Formalização de Demanda para qualquer setor
+          Preencha o formulário de Documento de Formalização de Demanda com as informações necessárias
         </p>
       </div>
 
