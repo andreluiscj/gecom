@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,14 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Check if user is already authenticated
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -23,7 +31,7 @@ const Login: React.FC = () => {
         // Login bem-sucedido
         toast.success('Login realizado com sucesso!');
         localStorage.setItem('user-authenticated', 'true');
-        navigate('/admin');
+        navigate('/dashboard');
       } else {
         // Login falhou
         toast.error('Usuário ou senha incorretos');

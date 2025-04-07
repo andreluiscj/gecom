@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import AppLayout from "./components/Layout/AppLayout";
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -9,6 +10,7 @@ import ListaPedidos from "./pages/Pedidos/ListaPedidos";
 import VisualizarPedido from "./pages/Pedidos/VisualizarPedido";
 import NovoPedido from "./pages/Pedidos/NovoPedido";
 import MunicipioSelection from "./pages/Admin/MunicipioSelection";
+import Admin from "./pages/Admin/Admin";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -19,6 +21,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/admin" element={<Admin />} />
 
       <Route path="/" element={<AppLayout />}>
         <Route path="dashboard" element={<Dashboard />} />

@@ -6,8 +6,13 @@ const Index: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect to the admin area
-    navigate('/admin');
+    // Check if user is authenticated
+    const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    } else {
+      navigate('/login');
+    }
   }, [navigate]);
 
   return (
