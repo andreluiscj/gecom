@@ -42,6 +42,7 @@ const TarefasSelecao: React.FC = () => {
     priorities: language === 'pt' ? 'Prioridades' : 'Priorities',
     pendingTasks: language === 'pt' ? 'Tarefas Pendentes' : 'Pending Tasks',
     noTasks: language === 'pt' ? 'Sem tarefas' : 'No tasks',
+    workflow: language === 'pt' ? 'Fluxo do Processo' : 'Workflow',
   };
 
   const departamentos = [
@@ -167,10 +168,8 @@ const TarefasSelecao: React.FC = () => {
     },
   ];
 
-  // Filtrar apenas departamentos com tarefas pendentes
   const departamentosComTarefas = departamentos.filter(dept => dept.tarefasPendentes > 0);
   
-  // Total de tarefas pendentes
   const totalPendentes = departamentos.reduce((sum, dept) => sum + dept.tarefasPendentes, 0);
 
   const [setorSelecionado, setSetorSelecionado] = useState<string | null>(null);
@@ -180,7 +179,6 @@ const TarefasSelecao: React.FC = () => {
     setSetorSelecionado(setor);
   };
 
-  // Get pedidos for the selected setor
   const pedidosDoSetor = setorSelecionado 
     ? obterPedidosPorSetor(setorSelecionado as any)
     : [];
@@ -222,6 +220,7 @@ const TarefasSelecao: React.FC = () => {
                     <TableHead>{language === 'pt' ? 'Valor' : 'Value'}</TableHead>
                     <TableHead>{language === 'pt' ? 'Status' : 'Status'}</TableHead>
                     <TableHead>{language === 'pt' ? 'Progresso' : 'Progress'}</TableHead>
+                    <TableHead>{language === 'pt' ? 'Ações' : 'Actions'}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -256,6 +255,16 @@ const TarefasSelecao: React.FC = () => {
                             {pedido.workflow?.percentComplete || 0}%
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          onClick={() => navigate(`/pedidos/workflow/${pedido.id}`)}
+                          title={texts.workflow}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
