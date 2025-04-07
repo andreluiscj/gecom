@@ -3,7 +3,20 @@ import { PedidoCompra, Item, Setor, PedidoStatus } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { addDays, subDays } from 'date-fns';
 import { initializeWorkflow, updateWorkflowStep } from '@/utils/workflowHelpers';
-import { nomesResponsaveis } from '@/data/mockData';
+
+// Import directly from the source definition file to avoid circular dependencies
+const nomesResponsaveis = [
+  'Ana Silva',
+  'Carlos Santos',
+  'Mariana Oliveira',
+  'Pedro Almeida',
+  'Juliana Costa',
+  'Roberto Pereira',
+  'Fernanda Lima',
+  'Lucas Martins',
+  'Patricia Souza',
+  'Bruno Rodrigues'
+];
 
 // Function to generate IDs (local copy to avoid circular dependency)
 const gerarIdLocal = () => uuidv4();

@@ -35,6 +35,9 @@ export function gerarId() {
   return uuidv4();
 }
 
+// Import functions from pedidos module - MOVED UP before it's used
+import { obterPedidosFicticios } from './pedidos/mockPedidos';
+
 // Initialize todosPedidos
 const todosPedidos: PedidoCompra[] = [];
 
@@ -52,9 +55,6 @@ export function initializeMockData() {
 
 // Make sure data is initialized before first use
 initializeMockData();
-
-// Import functions from pedidos module
-import { obterPedidosFicticios } from './pedidos/mockPedidos';
 
 // Re-export the function for external use
 export { obterPedidosFicticios };
