@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -223,7 +222,6 @@ const TarefasSelecao: React.FC = () => {
                     <TableHead>{language === 'pt' ? 'Valor' : 'Value'}</TableHead>
                     <TableHead>{language === 'pt' ? 'Status' : 'Status'}</TableHead>
                     <TableHead>{language === 'pt' ? 'Progresso' : 'Progress'}</TableHead>
-                    <TableHead>{language === 'pt' ? 'Ações' : 'Actions'}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -257,16 +255,6 @@ const TarefasSelecao: React.FC = () => {
                           <div className="text-xs text-muted-foreground text-right mt-1">
                             {pedido.workflow?.percentComplete || 0}%
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" onClick={() => navigate(`/pedidos/${pedido.id}`)}>
-                            Visualizar
-                          </Button>
-                          <Button variant="secondary" size="sm" onClick={() => navigate(`/pedidos/workflow/${pedido.id}`)}>
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
