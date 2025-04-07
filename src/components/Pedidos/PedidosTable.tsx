@@ -97,7 +97,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
                 <TableHead>Valor</TableHead>
                 <TableHead>Fundo</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Visualizar</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

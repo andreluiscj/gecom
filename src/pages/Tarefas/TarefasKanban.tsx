@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +17,14 @@ interface TaskProps {
 
 const Task: React.FC<TaskProps> = ({ pedido }) => {
   const navigate = useNavigate();
+
+  const handleVisualizar = () => {
+    navigate(`/pedidos/${pedido.id}`);
+  };
+
+  const handleWorkflow = () => {
+    navigate(`/pedidos/workflow/${pedido.id}`);
+  };
 
   return (
     <div className="border rounded-lg p-4 shadow-sm mb-3 bg-white">
@@ -55,23 +62,15 @@ const Task: React.FC<TaskProps> = ({ pedido }) => {
         </div>
       )}
       
-      <div className="flex space-x-2 mt-2">
+      <div className="mt-2">
         <Button 
           size="sm" 
           variant="outline" 
-          className="w-full mt-2"
-          onClick={() => navigate(`/pedidos/${pedido.id}`)}
+          className="w-full"
+          onClick={handleVisualizar}
         >
           <Eye className="h-4 w-4 mr-1" /> 
           Visualizar
-        </Button>
-        <Button 
-          size="sm" 
-          variant="secondary" 
-          className="w-full mt-2"
-          onClick={() => navigate(`/pedidos/workflow/${pedido.id}`)}
-        >
-          Fluxo
         </Button>
       </div>
     </div>
