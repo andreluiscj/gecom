@@ -28,9 +28,16 @@ const Login: React.FC = () => {
     // Simular uma verificação de login
     setTimeout(() => {
       if (username === 'admin' && password === 'admin') {
-        // Login bem-sucedido
+        // Login bem-sucedido para admin
         toast.success('Login realizado com sucesso!');
         localStorage.setItem('user-authenticated', 'true');
+        localStorage.setItem('user-role', 'admin');
+        navigate('/admin');
+      } else if (username === 'user' && password === 'user') {
+        // Login bem-sucedido para usuário normal
+        toast.success('Login realizado com sucesso!');
+        localStorage.setItem('user-authenticated', 'true');
+        localStorage.setItem('user-role', 'user');
         navigate('/dashboard');
       } else {
         // Login falhou

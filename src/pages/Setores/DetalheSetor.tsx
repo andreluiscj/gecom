@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   HeartPulse, BookOpen, Building2, Bus, Shield, Heart,
-  Leaf, Coins, Briefcase, Music, Globe, Award, PieChart as PieChartIcon,
+  Leaf, Coins, Briefcase, Music, Globe, Award, PieChartIcon,
   Radio, MapPin, Eye, BarChart3, List as ListIcon, FileText
 } from 'lucide-react';
 import { getSetorIcon, getSetorColor } from '@/utils/iconHelpers';
@@ -22,7 +23,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
 const DetalheSetor: React.FC = () => {
-  const { setor } = useParams<{ setor: string }>();
+  // Fix: Use id parameter instead of setor
+  const { id } = useParams<{ id: string }>();
   const dadosDashboard = obterDadosDashboard();
   const todosPedidos = obterPedidosFicticios();
   
@@ -126,7 +128,8 @@ const DetalheSetor: React.FC = () => {
     },
   ];
   
-  const setorConfig = useMemo(() => SETORES_CONFIG.find(s => s.id === setor), [setor]);
+  // Fix: find setor by id parameter
+  const setorConfig = useMemo(() => SETORES_CONFIG.find(s => s.id === id), [id]);
 
   if (!setorConfig) {
     return <div>Setor não encontrado</div>;
