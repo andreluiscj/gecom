@@ -1,10 +1,9 @@
-
 import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
+import { obterTodosPedidos } from '@/data/mockData';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { getSetorIcon } from '@/utils/iconHelpers';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +24,7 @@ const VisualizarPedido: React.FC = () => {
   const navigate = useNavigate();
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   
-  const todosPedidos = obterPedidosFicticios();
+  const todosPedidos = obterTodosPedidos();
   const pedido = useMemo(() => todosPedidos.find(p => p.id === id), [id, todosPedidos]);
 
   const handleDelete = () => {

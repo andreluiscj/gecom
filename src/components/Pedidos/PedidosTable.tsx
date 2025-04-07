@@ -45,6 +45,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
   );
 
   const handleVisualizar = (id: string) => {
+    // Navigate to the pedido detail page
     navigate(`/pedidos/${id}`);
   };
 
