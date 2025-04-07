@@ -16,7 +16,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
   municipio,
   language
 }) => {
-  const totalDFDs = Object.values(dadosDashboard.pedidosPorSetor).reduce((sum, count) => sum + count, 0);
+  const totalDFDs = Object.values(dadosDashboard.pedidosPorSetor || {}).reduce((sum, count) => sum + (count || 0), 0);
   const percentualOrcamento = ((dadosDashboard.gastosTotais / municipio.orcamentoAnual) * 100).toFixed(2);
   
   return (

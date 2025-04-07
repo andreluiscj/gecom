@@ -1,4 +1,3 @@
-import { Workflow } from "./workflow";
 
 export type Role = "admin" | "editor" | null;
 
@@ -23,7 +22,17 @@ export type Setor =
   | "Transporte"
   | "Assistência Social"
   | "Cultura"
-  | "Meio Ambiente";
+  | "Meio Ambiente"
+  | "Obras"
+  | "Segurança Pública"
+  | "Fazenda"
+  | "Turismo"
+  | "Esportes e Lazer"
+  | "Planejamento"
+  | "Comunicação"
+  | "Ciência e Tecnologia";
+
+export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
 
 export interface Item {
   id: string;
@@ -40,7 +49,7 @@ export interface PedidoCompra {
   setor: Setor;
   itens: Item[];
   valorTotal: number;
-  status: 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
+  status: PedidoStatus;
   fundoMonetario: string;
   createdAt: Date;
   justificativa?: string;
@@ -48,4 +57,50 @@ export interface PedidoCompra {
   observacoes?: string;
   workflow?: Workflow;
   localEntrega?: string;
+}
+
+export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído';
+
+export interface WorkflowStep {
+  id: string;
+  title: string;
+  status: WorkflowStepStatus;
+  date?: Date;
+}
+
+export interface Workflow {
+  currentStep: number;
+  totalSteps: number;
+  percentComplete: number;
+  steps: WorkflowStep[];
+}
+
+export interface Municipio {
+  id: string;
+  nome: string;
+  estado: string;
+  populacao: number;
+  orcamento: number;
+  orcamentoAnual: number;
+  prefeito: string;
+}
+
+export interface DadosDashboard {
+  resumoFinanceiro: {
+    orcamentoAnual: number;
+    orcamentoUtilizado: number;
+    percentualUtilizado: number;
+    totalPedidos: number;
+  };
+  cartoes: Array<{
+    titulo: string;
+    valor: string | number;
+    percentualMudanca: number;
+    icon: string;
+    classeCor: string;
+  }>;
+  orcamentoPrevisto: Record<string, number>;
+  gastosPorSetor: Record<string, number>;
+  gastosTotais: number;
+  pedidosPorSetor: Record<string, number>;
 }
