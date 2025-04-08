@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +10,7 @@ import { obterTodosPedidos, atualizarEtapaWorkflow } from '@/data/mockData';
 import { toast } from 'sonner';
 import { WorkflowStepStatus } from '@/types';
 import { canEditStep } from '@/utils/workflowHelpers';
-import { canEditWorkflowStep, getPermittedWorkflowStep } from '@/utils/authHelpers';
+import { canEditWorkflowStep, getPermittedWorkflowStep, getUserRole } from '@/utils/authHelpers';
 import {
   Select,
   SelectContent,
@@ -32,6 +31,7 @@ const WorkflowPedido: React.FC = () => {
   const allPedidos = obterTodosPedidos();
   const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos, refreshKey]);
   const permittedStep = getPermittedWorkflowStep();
+  const userRole = getUserRole();
 
   if (!pedido) {
     return (
@@ -285,20 +285,44 @@ const WorkflowPedido: React.FC = () => {
                         )}
                       </div>
                       
-                      <Select
-                        value={step.status}
-                        onValueChange={(value) => handleUpdateStepStatus(index, value as WorkflowStepStatus)}
-                        disabled={!isEditable || !hasPermission}
-                      >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pendente">Pendente</SelectItem>
-                          <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                          <SelectItem value="Concluído">Concluído</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      {/* Replace dropdown with approval button for the first step, keep dropdown for others */}
+                      {step.title === 'Aprovação da DFD' ? (
+                        <div>
+                          {userRole === 'admin' || userRole === 'manager' ? (
+                            <Button 
+                              variant="default" 
+                              className="bg-blue-600 hover:bg-blue-700"
+                              onClick={() => navigate(`/pedidos/aprovacao/${pedido.id}`)}
+                              disabled={!isEditable || !hasPermission}
+                            >
+                              Aprovar
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="default" 
+                              className="bg-blue-600 hover:bg-blue-700"
+                              disabled={true}
+                            >
+                              Aprovar
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <Select
+                          value={step.status}
+                          onValueChange={(value) => handleUpdateStepStatus(index, value as WorkflowStepStatus)}
+                          disabled={!isEditable || !hasPermission}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pendente">Pendente</SelectItem>
+                            <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                            <SelectItem value="Concluído">Concluído</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
 
                     {/* Additional Fields Section */}
@@ -313,7 +337,7 @@ const WorkflowPedido: React.FC = () => {
                           value={step.responsavel || ''} 
                           onChange={(e) => handleUpdateResponsavel(index, e.target.value)}
                           className="h-8 text-sm"
-                          disabled={!isEditable || !hasPermission}
+                          disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}
                         />
                       </div>
 
@@ -323,12 +347,12 @@ const WorkflowPedido: React.FC = () => {
                           <Calendar className="h-3 w-3 inline mr-1" /> Data de Conclusão
                         </label>
                         <Popover>
-                          <PopoverTrigger asChild disabled={!isEditable || !hasPermission}>
+                          <PopoverTrigger asChild disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}>
                             <Button
                               variant="outline"
                               size="sm"
-                              className={`w-full justify-start text-left font-normal h-8 text-sm ${!step.dataConclusao ? 'text-muted-foreground' : ''} ${!isEditable || !hasPermission ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              disabled={!isEditable || !hasPermission}
+                              className={`w-full justify-start text-left font-normal h-8 text-sm ${!step.dataConclusao ? 'text-muted-foreground' : ''} ${!isEditable || !hasPermission || step.title === 'Aprovação da DFD' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}
                             >
                               <Calendar className="mr-2 h-3 w-3" />
                               {step.dataConclusao ? format(new Date(step.dataConclusao), 'dd/MM/yyyy') : 'Selecionar data'}
@@ -338,9 +362,9 @@ const WorkflowPedido: React.FC = () => {
                             <CalendarComponent
                               mode="single"
                               selected={step.dataConclusao}
-                              onSelect={(isEditable && hasPermission) ? handleUpdateDataConclusao.bind(null, index) : undefined}
+                              onSelect={(isEditable && hasPermission && step.title !== 'Aprovação da DFD') ? handleUpdateDataConclusao.bind(null, index) : undefined}
                               initialFocus
-                              disabled={!isEditable || !hasPermission}
+                              disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}
                             />
                           </PopoverContent>
                         </Popover>

@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import WorkflowPedido from "./pages/Pedidos/WorkflowPedido";
+import AprovacaoDFD from "./pages/Pedidos/AprovacaoDFD";
 import Funcionarios from "./pages/Gerenciamento/Funcionarios";
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
         <Route path="pedidos" element={<ListaPedidos />} />
         <Route path="pedidos/:id" element={<VisualizarPedido />} />
         <Route path="pedidos/workflow/:id" element={<WorkflowPedido />} />
+        <Route path="pedidos/aprovacao/:id" element={<AprovacaoDFD />} />
         <Route path="pedidos/novo" element={<NovoPedido />} />
         <Route path="admin/municipios" element={<MunicipioSelection />} />
         <Route path="gerenciamento/funcionarios" element={<Funcionarios />} />
