@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   BarChart3,
@@ -28,41 +28,66 @@ import {
   Globe,
   Radio,
   Award,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  LogOut
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface SidebarProps {
   isOpen: boolean;
+  userRole?: string | null;
+  userMunicipality?: string | null;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [secretariasOpen, setSecretariasOpen] = useState(false);
 
   const toggleSecretarias = () => {
     setSecretariasOpen(!secretariasOpen);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('user-authenticated');
+    localStorage.removeItem('user-role');
+    localStorage.removeItem('user-municipality');
+    toast.success('Logout realizado com sucesso!');
+    navigate('/login');
+  };
+
+  // Determine menu items based on role
   const menuItems = [
     {
       title: 'Dashboard',
       path: '/dashboard',
       icon: <Home className="h-5 w-5" />,
+      roles: ['admin', 'gerente', 'funcionario', 'user'],
     },
     {
       title: 'Pedidos de Compras',
       path: '/pedidos',
       icon: <List className="h-5 w-5" />,
+      roles: ['admin', 'gerente', 'funcionario', 'user'],
     },
     {
       title: 'Nova DFD',
       path: '/pedidos/novo',
       icon: <FilePlus className="h-5 w-5" />,
+      roles: ['admin', 'gerente', 'user'], // Funcionários can't create new DFDs
     },
     {
       title: 'Tarefas',
       path: '/tarefas',
       icon: <CheckSquare className="h-5 w-5" />,
+      roles: ['admin', 'gerente', 'funcionario', 'user'],
+    },
+    {
+      title: 'Administração',
+      path: '/admin',
+      icon: <Building2 className="h-5 w-5" />,
+      roles: ['admin'], // Only admin can access the admin page
     }
   ];
 
@@ -159,6 +184,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     },
   ];
 
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(
+    (item) => !item.roles || (userRole && item.roles.includes(userRole))
+  );
+
   return (
     <div
       className={cn(
@@ -174,10 +204,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           </div>
           <h2 className="font-heading font-bold text-xl text-white">GECOM</h2>
         </div>
+        {userRole && userMunicipality && userMunicipality !== 'all' && userMunicipality !== 'default' && (
+          <div className="mt-2 text-white text-sm bg-sidebar-primary bg-opacity-50 rounded p-2">
+            <p>Município: <strong>{userMunicipality}</strong></p>
+            <p>Acesso: <strong>{userRole === 'gerente' ? 'Gerente' : 'Funcionário'}</strong></p>
+          </div>
+        )}
       </div>
       <div className="flex flex-1 flex-col overflow-auto py-4">
         <nav className="flex-1 px-3 space-y-1">
-          {menuItems.map((item, idx) => (
+          {filteredMenuItems.map((item, idx) => (
             <div key={idx} className="mb-1">
               <Link
                 to={item.path}
@@ -238,6 +274,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         </nav>
       </div>
       <div className="border-t border-sidebar-border p-4">
+        <Button 
+          variant="outline" 
+          className="w-full flex items-center justify-center gap-2 mb-3"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4" /> 
+          <span>Sair</span>
+        </Button>
         <div className="flex items-center justify-center">
           <p className="text-xs text-sidebar-foreground/70">
             © 2023 GECOM • Sistema de Gestão de Compras

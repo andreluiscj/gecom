@@ -18,19 +18,40 @@ const Login: React.FC = () => {
 
     // Simular uma verificação de login
     setTimeout(() => {
+      // Admin login
       if (username === 'admin' && password === 'admin') {
-        // Login bem-sucedido para admin
-        toast.success('Login realizado com sucesso!');
+        toast.success('Login realizado com sucesso como Administrador!');
         localStorage.setItem('user-authenticated', 'true');
         localStorage.setItem('user-role', 'admin');
+        localStorage.setItem('user-municipality', 'all'); // Admin has access to all
         navigate('/admin');
-      } else if (username === 'user' && password === 'user') {
-        // Login bem-sucedido para usuário normal
+      } 
+      // Manager (Gerente) login - username and password are the municipality name
+      else if (username === password && username.trim() !== '') {
+        toast.success(`Login realizado com sucesso como Gerente de ${username}!`);
+        localStorage.setItem('user-authenticated', 'true');
+        localStorage.setItem('user-role', 'gerente');
+        localStorage.setItem('user-municipality', username.toLowerCase());
+        navigate('/dashboard');
+      } 
+      // Employee (Funcionário) login - prefixed with func_
+      else if (username.startsWith('func_') && username === password) {
+        const municipality = username.substring(5); // Remove 'func_' prefix
+        toast.success(`Login realizado com sucesso como Funcionário de ${municipality}!`);
+        localStorage.setItem('user-authenticated', 'true');
+        localStorage.setItem('user-role', 'funcionario');
+        localStorage.setItem('user-municipality', municipality.toLowerCase());
+        navigate('/dashboard');
+      } 
+      // Regular user login (keeping existing one)
+      else if (username === 'user' && password === 'user') {
         toast.success('Login realizado com sucesso!');
         localStorage.setItem('user-authenticated', 'true');
         localStorage.setItem('user-role', 'user');
+        localStorage.setItem('user-municipality', 'default');
         navigate('/dashboard');
-      } else {
+      }
+      else {
         // Login falhou
         toast.error('Usuário ou senha incorretos');
       }
@@ -93,10 +114,24 @@ const Login: React.FC = () => {
               </div>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center">
-            <p className="text-sm text-muted-foreground">
+          <CardFooter className="flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground text-center">
               © 2023 GECOM - Todos os direitos reservados
             </p>
+            <div className="w-full border-t pt-2">
+              <p className="text-xs text-muted-foreground text-center">
+                <strong>Tipos de acesso:</strong>
+              </p>
+              <p className="text-xs text-muted-foreground text-center">
+                Administrador - usuário: admin, senha: admin
+              </p>
+              <p className="text-xs text-muted-foreground text-center">
+                Gerente - usuário: [nome do município], senha: [nome do município]
+              </p>
+              <p className="text-xs text-muted-foreground text-center">
+                Funcionário - usuário: func_[nome do município], senha: func_[nome do município]
+              </p>
+            </div>
           </CardFooter>
         </Card>
       </div>
