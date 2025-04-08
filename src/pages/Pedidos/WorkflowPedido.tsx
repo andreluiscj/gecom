@@ -3,13 +3,14 @@ import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check, Circle, Clock, AlertCircle, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Check, Circle, Clock, AlertCircle, Calendar, User, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { obterTodosPedidos, atualizarEtapaWorkflow } from '@/data/mockData';
 import { toast } from 'sonner';
 import { WorkflowStepStatus } from '@/types';
+import { canEditStep } from '@/utils/workflowHelpers';
 import {
   Select,
   SelectContent,
@@ -20,6 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const WorkflowPedido: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -56,6 +58,25 @@ const WorkflowPedido: React.FC = () => {
 
   const handleUpdateStepStatus = (stepIndex: number, status: WorkflowStepStatus) => {
     if (pedido && pedido.workflow) {
+      // Verificar se a etapa pode ser editada
+      if (!canEditStep(pedido.workflow, stepIndex)) {
+        toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
+        return;
+      }
+      
+      // Verificar se a alteração segue a ordem lógica
+      if (status === 'Concluído' && stepIndex < pedido.workflow.steps.length - 1) {
+        // Se estamos concluindo uma etapa, precisamos verificar se a próxima etapa existe
+        // e atualizá-la para "Em Andamento" se estiver "Pendente"
+        if (pedido.workflow.steps[stepIndex + 1].status === 'Pendente') {
+          atualizarEtapaWorkflow(
+            pedido.id, 
+            stepIndex + 1, 
+            'Em Andamento'
+          );
+        }
+      }
+      
       atualizarEtapaWorkflow(pedido.id, stepIndex, status);
       toast.success(`Status da etapa atualizado para ${status}`);
       setRefreshKey(prev => prev + 1); // Force refresh
@@ -64,6 +85,11 @@ const WorkflowPedido: React.FC = () => {
 
   const handleUpdateResponsavel = (stepIndex: number, responsavel: string) => {
     if (pedido && pedido.workflow) {
+      if (!canEditStep(pedido.workflow, stepIndex)) {
+        toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
+        return;
+      }
+      
       atualizarEtapaWorkflow(
         pedido.id, 
         stepIndex, 
@@ -78,6 +104,11 @@ const WorkflowPedido: React.FC = () => {
 
   const handleUpdateDataConclusao = (stepIndex: number, data: Date | undefined) => {
     if (pedido && pedido.workflow) {
+      if (!canEditStep(pedido.workflow, stepIndex)) {
+        toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
+        return;
+      }
+      
       atualizarEtapaWorkflow(
         pedido.id, 
         stepIndex, 
@@ -103,7 +134,11 @@ const WorkflowPedido: React.FC = () => {
     }
   };
 
-  const getStatusClass = (status: WorkflowStepStatus) => {
+  const getStatusClass = (status: WorkflowStepStatus, isEditable: boolean) => {
+    if (!isEditable) {
+      return 'text-gray-400 border-gray-100 bg-gray-50 opacity-70';
+    }
+    
     switch (status) {
       case 'Concluído':
         return 'text-green-600 border-green-200 bg-green-50';
@@ -167,86 +202,112 @@ const WorkflowPedido: React.FC = () => {
           </div>
           
           <div className="space-y-6 mt-8">
-            {pedido.workflow?.steps.map((step, index) => (
-              <div key={step.id} className={`border rounded-lg p-4 ${getStatusClass(step.status)}`}>
-                <div className="flex flex-col gap-4">
-                  {/* Title and Status Section */}
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0">
-                        {getStatusIcon(step.status)}
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{step.title}</h3>
-                        {step.title === 'Sessão Licitação' && step.date && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                            <Calendar className="h-3 w-3" /> 
-                            Data marcada: {format(new Date(step.date), 'dd/MM/yyyy')}
-                          </div>
+            {pedido.workflow?.steps.map((step, index) => {
+              // Verificando se a etapa pode ser editada com base na função canEditStep
+              const isEditable = canEditStep(pedido.workflow!, index);
+              
+              return (
+                <div 
+                  key={step.id} 
+                  className={`border rounded-lg p-4 ${getStatusClass(step.status, isEditable)}`}
+                >
+                  <div className="flex flex-col gap-4">
+                    {/* Title and Status Section */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          {getStatusIcon(step.status)}
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{step.title}</h3>
+                          {step.title === 'Sessão Licitação' && step.date && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                              <Calendar className="h-3 w-3" /> 
+                              Data marcada: {format(new Date(step.date), 'dd/MM/yyyy')}
+                            </div>
+                          )}
+                        </div>
+                        {!isEditable && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="ml-2">
+                                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Etapas anteriores precisam ser concluídas primeiro</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
-                    </div>
-                    
-                    <Select
-                      value={step.status}
-                      onValueChange={(value) => handleUpdateStepStatus(index, value as WorkflowStepStatus)}
-                    >
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pendente">Pendente</SelectItem>
-                        <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                        <SelectItem value="Concluído">Concluído</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Additional Fields Section */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
-                    {/* Responsible Person */}
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">
-                        <User className="h-3 w-3 inline mr-1" /> Responsável
-                      </label>
-                      <Input 
-                        placeholder="Nome do responsável" 
-                        value={step.responsavel || ''} 
-                        onChange={(e) => handleUpdateResponsavel(index, e.target.value)}
-                        className="h-8 text-sm"
-                      />
+                      
+                      <Select
+                        value={step.status}
+                        onValueChange={(value) => handleUpdateStepStatus(index, value as WorkflowStepStatus)}
+                        disabled={!isEditable}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pendente">Pendente</SelectItem>
+                          <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                          <SelectItem value="Concluído">Concluído</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    {/* Completion Date */}
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">
-                        <Calendar className="h-3 w-3 inline mr-1" /> Data de Conclusão
-                      </label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className={`w-full justify-start text-left font-normal h-8 text-sm ${!step.dataConclusao ? 'text-muted-foreground' : ''}`}
-                          >
-                            <Calendar className="mr-2 h-3 w-3" />
-                            {step.dataConclusao ? format(new Date(step.dataConclusao), 'dd/MM/yyyy') : 'Selecionar data'}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <CalendarComponent
-                            mode="single"
-                            selected={step.dataConclusao}
-                            onSelect={handleUpdateDataConclusao.bind(null, index)}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    {/* Additional Fields Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
+                      {/* Responsible Person */}
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          <User className="h-3 w-3 inline mr-1" /> Responsável
+                        </label>
+                        <Input 
+                          placeholder="Nome do responsável" 
+                          value={step.responsavel || ''} 
+                          onChange={(e) => handleUpdateResponsavel(index, e.target.value)}
+                          className="h-8 text-sm"
+                          disabled={!isEditable}
+                        />
+                      </div>
+
+                      {/* Completion Date */}
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          <Calendar className="h-3 w-3 inline mr-1" /> Data de Conclusão
+                        </label>
+                        <Popover>
+                          <PopoverTrigger asChild disabled={!isEditable}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={`w-full justify-start text-left font-normal h-8 text-sm ${!step.dataConclusao ? 'text-muted-foreground' : ''} ${!isEditable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              disabled={!isEditable}
+                            >
+                              <Calendar className="mr-2 h-3 w-3" />
+                              {step.dataConclusao ? format(new Date(step.dataConclusao), 'dd/MM/yyyy') : 'Selecionar data'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={step.dataConclusao}
+                              onSelect={isEditable ? handleUpdateDataConclusao.bind(null, index) : undefined}
+                              initialFocus
+                              disabled={!isEditable}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>

@@ -96,3 +96,25 @@ export function updateWorkflowFromPedidoStatus(pedido: PedidoCompra): PedidoComp
   
   return { ...pedido, workflow };
 }
+
+/**
+ * Check if a given workflow step can be edited based on the status of previous steps
+ * @param workflow The workflow object
+ * @param stepIndex The index of the step being checked
+ * @returns boolean indicating if the step can be edited
+ */
+export function canEditStep(workflow: PedidoCompra['workflow'], stepIndex: number): boolean {
+  if (!workflow || stepIndex < 0 || stepIndex >= workflow.steps.length) {
+    return false;
+  }
+  
+  // First step can always be edited
+  if (stepIndex === 0) {
+    return true;
+  }
+  
+  // For other steps, the previous step must be "Concluído"
+  const previousStep = workflow.steps[stepIndex - 1];
+  return previousStep.status === 'Concluído';
+}
+
