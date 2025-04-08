@@ -109,3 +109,13 @@ export function canEditStep(workflow: PedidoCompra['workflow'], stepIndex: numbe
   return previousStep.status === 'Concluído';
 }
 
+/**
+ * Check if an employee has permission to work on a specific workflow step
+ * @param stepTitle The title of the workflow step
+ * @param funcionarioPermissao The employee's permission
+ * @returns boolean indicating if the employee has permission
+ */
+export function funcionarioTemPermissao(stepTitle: string, funcionarioPermissao?: string): boolean {
+  if (!funcionarioPermissao) return false;
+  return stepTitle === funcionarioPermissao;
+}

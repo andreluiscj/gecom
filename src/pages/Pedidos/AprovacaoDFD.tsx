@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -20,7 +19,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Funcionario, WorkflowStepStatus } from '@/types';
 import { getUserRole } from '@/utils/authHelpers';
-import { DEFAULT_WORKFLOW_STEPS } from '@/utils/workflowHelpers';
+import { DEFAULT_WORKFLOW_STEPS, funcionarioTemPermissao } from '@/utils/workflowHelpers';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface ResponsavelData {
@@ -42,7 +41,6 @@ const AprovacaoDFD: React.FC = () => {
   const [responsaveis, setResponsaveis] = useState<ResponsavelData[]>([]);
   const [todosAtribuidos, setTodosAtribuidos] = useState<boolean>(false);
 
-  // Verificar se o usuário atual tem permissão para esta página
   useEffect(() => {
     if (userRole !== 'admin' && userRole !== 'manager') {
       toast.error("Você não tem permissão para acessar esta página");
@@ -50,7 +48,6 @@ const AprovacaoDFD: React.FC = () => {
     }
   }, [userRole, navigate]);
 
-  // Inicializar responsáveis com dados existentes ou vazios
   useEffect(() => {
     if (pedido?.workflow?.steps) {
       const initialResponsaveis = pedido.workflow.steps.map((step, index) => ({
@@ -63,7 +60,6 @@ const AprovacaoDFD: React.FC = () => {
     }
   }, [pedido]);
 
-  // Verificar se todos os passos têm responsáveis e datas atribuídos
   useEffect(() => {
     if (responsaveis.length === 0) return;
     
@@ -106,7 +102,6 @@ const AprovacaoDFD: React.FC = () => {
   const handleAprovarDFD = () => {
     if (!pedido || !pedido.workflow) return;
     
-    // Atualizar o status da Aprovação da DFD para "Concluído"
     atualizarEtapaWorkflow(
       pedido.id, 
       0, 
@@ -116,14 +111,12 @@ const AprovacaoDFD: React.FC = () => {
       new Date()
     );
 
-    // Atualizar a segunda etapa para "Em Andamento"
     atualizarEtapaWorkflow(
       pedido.id, 
       1, 
       'Em Andamento'
     );
 
-    // Atribuir todos os responsáveis e datas limite
     responsaveis.forEach(resp => {
       if (resp.responsavelId && resp.dataLimite) {
         const funcionario = funcionarios.find(f => f.id === resp.responsavelId);
@@ -145,9 +138,15 @@ const AprovacaoDFD: React.FC = () => {
   };
 
   const getFuncionariosByStep = (stepTitle: string): Funcionario[] => {
-    // Esta função pode filtrar funcionários por permissões específicas no futuro
-    // Por enquanto, retorna todos os funcionários
-    return funcionarios;
+    return funcionarios.filter(
+      funcionario => {
+        if (funcionario.cargo.includes('Admin') || funcionario.cargo.includes('Gerente')) {
+          return true;
+        }
+        
+        return funcionarioTemPermissao(stepTitle, funcionario.permissaoEtapa);
+      }
+    );
   };
 
   return (

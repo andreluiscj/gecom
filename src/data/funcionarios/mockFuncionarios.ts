@@ -75,6 +75,26 @@ export const mockFuncionarios: Funcionario[] = [
     setor: 'Cultura',
     dataContratacao: new Date('2021-05-12'),
     ativo: true,
+  },
+  {
+    id: uuidv4(),
+    nome: 'André Luis',
+    email: 'andre.luis@municipio.gov.br',
+    cargo: 'Analista de Licitações',
+    setor: 'Administrativo',
+    dataContratacao: new Date('2021-03-15'),
+    ativo: true,
+    permissaoEtapa: 'Criação do TR',
+  },
+  {
+    id: uuidv4(),
+    nome: 'Breno Jorge',
+    email: 'breno.jorge@municipio.gov.br',
+    cargo: 'Analista de Compras',
+    setor: 'Administrativo',
+    dataContratacao: new Date('2022-01-20'),
+    ativo: true,
+    permissaoEtapa: 'Pesquisa de Preços',
   }
 ];
 

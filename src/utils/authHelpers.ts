@@ -86,7 +86,6 @@ export const isAuthenticated = (): boolean => {
  */
 export const formatUserDisplayName = (): string => {
   const role = getUserRole();
-  const municipality = getUserMunicipality();
   const name = getUserName();
   
   if (role === 'admin') {
