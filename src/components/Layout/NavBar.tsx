@@ -32,9 +32,11 @@ import { Label } from '@/components/ui/label';
 
 interface NavBarProps {
   toggleSidebar: () => void;
+  userRole?: string | null;
+  userMunicipality?: string | null;
 }
 
-const NavBar: React.FC<NavBarProps> = ({ toggleSidebar }) => {
+const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipality }) => {
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
