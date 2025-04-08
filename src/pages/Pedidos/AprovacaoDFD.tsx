@@ -1,10 +1,11 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, User, CheckCircle2 } from 'lucide-react';
 import { obterTodosPedidos, atualizarEtapaWorkflow } from '@/data/mockData';
-import { getFuncionarios } from '@/data/funcionarios/mockFuncionarios';
+import { getFuncionarios, filtrarFuncionariosPorSetor } from '@/data/funcionarios/mockFuncionarios';
 import { toast } from 'sonner';
 import { 
   Select, 
@@ -36,7 +37,14 @@ const AprovacaoDFD: React.FC = () => {
   
   const allPedidos = obterTodosPedidos();
   const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos]);
-  const funcionarios = useMemo(() => getFuncionarios(), []);
+  
+  // Filtrar funcionários pelo setor do pedido
+  const funcionarios = useMemo(() => {
+    if (pedido) {
+      return filtrarFuncionariosPorSetor(pedido.setor);
+    }
+    return [];
+  }, [pedido]);
   
   const [responsaveis, setResponsaveis] = useState<ResponsavelData[]>([]);
   const [todosAtribuidos, setTodosAtribuidos] = useState<boolean>(false);
@@ -173,6 +181,9 @@ const AprovacaoDFD: React.FC = () => {
               <p className="text-sm text-blue-700">
                 Como gestor(a), você precisa aprovar esta DFD e atribuir responsáveis e datas limite para cada etapa do processo.
                 Todos os campos devem ser preenchidos para prosseguir com a aprovação.
+              </p>
+              <p className="text-sm text-blue-700 mt-2">
+                Apenas funcionários do setor "{pedido.setor}" ou que atuam neste setor estão disponíveis para atribuição.
               </p>
             </div>
             

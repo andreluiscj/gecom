@@ -10,6 +10,7 @@ export const mockFuncionarios: Funcionario[] = [
     email: 'joao.silva@municipio.gov.br',
     cargo: 'Analista Administrativo',
     setor: 'Administrativo',
+    setoresAdicionais: ['Saúde', 'Educação'],
     dataContratacao: new Date('2020-01-10'),
     ativo: true,
   },
@@ -28,6 +29,7 @@ export const mockFuncionarios: Funcionario[] = [
     email: 'carlos.santos@municipio.gov.br',
     cargo: 'Professor',
     setor: 'Educação',
+    setoresAdicionais: ['Cultura'],
     dataContratacao: new Date('2021-02-05'),
     ativo: true,
   },
@@ -37,6 +39,7 @@ export const mockFuncionarios: Funcionario[] = [
     email: 'ana.pereira@municipio.gov.br',
     cargo: 'Engenheira Civil',
     setor: 'Obras',
+    setoresAdicionais: ['Transporte', 'Meio Ambiente'],
     dataContratacao: new Date('2018-07-22'),
     ativo: true,
   },
@@ -55,6 +58,7 @@ export const mockFuncionarios: Funcionario[] = [
     email: 'fernanda.costa@municipio.gov.br',
     cargo: 'Assistente Social',
     setor: 'Assistência Social',
+    setoresAdicionais: ['Saúde'],
     dataContratacao: new Date('2020-09-10'),
     ativo: false,
   },
@@ -64,6 +68,7 @@ export const mockFuncionarios: Funcionario[] = [
     email: 'roberto.alves@municipio.gov.br',
     cargo: 'Contador',
     setor: 'Fazenda',
+    setoresAdicionais: ['Administrativo'],
     dataContratacao: new Date('2019-11-03'),
     ativo: true,
   },
@@ -82,6 +87,7 @@ export const mockFuncionarios: Funcionario[] = [
     email: 'andre.luis@municipio.gov.br',
     cargo: 'Analista de Licitações',
     setor: 'Administrativo',
+    setoresAdicionais: ['Fazenda', 'Saúde'],
     dataContratacao: new Date('2021-03-15'),
     ativo: true,
     permissaoEtapa: 'Criação do TR',
@@ -92,6 +98,7 @@ export const mockFuncionarios: Funcionario[] = [
     email: 'breno.jorge@municipio.gov.br',
     cargo: 'Analista de Compras',
     setor: 'Administrativo',
+    setoresAdicionais: ['Educação', 'Saúde'],
     dataContratacao: new Date('2022-01-20'),
     ativo: true,
     permissaoEtapa: 'Pesquisa de Preços',
@@ -151,4 +158,15 @@ export const deleteFuncionario = (id: string) => {
   
   localStorage.setItem('funcionarios', JSON.stringify(filteredFuncionarios));
   return filteredFuncionarios;
+};
+
+// Filter employees by sector/department
+export const filtrarFuncionariosPorSetor = (setor: string) => {
+  const funcionarios = getFuncionarios();
+  return funcionarios.filter(funcionario => 
+    funcionario.ativo && (
+      funcionario.setor === setor || 
+      (funcionario.setoresAdicionais && funcionario.setoresAdicionais.includes(setor))
+    )
+  );
 };

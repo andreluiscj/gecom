@@ -2,7 +2,7 @@
 import { PedidoCompra, Item, Setor, PedidoStatus } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { addDays, subDays } from 'date-fns';
-import { initializeWorkflow, updateWorkflowStep } from '@/utils/workflowHelpers';
+import { initializeWorkflow } from '@/utils/workflowHelpers';
 
 // Import directly from the source definition file to avoid circular dependencies
 const nomesResponsaveis = [
@@ -40,7 +40,7 @@ const gerarPedidoFicticio = (
     descricao,
     setor,
     dataCompra,
-    status,
+    status: 'Pendente' as PedidoStatus, // Always start as "Pendente"
     valorTotal,
     itens,
     fundoMonetario: `Fundo Municipal de ${setor}`,
@@ -56,61 +56,10 @@ const gerarPedidoFicticio = (
     anexos: []
   };
 
-  // Initialize workflow based on status
-  let workflow = initializeWorkflow();
+  // Initialize workflow with all steps as "Pendente"
+  const workflow = initializeWorkflow();
 
-  // Helper to add responsible person and completion date to completed steps
-  const addResponsavelAndConclusao = (workflow: any, stepIndex: number) => {
-    const step = workflow.steps[stepIndex];
-    if (step && step.status === 'Concluído') {
-      workflow.steps[stepIndex] = {
-        ...step,
-        responsavel: getRandomResponsavel(),
-        dataConclusao: subDays(new Date(), Math.floor(Math.random() * 10) + 1)
-      };
-    }
-    return workflow;
-  };
-
-  if (status === 'Pendente') {
-    workflow = updateWorkflowStep(workflow, 0, 'Em Andamento');
-    workflow.steps[0].responsavel = getRandomResponsavel();
-  } else if (status === 'Em Análise') {
-    workflow = updateWorkflowStep(workflow, 0, 'Concluído');
-    workflow = updateWorkflowStep(workflow, 1, 'Em Andamento');
-    workflow = addResponsavelAndConclusao(workflow, 0);
-    workflow.steps[1].responsavel = getRandomResponsavel();
-  } else if (status === 'Aprovado') {
-    workflow = updateWorkflowStep(workflow, 0, 'Concluído');
-    workflow = updateWorkflowStep(workflow, 1, 'Concluído');
-    workflow = updateWorkflowStep(workflow, 2, 'Em Andamento');
-    workflow = addResponsavelAndConclusao(workflow, 0);
-    workflow = addResponsavelAndConclusao(workflow, 1);
-    workflow.steps[2].responsavel = getRandomResponsavel();
-  } else if (status === 'Em Andamento') {
-    workflow = updateWorkflowStep(workflow, 0, 'Concluído');
-    workflow = updateWorkflowStep(workflow, 1, 'Concluído');
-    workflow = updateWorkflowStep(workflow, 2, 'Concluído');
-    workflow = updateWorkflowStep(workflow, 3, 'Em Andamento');
-    workflow = updateWorkflowStep(workflow, 4, 'Pendente');
-    workflow = addResponsavelAndConclusao(workflow, 0);
-    workflow = addResponsavelAndConclusao(workflow, 1);
-    workflow = addResponsavelAndConclusao(workflow, 2);
-    workflow.steps[3].responsavel = getRandomResponsavel();
-  } else if (status === 'Concluído') {
-    for (let i = 0; i < workflow.totalSteps; i++) {
-      workflow = updateWorkflowStep(workflow, i, 'Concluído');
-      workflow = addResponsavelAndConclusao(workflow, i);
-    }
-  }
-
-  // For demonstration purposes, set a future date for the "Sessão Licitação" step
-  if (status !== 'Concluído' && status !== 'Pendente') {
-    const futureDate = addDays(new Date(), Math.floor(Math.random() * 30) + 1);
-    const licitacaoStepIndex = 6; // Index for "Sessão Licitação" step
-    workflow.steps[licitacaoStepIndex].date = futureDate;
-    workflow.steps[licitacaoStepIndex].responsavel = getRandomResponsavel();
-  }
+  // No custom workflow modifications - all steps stay as "Pendente"
 
   return { ...pedido, workflow };
 };
@@ -155,32 +104,32 @@ export const obterPedidosFicticios = (): PedidoCompra[] => {
 
   const pedidos: PedidoCompra[] = [
     // Saúde
-    gerarPedidoFicticio('Saúde', 'Compra de Medicamentos', 'Aprovado', 62500, subDays(hoje, 5), [itensSaude[0]]),
-    gerarPedidoFicticio('Saúde', 'Aquisição de Equipamentos Hospitalares', 'Em Andamento', 85000, subDays(hoje, 10), [itensSaude[1]]),
-    gerarPedidoFicticio('Saúde', 'Material Cirúrgico para Hospital Municipal', 'Concluído', 60000, subDays(hoje, 25), [itensSaude[2]]),
+    gerarPedidoFicticio('Saúde', 'Compra de Medicamentos', 'Pendente', 62500, subDays(hoje, 5), [itensSaude[0]]),
+    gerarPedidoFicticio('Saúde', 'Aquisição de Equipamentos Hospitalares', 'Pendente', 85000, subDays(hoje, 10), [itensSaude[1]]),
+    gerarPedidoFicticio('Saúde', 'Material Cirúrgico para Hospital Municipal', 'Pendente', 60000, subDays(hoje, 25), [itensSaude[2]]),
     
     // Educação
-    gerarPedidoFicticio('Educação', 'Livros para Biblioteca Municipal', 'Aprovado', 45000, subDays(hoje, 7), [itensEducacao[0]]),
-    gerarPedidoFicticio('Educação', 'Carteiras para Escola Municipal', 'Em Andamento', 45000, subDays(hoje, 12), [itensEducacao[1]]),
-    gerarPedidoFicticio('Educação', 'Material Escolar para Alunos da Rede Municipal', 'Concluído', 75000, subDays(hoje, 30), [itensEducacao[2]]),
+    gerarPedidoFicticio('Educação', 'Livros para Biblioteca Municipal', 'Pendente', 45000, subDays(hoje, 7), [itensEducacao[0]]),
+    gerarPedidoFicticio('Educação', 'Carteiras para Escola Municipal', 'Pendente', 45000, subDays(hoje, 12), [itensEducacao[1]]),
+    gerarPedidoFicticio('Educação', 'Material Escolar para Alunos da Rede Municipal', 'Pendente', 75000, subDays(hoje, 30), [itensEducacao[2]]),
     
     // Administrativo
-    gerarPedidoFicticio('Administrativo', 'Material de Escritório', 'Aprovado', 10000, subDays(hoje, 6), [itensAdmin[0]]),
-    gerarPedidoFicticio('Administrativo', 'Computadores para Setores Administrativos', 'Em Andamento', 50000, subDays(hoje, 15), [itensAdmin[1]]),
+    gerarPedidoFicticio('Administrativo', 'Material de Escritório', 'Pendente', 10000, subDays(hoje, 6), [itensAdmin[0]]),
+    gerarPedidoFicticio('Administrativo', 'Computadores para Setores Administrativos', 'Pendente', 50000, subDays(hoje, 15), [itensAdmin[1]]),
     gerarPedidoFicticio('Administrativo', 'Manutenção Predial', 'Pendente', 15000, subDays(hoje, 2), [itensAdmin[2]]),
     
     // Transporte
-    gerarPedidoFicticio('Transporte', 'Combustível para Frota Municipal', 'Aprovado', 25000, subDays(hoje, 4), [itensTransporte[0]]),
-    gerarPedidoFicticio('Transporte', 'Peças para Manutenção da Frota', 'Em Andamento', 25000, subDays(hoje, 18), [itensTransporte[1]]),
-    gerarPedidoFicticio('Transporte', 'Serviço de Manutenção de Veículos', 'Concluído', 20000, subDays(hoje, 28), [itensTransporte[2]]),
+    gerarPedidoFicticio('Transporte', 'Combustível para Frota Municipal', 'Pendente', 25000, subDays(hoje, 4), [itensTransporte[0]]),
+    gerarPedidoFicticio('Transporte', 'Peças para Manutenção da Frota', 'Pendente', 25000, subDays(hoje, 18), [itensTransporte[1]]),
+    gerarPedidoFicticio('Transporte', 'Serviço de Manutenção de Veículos', 'Pendente', 20000, subDays(hoje, 28), [itensTransporte[2]]),
     
     // Obras
-    gerarPedidoFicticio('Obras', 'Material para Reforma de Praça', 'Aprovado', 100000, subDays(hoje, 8), [itensObras[0]]),
-    gerarPedidoFicticio('Obras', 'Aquisição de Retroescavadeira', 'Em Análise', 100000, subDays(hoje, 3), [itensObras[1]]),
+    gerarPedidoFicticio('Obras', 'Material para Reforma de Praça', 'Pendente', 100000, subDays(hoje, 8), [itensObras[0]]),
+    gerarPedidoFicticio('Obras', 'Aquisição de Retroescavadeira', 'Pendente', 100000, subDays(hoje, 3), [itensObras[1]]),
     
     // Segurança Pública
-    gerarPedidoFicticio('Segurança Pública', 'Câmeras de Monitoramento', 'Aprovado', 30000, subDays(hoje, 9), [itensSeguranca[0]]),
-    gerarPedidoFicticio('Segurança Pública', 'Uniformes para Guarda Municipal', 'Concluído', 25000, subDays(hoje, 20), [itensSeguranca[1]]),
+    gerarPedidoFicticio('Segurança Pública', 'Câmeras de Monitoramento', 'Pendente', 30000, subDays(hoje, 9), [itensSeguranca[0]]),
+    gerarPedidoFicticio('Segurança Pública', 'Uniformes para Guarda Municipal', 'Pendente', 25000, subDays(hoje, 20), [itensSeguranca[1]]),
   ];
 
   return pedidos;

@@ -1,3 +1,4 @@
+
 export type Role = "admin" | "editor" | null;
 
 export type Tarefa = {
@@ -114,8 +115,9 @@ export interface Funcionario {
   email: string;
   cargo: string;
   setor: Setor;
+  setoresAdicionais?: Setor[];  // New field to allow an employee to belong to multiple sectors
   dataContratacao: Date;
   ativo: boolean;
   senha?: string; // Only used for creation/update, not stored in state
-  permissaoEtapa?: string; // New field to specify which workflow step the employee can edit
+  permissaoEtapa?: string; // Specifies which workflow step the employee can edit
 }
