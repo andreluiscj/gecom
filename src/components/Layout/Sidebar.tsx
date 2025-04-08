@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -195,8 +194,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
   ];
 
   const filteredMenuItems = menuItems.filter(
-    (item) => (item.roles && userRole && item.roles.includes(userRole)) || 
-              (item.access === true)
+    (item) => (item.roles && userRole && item.roles.includes(userRole))
   );
 
   return (
