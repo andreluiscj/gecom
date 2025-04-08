@@ -97,7 +97,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
       title: 'Gerenciamento de Funcionários',
       path: '/gerenciamento/funcionarios',
       icon: <Users className="h-5 w-5" />,
-      access: hasUserManagementAccess,
+      roles: ['admin', 'manager', 'gerente'],
     }
   ];
 
@@ -218,6 +218,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
               src="/lovable-uploads/408ac38b-4584-43a1-b61d-be1c1ebe20ee.png" 
               alt="Logo" 
               className="h-8 ml-2" 
+              style={{ filter: 'brightness(0) invert(1)' }}
             />
           </div>
         </div>

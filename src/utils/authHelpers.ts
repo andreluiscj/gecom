@@ -91,5 +91,5 @@ export function canAccessSetor(setor: string): boolean {
 // Função para verificar se o usuário pode gerenciar usuários
 export function canAccessUserManagement(): boolean {
   const userRole = getUserRole();
-  return userRole === 'admin';
+  return userRole === 'admin' || userRole === 'gerente' || userRole === 'manager';
 }
