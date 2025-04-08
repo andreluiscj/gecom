@@ -19,7 +19,7 @@ export function initializeWorkflow(): PedidoCompra['workflow'] {
   const steps = DEFAULT_WORKFLOW_STEPS.map(step => ({
     ...step,
     id: uuidv4(),
-    status: 'Pendente', // Ensuring all steps start as "Pendente"
+    status: 'Pendente' as WorkflowStepStatus, // Explicit type casting to WorkflowStepStatus
   }));
 
   return {
@@ -76,9 +76,9 @@ export function updateWorkflowFromPedidoStatus(pedido: PedidoCompra): PedidoComp
   let workflow = pedido.workflow || initializeWorkflow();
   
   // Reset all steps to "Pendente" state to ensure DFD approval isn't completed
-  workflow.steps = workflow.steps.map((step, index) => ({
+  workflow.steps = workflow.steps.map((step) => ({
     ...step,
-    status: 'Pendente'
+    status: 'Pendente' as WorkflowStepStatus
   }));
   
   // Set the percentComplete to 0 and currentStep to 0
@@ -108,3 +108,4 @@ export function canEditStep(workflow: PedidoCompra['workflow'], stepIndex: numbe
   const previousStep = workflow.steps[stepIndex - 1];
   return previousStep.status === 'Concluído';
 }
+
