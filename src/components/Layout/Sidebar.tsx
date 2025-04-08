@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -29,10 +28,12 @@ import {
   Radio,
   Award,
   PieChart as PieChartIcon,
-  LogOut
+  LogOut,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { canAccessUserManagement } from '@/utils/authHelpers';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -53,41 +54,49 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
     localStorage.removeItem('user-authenticated');
     localStorage.removeItem('user-role');
     localStorage.removeItem('user-municipality');
+    localStorage.removeItem('user-name');
     toast.success('Logout realizado com sucesso!');
     navigate('/login');
   };
 
-  // Determine menu items based on role
+  const hasUserManagementAccess = canAccessUserManagement();
+
   const menuItems = [
     {
       title: 'Dashboard',
       path: '/dashboard',
       icon: <Home className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'funcionario', 'user'],
+      roles: ['admin', 'gerente', 'user', 'manager'],
     },
     {
       title: 'Pedidos de Compras',
       path: '/pedidos',
       icon: <List className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'funcionario', 'user'],
+      roles: ['admin', 'gerente', 'user', 'manager'],
     },
     {
       title: 'Nova DFD',
       path: '/pedidos/novo',
       icon: <FilePlus className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'user'], // Funcionários can't create new DFDs
+      roles: ['admin', 'gerente', 'user', 'manager'],
     },
     {
       title: 'Tarefas',
       path: '/tarefas',
       icon: <CheckSquare className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'funcionario', 'user'],
+      roles: ['admin', 'gerente', 'user', 'manager'],
     },
     {
       title: 'Administração',
       path: '/admin',
       icon: <Building2 className="h-5 w-5" />,
-      roles: ['admin'], // Only admin can access the admin page
+      roles: ['admin'],
+    },
+    {
+      title: 'Gerenciamento de Funcionários',
+      path: '/gerenciamento/funcionarios',
+      icon: <Users className="h-5 w-5" />,
+      access: hasUserManagementAccess,
     }
   ];
 
@@ -184,9 +193,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
     },
   ];
 
-  // Filter menu items based on user role
   const filteredMenuItems = menuItems.filter(
-    (item) => !item.roles || (userRole && item.roles.includes(userRole))
+    (item) => (item.roles && userRole && item.roles.includes(userRole)) || 
+              (item.access === true)
   );
 
   return (
@@ -207,7 +216,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
         {userRole && userMunicipality && userMunicipality !== 'all' && userMunicipality !== 'default' && (
           <div className="mt-2 text-white text-sm bg-sidebar-primary bg-opacity-50 rounded p-2">
             <p>Município: <strong>{userMunicipality}</strong></p>
-            <p>Acesso: <strong>{userRole === 'gerente' ? 'Gerente' : 'Funcionário'}</strong></p>
+            <p>Acesso: <strong>{userRole === 'gerente' ? 'Gerente' : userRole === 'manager' ? localStorage.getItem('user-name') : 'Usuário'}</strong></p>
           </div>
         )}
       </div>

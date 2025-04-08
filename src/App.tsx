@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import WorkflowPedido from "./pages/Pedidos/WorkflowPedido";
+import Funcionarios from "./pages/Gerenciamento/Funcionarios";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         <Route path="pedidos/workflow/:id" element={<WorkflowPedido />} />
         <Route path="pedidos/novo" element={<NovoPedido />} />
         <Route path="admin/municipios" element={<MunicipioSelection />} />
+        <Route path="gerenciamento/funcionarios" element={<Funcionarios />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

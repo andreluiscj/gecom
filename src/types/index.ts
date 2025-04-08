@@ -106,3 +106,17 @@ export interface DadosDashboard {
   gastosTotais: number;
   pedidosPorSetor: Record<string, number>;
 }
+
+export type UserRole = 'admin' | 'gerente' | 'user' | 'manager';
+
+export interface Funcionario {
+  id: string;
+  nome: string;
+  email: string;
+  cargo: string;
+  setor: Setor;
+  dataContratacao: Date;
+  ativo: boolean;
+  senha?: string; // Only used for creation/update, not stored in state
+}
+

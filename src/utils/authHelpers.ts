@@ -43,6 +43,14 @@ export const getUserRole = (): string | null => {
 };
 
 /**
+ * Get the current user's name
+ * @returns string | null - The user name or null
+ */
+export const getUserName = (): string | null => {
+  return localStorage.getItem('user-name');
+};
+
+/**
  * Check if user is authenticated
  * @returns boolean - Whether the user is authenticated
  */
@@ -57,12 +65,27 @@ export const isAuthenticated = (): boolean => {
 export const formatUserDisplayName = (): string => {
   const role = getUserRole();
   const municipality = getUserMunicipality();
+  const name = getUserName();
   
   if (role === 'admin') {
     return 'Administrador';
   } else if (role === 'gerente' && municipality) {
     return `Gerente - ${municipality}`;
+  } else if (role === 'manager' && name) {
+    return name;
   }
   
   return 'Usuário';
 };
+
+/**
+ * Check if the current user can access user management
+ * @returns boolean - Whether the user can access user management
+ */
+export const canAccessUserManagement = (): boolean => {
+  const userRole = localStorage.getItem('user-role');
+  const userName = localStorage.getItem('user-name');
+  
+  return userRole === 'admin' || (userRole === 'manager' && userName === 'Amanda Amarante');
+};
+
