@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -213,12 +214,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
           </div>
           <h2 className="font-heading font-bold text-xl text-white">GECOM</h2>
         </div>
-        {userRole && userMunicipality && userMunicipality !== 'all' && userMunicipality !== 'default' && (
-          <div className="mt-2 text-white text-sm bg-sidebar-primary bg-opacity-50 rounded p-2">
-            <p>Município: <strong>{userMunicipality}</strong></p>
-            <p>Acesso: <strong>{userRole === 'gerente' ? 'Gerente' : userRole === 'manager' ? localStorage.getItem('user-name') : 'Usuário'}</strong></p>
-          </div>
-        )}
+        {/* Municipality and access info card has been removed as requested */}
       </div>
       <div className="flex flex-1 flex-col overflow-auto py-4">
         <nav className="flex-1 px-3 space-y-1">

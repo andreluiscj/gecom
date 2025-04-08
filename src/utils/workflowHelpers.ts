@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { PedidoCompra, WorkflowStep, WorkflowStepStatus } from '@/types';
 
@@ -18,7 +19,7 @@ export function initializeWorkflow(): PedidoCompra['workflow'] {
   const steps = DEFAULT_WORKFLOW_STEPS.map(step => ({
     ...step,
     id: uuidv4(),
-    status: step.status,
+    status: 'Pendente', // Ensuring all steps start as "Pendente"
   }));
 
   return {
@@ -74,24 +75,15 @@ export function updateWorkflowStep(
 export function updateWorkflowFromPedidoStatus(pedido: PedidoCompra): PedidoCompra {
   let workflow = pedido.workflow || initializeWorkflow();
   
-  if (pedido.status === 'Pendente') {
-    // In Pendente status, the first step is in progress
-    workflow = updateWorkflowStep(workflow, 0, 'Em Andamento');
-  } else if (pedido.status === 'Em Análise' || pedido.status === 'Aprovado') {
-    // When in analysis or approved, the first step is completed and the second step is in progress
-    workflow = updateWorkflowStep(workflow, 0, 'Concluído');
-    workflow = updateWorkflowStep(workflow, 1, 'Em Andamento');
-  } else if (pedido.status === 'Em Andamento') {
-    // For in progress status, more steps are completed
-    workflow = updateWorkflowStep(workflow, 0, 'Concluído');
-    workflow = updateWorkflowStep(workflow, 1, 'Concluído');
-    workflow = updateWorkflowStep(workflow, 2, 'Em Andamento');
-  } else if (pedido.status === 'Concluído') {
-    // When concluded, all steps are completed
-    for (let i = 0; i < workflow.totalSteps; i++) {
-      workflow = updateWorkflowStep(workflow, i, 'Concluído');
-    }
-  }
+  // Reset all steps to "Pendente" state to ensure DFD approval isn't completed
+  workflow.steps = workflow.steps.map((step, index) => ({
+    ...step,
+    status: 'Pendente'
+  }));
+  
+  // Set the percentComplete to 0 and currentStep to 0
+  workflow.currentStep = 0;
+  workflow.percentComplete = 0;
   
   return { ...pedido, workflow };
 }
