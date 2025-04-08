@@ -34,15 +34,6 @@ const Login: React.FC = () => {
         localStorage.setItem('user-municipality', username.toLowerCase());
         navigate('/dashboard');
       } 
-      // Employee (Funcionário) login - prefixed with func_
-      else if (username.startsWith('func_') && username === password) {
-        const municipality = username.substring(5); // Remove 'func_' prefix
-        toast.success(`Login realizado com sucesso como Funcionário de ${municipality}!`);
-        localStorage.setItem('user-authenticated', 'true');
-        localStorage.setItem('user-role', 'funcionario');
-        localStorage.setItem('user-municipality', municipality.toLowerCase());
-        navigate('/dashboard');
-      } 
       // Regular user login (keeping existing one)
       else if (username === 'user' && password === 'user') {
         toast.success('Login realizado com sucesso!');
@@ -127,9 +118,6 @@ const Login: React.FC = () => {
               </p>
               <p className="text-xs text-muted-foreground text-center">
                 Gerente - usuário: [nome do município], senha: [nome do município]
-              </p>
-              <p className="text-xs text-muted-foreground text-center">
-                Funcionário - usuário: func_[nome do município], senha: func_[nome do município]
               </p>
             </div>
           </CardFooter>

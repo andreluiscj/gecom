@@ -9,22 +9,9 @@
 export const canEditWorkflowStep = (stepResponsavel?: string): boolean => {
   const userRole = localStorage.getItem('user-role');
   
-  // Admin and gerente can edit any step
+  // All users can edit any step now
   if (userRole === 'admin' || userRole === 'gerente' || userRole === 'user') {
     return true;
-  }
-  
-  // Funcionário can only edit steps where they are responsible
-  if (userRole === 'funcionario') {
-    const userName = localStorage.getItem('user-municipality');
-    
-    // If no responsável is defined yet, allow editing (since it needs to be assigned)
-    if (!stepResponsavel) {
-      return true;
-    }
-    
-    // If the current user is the responsável for this step, allow editing
-    return stepResponsavel.toLowerCase().includes(userName?.toLowerCase() || '');
   }
   
   return false;
@@ -75,8 +62,6 @@ export const formatUserDisplayName = (): string => {
     return 'Administrador';
   } else if (role === 'gerente' && municipality) {
     return `Gerente - ${municipality}`;
-  } else if (role === 'funcionario' && municipality) {
-    return `Funcionário - ${municipality}`;
   }
   
   return 'Usuário';
