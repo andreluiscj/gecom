@@ -35,10 +35,12 @@ const Login: React.FC = () => {
     if (username && password) {
       if (selectedUser === 'admin' && username === 'admin' && password === 'admin') {
         loginSuccess('admin');
-      } else if (selectedUser === 'gerente' && username === 'gerente' && password === 'gerente') {
-        loginSuccess('gerente', 'São Paulo');
       } else if (selectedUser === 'amanda' && username === 'amanda' && password === 'amanda') {
         loginSuccess('manager', 'São Paulo', 'Amanda Amarante');
+      } else if (selectedUser === 'andre' && username === 'andre' && password === 'andre') {
+        loginSuccess('user', 'São Paulo', 'André Luis', 'Criação do TR');
+      } else if (selectedUser === 'breno' && username === 'breno' && password === 'breno') {
+        loginSuccess('user', 'São Paulo', 'Breno Jorge', 'Pesquisa de Preços');
       } else {
         toast.error('Credenciais inválidas. Tente novamente.');
       }
@@ -47,13 +49,16 @@ const Login: React.FC = () => {
     }
   };
 
-  const loginSuccess = (role: string, municipality: string = 'all', name: string = '') => {
+  const loginSuccess = (role: string, municipality: string = 'all', name: string = '', permittedStep: string = '') => {
     // Set authenticated state in localStorage
     localStorage.setItem('user-authenticated', 'true');
     localStorage.setItem('user-role', role);
     localStorage.setItem('user-municipality', municipality);
     if (name) {
       localStorage.setItem('user-name', name);
+    }
+    if (permittedStep) {
+      localStorage.setItem('user-permitted-step', permittedStep);
     }
 
     toast.success('Login realizado com sucesso!');
@@ -66,12 +71,15 @@ const Login: React.FC = () => {
     if (userType === 'admin') {
       setUsername('admin');
       setPassword('admin');
-    } else if (userType === 'gerente') {
-      setUsername('gerente');
-      setPassword('gerente');
     } else if (userType === 'amanda') {
       setUsername('amanda');
       setPassword('amanda');
+    } else if (userType === 'andre') {
+      setUsername('andre');
+      setPassword('andre');
+    } else if (userType === 'breno') {
+      setUsername('breno');
+      setPassword('breno');
     }
   };
 
@@ -129,7 +137,7 @@ const Login: React.FC = () => {
           <div className="text-center text-sm text-muted-foreground">
             <p>Para testar o sistema, utilize um dos logins abaixo:</p>
           </div>
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-2 flex-wrap">
             <Button
               variant={selectedUser === 'admin' ? 'default' : 'outline'}
               size="sm"
@@ -138,18 +146,25 @@ const Login: React.FC = () => {
               Admin
             </Button>
             <Button
-              variant={selectedUser === 'gerente' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleQuickLogin('gerente')}
-            >
-              Gerente
-            </Button>
-            <Button
               variant={selectedUser === 'amanda' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handleQuickLogin('amanda')}
             >
               Amanda
+            </Button>
+            <Button
+              variant={selectedUser === 'andre' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleQuickLogin('andre')}
+            >
+              André
+            </Button>
+            <Button
+              variant={selectedUser === 'breno' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleQuickLogin('breno')}
+            >
+              Breno
             </Button>
           </div>
         </CardFooter>

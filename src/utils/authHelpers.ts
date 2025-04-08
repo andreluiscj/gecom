@@ -3,15 +3,29 @@
 
 /**
  * Check if the current user has permission to edit a specific task or workflow step
- * @param stepResponsavel - The user responsible for the workflow step
+ * @param stepTitle - The title of the workflow step
  * @returns boolean - Whether the current user has permission
  */
-export const canEditWorkflowStep = (stepResponsavel?: string): boolean => {
+export const canEditWorkflowStep = (stepTitle?: string): boolean => {
   const userRole = localStorage.getItem('user-role');
   
-  // All users can edit any step now
-  if (userRole === 'admin' || userRole === 'gerente' || userRole === 'user') {
+  // Admin and manager can edit any step
+  if (userRole === 'admin' || userRole === 'manager') {
     return true;
+  }
+  
+  // For regular users, check if they have permission for this specific step
+  if (userRole === 'user') {
+    // Get the user's assigned workflow step (if any)
+    const permittedStep = localStorage.getItem('user-permitted-step');
+    
+    // If user has a permitted step and it matches the current step, allow editing
+    if (permittedStep && stepTitle && permittedStep === stepTitle) {
+      return true;
+    }
+    
+    // No match found
+    return false;
   }
   
   return false;
@@ -23,7 +37,7 @@ export const canEditWorkflowStep = (stepResponsavel?: string): boolean => {
  */
 export const canCreateNewDFD = (): boolean => {
   const userRole = localStorage.getItem('user-role');
-  return userRole === 'admin' || userRole === 'gerente' || userRole === 'user';
+  return userRole === 'admin' || userRole === 'manager' || userRole === 'user';
 };
 
 /**
@@ -51,6 +65,14 @@ export const getUserName = (): string | null => {
 };
 
 /**
+ * Get the user's permitted workflow step (if any)
+ * @returns string | null - The permitted workflow step or null
+ */
+export const getPermittedWorkflowStep = (): string | null => {
+  return localStorage.getItem('user-permitted-step');
+};
+
+/**
  * Check if user is authenticated
  * @returns boolean - Whether the user is authenticated
  */
@@ -69,9 +91,9 @@ export const formatUserDisplayName = (): string => {
   
   if (role === 'admin') {
     return 'Administrador';
-  } else if (role === 'gerente' && municipality) {
-    return `Gerente - ${municipality}`;
   } else if (role === 'manager' && name) {
+    return name;
+  } else if (role === 'user' && name) {
     return name;
   }
   
@@ -88,4 +110,3 @@ export const canAccessUserManagement = (): boolean => {
   
   return userRole === 'admin' || (userRole === 'manager' && userName === 'Amanda Amarante');
 };
-

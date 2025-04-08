@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { PedidoCompra, WorkflowStep, WorkflowStepStatus } from '@/types';
 
@@ -117,4 +116,3 @@ export function canEditStep(workflow: PedidoCompra['workflow'], stepIndex: numbe
   const previousStep = workflow.steps[stepIndex - 1];
   return previousStep.status === 'Concluído';
 }
-

@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check, Circle, Clock, AlertCircle, Calendar, User, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Check, Circle, Clock, AlertCircle, Calendar, User, AlertTriangle, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
@@ -11,6 +11,7 @@ import { obterTodosPedidos, atualizarEtapaWorkflow } from '@/data/mockData';
 import { toast } from 'sonner';
 import { WorkflowStepStatus } from '@/types';
 import { canEditStep } from '@/utils/workflowHelpers';
+import { canEditWorkflowStep, getPermittedWorkflowStep } from '@/utils/authHelpers';
 import {
   Select,
   SelectContent,
@@ -30,6 +31,7 @@ const WorkflowPedido: React.FC = () => {
   
   const allPedidos = obterTodosPedidos();
   const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos, refreshKey]);
+  const permittedStep = getPermittedWorkflowStep();
 
   if (!pedido) {
     return (
@@ -58,7 +60,15 @@ const WorkflowPedido: React.FC = () => {
 
   const handleUpdateStepStatus = (stepIndex: number, status: WorkflowStepStatus) => {
     if (pedido && pedido.workflow) {
-      // Verificar se a etapa pode ser editada
+      const currentStep = pedido.workflow.steps[stepIndex];
+      
+      // Check if user has permission to edit this specific step
+      if (!canEditWorkflowStep(currentStep.title)) {
+        toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
+        return;
+      }
+      
+      // Verificar se a etapa pode ser editada na sequência correta
       if (!canEditStep(pedido.workflow, stepIndex)) {
         toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
         return;
@@ -85,6 +95,14 @@ const WorkflowPedido: React.FC = () => {
 
   const handleUpdateResponsavel = (stepIndex: number, responsavel: string) => {
     if (pedido && pedido.workflow) {
+      const currentStep = pedido.workflow.steps[stepIndex];
+      
+      // Check if user has permission to edit this specific step
+      if (!canEditWorkflowStep(currentStep.title)) {
+        toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
+        return;
+      }
+      
       if (!canEditStep(pedido.workflow, stepIndex)) {
         toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
         return;
@@ -104,6 +122,14 @@ const WorkflowPedido: React.FC = () => {
 
   const handleUpdateDataConclusao = (stepIndex: number, data: Date | undefined) => {
     if (pedido && pedido.workflow) {
+      const currentStep = pedido.workflow.steps[stepIndex];
+      
+      // Check if user has permission to edit this specific step
+      if (!canEditWorkflowStep(currentStep.title)) {
+        toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
+        return;
+      }
+      
       if (!canEditStep(pedido.workflow, stepIndex)) {
         toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
         return;
@@ -134,8 +160,8 @@ const WorkflowPedido: React.FC = () => {
     }
   };
 
-  const getStatusClass = (status: WorkflowStepStatus, isEditable: boolean) => {
-    if (!isEditable) {
+  const getStatusClass = (status: WorkflowStepStatus, isEditable: boolean, hasPermission: boolean) => {
+    if (!isEditable || !hasPermission) {
       return 'text-gray-400 border-gray-100 bg-gray-50 opacity-70';
     }
     
@@ -205,11 +231,13 @@ const WorkflowPedido: React.FC = () => {
             {pedido.workflow?.steps.map((step, index) => {
               // Verificando se a etapa pode ser editada com base na função canEditStep
               const isEditable = canEditStep(pedido.workflow!, index);
+              // Verificando se o usuário tem permissão para editar esta etapa específica
+              const hasPermission = canEditWorkflowStep(step.title);
               
               return (
                 <div 
                   key={step.id} 
-                  className={`border rounded-lg p-4 ${getStatusClass(step.status, isEditable)}`}
+                  className={`border rounded-lg p-4 ${getStatusClass(step.status, isEditable, hasPermission)}`}
                 >
                   <div className="flex flex-col gap-4">
                     {/* Title and Status Section */}
@@ -241,12 +269,26 @@ const WorkflowPedido: React.FC = () => {
                             </Tooltip>
                           </TooltipProvider>
                         )}
+                        {!hasPermission && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="ml-2">
+                                  <Lock className="h-4 w-4 text-red-500" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Você não tem permissão para editar esta etapa</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
                       
                       <Select
                         value={step.status}
                         onValueChange={(value) => handleUpdateStepStatus(index, value as WorkflowStepStatus)}
-                        disabled={!isEditable}
+                        disabled={!isEditable || !hasPermission}
                       >
                         <SelectTrigger className="w-[140px]">
                           <SelectValue placeholder="Status" />
@@ -271,7 +313,7 @@ const WorkflowPedido: React.FC = () => {
                           value={step.responsavel || ''} 
                           onChange={(e) => handleUpdateResponsavel(index, e.target.value)}
                           className="h-8 text-sm"
-                          disabled={!isEditable}
+                          disabled={!isEditable || !hasPermission}
                         />
                       </div>
 
@@ -281,12 +323,12 @@ const WorkflowPedido: React.FC = () => {
                           <Calendar className="h-3 w-3 inline mr-1" /> Data de Conclusão
                         </label>
                         <Popover>
-                          <PopoverTrigger asChild disabled={!isEditable}>
+                          <PopoverTrigger asChild disabled={!isEditable || !hasPermission}>
                             <Button
                               variant="outline"
                               size="sm"
-                              className={`w-full justify-start text-left font-normal h-8 text-sm ${!step.dataConclusao ? 'text-muted-foreground' : ''} ${!isEditable ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              disabled={!isEditable}
+                              className={`w-full justify-start text-left font-normal h-8 text-sm ${!step.dataConclusao ? 'text-muted-foreground' : ''} ${!isEditable || !hasPermission ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              disabled={!isEditable || !hasPermission}
                             >
                               <Calendar className="mr-2 h-3 w-3" />
                               {step.dataConclusao ? format(new Date(step.dataConclusao), 'dd/MM/yyyy') : 'Selecionar data'}
@@ -296,9 +338,9 @@ const WorkflowPedido: React.FC = () => {
                             <CalendarComponent
                               mode="single"
                               selected={step.dataConclusao}
-                              onSelect={isEditable ? handleUpdateDataConclusao.bind(null, index) : undefined}
+                              onSelect={(isEditable && hasPermission) ? handleUpdateDataConclusao.bind(null, index) : undefined}
                               initialFocus
-                              disabled={!isEditable}
+                              disabled={!isEditable || !hasPermission}
                             />
                           </PopoverContent>
                         </Popover>

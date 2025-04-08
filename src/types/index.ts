@@ -1,4 +1,3 @@
-
 export type Role = "admin" | "editor" | null;
 
 export type Tarefa = {
@@ -107,7 +106,7 @@ export interface DadosDashboard {
   pedidosPorSetor: Record<string, number>;
 }
 
-export type UserRole = 'admin' | 'gerente' | 'user' | 'manager';
+export type UserRole = 'admin' | 'user' | 'manager';
 
 export interface Funcionario {
   id: string;
@@ -118,5 +117,5 @@ export interface Funcionario {
   dataContratacao: Date;
   ativo: boolean;
   senha?: string; // Only used for creation/update, not stored in state
+  permissaoEtapa?: string; // New field to specify which workflow step the employee can edit
 }
-
