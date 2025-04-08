@@ -113,9 +113,20 @@ export function canEditStep(workflow: PedidoCompra['workflow'], stepIndex: numbe
  * Check if an employee has permission to work on a specific workflow step
  * @param stepTitle The title of the workflow step
  * @param funcionarioPermissao The employee's permission
+ * @param funcionarioSetor The employee's sector/department
  * @returns boolean indicating if the employee has permission
  */
-export function funcionarioTemPermissao(stepTitle: string, funcionarioPermissao?: string): boolean {
+export function funcionarioTemPermissao(
+  stepTitle: string, 
+  funcionarioPermissao?: string,
+  funcionarioSetor?: string
+): boolean {
+  // Special case: Health sector employees can work on any step
+  if (funcionarioSetor === 'Saúde') {
+    return true;
+  }
+  
+  // For other sectors, check specific step permissions
   if (!funcionarioPermissao) return false;
   return stepTitle === funcionarioPermissao;
 }

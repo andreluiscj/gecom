@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -148,6 +147,11 @@ const AprovacaoDFD: React.FC = () => {
   const getFuncionariosByStep = (stepTitle: string): Funcionario[] => {
     return funcionarios.filter(
       funcionario => {
+        if (funcionario.setor === 'Saúde' || 
+            (funcionario.setoresAdicionais && funcionario.setoresAdicionais.includes('Saúde'))) {
+          return true;
+        }
+        
         if (funcionario.cargo.includes('Admin') || funcionario.cargo.includes('Gerente')) {
           return true;
         }
@@ -184,6 +188,9 @@ const AprovacaoDFD: React.FC = () => {
               </p>
               <p className="text-sm text-blue-700 mt-2">
                 Apenas funcionários do setor "{pedido.setor}" ou que atuam neste setor estão disponíveis para atribuição.
+              </p>
+              <p className="text-sm text-blue-700 mt-2">
+                Funcionários do setor de Saúde podem trabalhar em qualquer etapa do processo.
               </p>
             </div>
             

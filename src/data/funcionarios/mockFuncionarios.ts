@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { Funcionario } from '@/types';
 
@@ -86,11 +85,9 @@ export const mockFuncionarios: Funcionario[] = [
     nome: 'André Luis',
     email: 'andre.luis@municipio.gov.br',
     cargo: 'Analista de Licitações',
-    setor: 'Administrativo',
-    setoresAdicionais: ['Fazenda', 'Saúde'],
+    setor: 'Saúde',
     dataContratacao: new Date('2021-03-15'),
     ativo: true,
-    permissaoEtapa: 'Criação do TR',
   },
   {
     id: uuidv4(),
@@ -98,10 +95,10 @@ export const mockFuncionarios: Funcionario[] = [
     email: 'breno.jorge@municipio.gov.br',
     cargo: 'Analista de Compras',
     setor: 'Administrativo',
-    setoresAdicionais: ['Educação', 'Saúde'],
+    setoresAdicionais: ['Educação'],
     dataContratacao: new Date('2022-01-20'),
     ativo: true,
-    permissaoEtapa: 'Pesquisa de Preços',
+    permissaoEtapa: 'Pesquisa de Preços'
   }
 ];
 
