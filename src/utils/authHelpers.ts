@@ -35,6 +35,11 @@ export function isFirstLogin(): boolean {
   return localStorage.getItem('first-login') === 'true';
 }
 
+// Function to set first login status
+export function setFirstLogin(status: boolean): void {
+  localStorage.setItem('first-login', status.toString());
+}
+
 // Function to check if user can access a specific route
 export function canAccess(requiredRole: string | string[]): boolean {
   const userRole = getUserRole();

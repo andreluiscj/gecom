@@ -9,7 +9,8 @@ import {
   HelpCircle, 
   Moon,
   Sun,
-  Trash2
+  Trash2,
+  Key
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,8 +31,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { getUserById } from '@/data/funcionarios/mockFuncionarios';
+import { getUserById, atualizarSenhaUsuario } from '@/data/funcionarios/mockFuncionarios';
 import { format } from 'date-fns';
+import { ChangePasswordDialog } from '@/components/Auth/ChangePasswordDialog';
 
 interface NavBarProps {
   toggleSidebar: () => void;
@@ -44,6 +46,7 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [openChangePassword, setOpenChangePassword] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     name: string;
     role: string;
@@ -145,12 +148,20 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
     setOpenDeleteConfirm(false);
   };
 
+  const handleOpenChangePassword = () => {
+    setOpenProfile(false); // Close profile dialog first
+    setTimeout(() => {
+      setOpenChangePassword(true); // Then open change password dialog
+    }, 100);
+  };
+
   const texts = {
     search: "Buscar pedidos, fornecedores...",
     preferences: "Preferências",
     profile: "Perfil",
     logout: "Sair",
     deleteAccount: "Excluir conta",
+    changePassword: "Alterar senha",
     new: "novas",
     theme: isDarkMode ? "Modo claro" : "Modo escuro",
     settings: "Configurações",
@@ -267,6 +278,10 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
               <User className="mr-2 h-4 w-4" />
               <span>{texts.editProfile}</span>
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleOpenChangePassword} className="cursor-pointer">
+              <Key className="mr-2 h-4 w-4" />
+              <span>{texts.changePassword}</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
               <LogOut className="h-4 w-4 mr-2" />
@@ -276,7 +291,13 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
         </DropdownMenu>
       </div>
       
-      <Dialog open={openProfile} onOpenChange={setOpenProfile}>
+      <Dialog open={openProfile} onOpenChange={(open) => {
+        setOpenProfile(open);
+        // Force React to fully unmount and remount the dialog when closing
+        if (!open) {
+          document.body.style.pointerEvents = '';
+        }
+      }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{texts.profile}</DialogTitle>
@@ -346,6 +367,11 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <ChangePasswordDialog 
+        open={openChangePassword} 
+        onOpenChange={setOpenChangePassword} 
+      />
     </div>
   );
 };
