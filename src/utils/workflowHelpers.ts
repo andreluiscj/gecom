@@ -126,7 +126,13 @@ export function funcionarioTemPermissao(
     return true;
   }
   
-  // For other sectors, check specific step permissions
-  if (!funcionarioPermissao) return false;
-  return stepTitle === funcionarioPermissao;
+  // Allow employees with manager/admin roles to work on any step
+  if (funcionarioPermissao === 'admin' || funcionarioPermissao?.toLowerCase().includes('gerente')) {
+    return true;
+  }
+  
+  // For other sectors, check specific step permissions or allow if no specific permissions are set
+  if (!funcionarioPermissao) return true; // Changed to true to allow all employees
+  
+  return stepTitle === funcionarioPermissao || funcionarioPermissao === "all";
 }

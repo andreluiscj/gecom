@@ -26,37 +26,17 @@ const Admin: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-2xl">Painel Administrativo</CardTitle>
           <CardDescription>
-            Gerencie configurações do sistema e usuários
+            Gerencie configurações do sistema
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer" 
                   onClick={() => navigate('/admin/municipios')}>
               <CardContent className="p-6">
                 <h3 className="text-lg font-medium mb-2">Municípios</h3>
                 <p className="text-sm text-muted-foreground">
                   Gerencie os municípios cadastrados no sistema
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer"
-                  onClick={() => navigate('/dashboard')}>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-2">Dashboard</h3>
-                <p className="text-sm text-muted-foreground">
-                  Visualize o dashboard do sistema
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer"
-                  onClick={() => navigate('/pedidos')}>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-2">Pedidos</h3>
-                <p className="text-sm text-muted-foreground">
-                  Gerencie os pedidos de compras
                 </p>
               </CardContent>
             </Card>

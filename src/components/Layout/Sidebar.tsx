@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -30,7 +29,8 @@ import {
   Award,
   PieChart as PieChartIcon,
   LogOut,
-  Users
+  Users,
+  UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -91,6 +91,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
       title: 'Administração',
       path: '/admin',
       icon: <Building2 className="h-5 w-5" />,
+      roles: ['admin'],
+    },
+    {
+      title: 'Cadastro de Gerente',
+      path: '/admin/gerentes',
+      icon: <UserPlus className="h-5 w-5" />,
       roles: ['admin'],
     },
     {

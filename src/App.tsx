@@ -17,6 +17,7 @@ import Login from "./pages/Login";
 import WorkflowPedido from "./pages/Pedidos/WorkflowPedido";
 import AprovacaoDFD from "./pages/Pedidos/AprovacaoDFD";
 import Funcionarios from "./pages/Gerenciamento/Funcionarios";
+import CadastroGerente from "./pages/Admin/CadastroGerente";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
         <Route path="pedidos/aprovacao/:id" element={<AprovacaoDFD />} />
         <Route path="pedidos/novo" element={<NovoPedido />} />
         <Route path="admin/municipios" element={<MunicipioSelection />} />
+        <Route path="admin/gerentes" element={<CadastroGerente />} />
         <Route path="gerenciamento/funcionarios" element={<Funcionarios />} />
       </Route>
 

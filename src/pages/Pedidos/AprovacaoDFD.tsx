@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -14,7 +13,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -38,10 +36,22 @@ const AprovacaoDFD: React.FC = () => {
   const allPedidos = obterTodosPedidos();
   const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos]);
   
-  // Filtrar funcionários pelo setor do pedido
   const funcionarios = useMemo(() => {
     if (pedido) {
-      return filtrarFuncionariosPorSetor(pedido.setor);
+      const allFuncionarios = getFuncionarios();
+      console.log("Total funcionários:", allFuncionarios.length);
+      
+      const filtered = allFuncionarios.filter(f => 
+        f.ativo && (
+          f.setor === pedido.setor || 
+          (f.setoresAdicionais && f.setoresAdicionais.includes(pedido.setor)) ||
+          f.cargo.toLowerCase().includes('gerente') ||
+          f.setor === 'Saúde'
+        )
+      );
+      
+      console.log("Filtered funcionários:", filtered.length, "for setor:", pedido.setor);
+      return filtered;
     }
     return [];
   }, [pedido]);
@@ -71,7 +81,6 @@ const AprovacaoDFD: React.FC = () => {
   useEffect(() => {
     if (responsaveis.length === 0) return;
     
-    // Modificado para considerar dataLimite como opcional
     const todosPreenchidos = responsaveis.every(r => r.responsavelId);
     
     setTodosAtribuidos(todosPreenchidos);
@@ -145,20 +154,8 @@ const AprovacaoDFD: React.FC = () => {
   };
 
   const getFuncionariosByStep = (stepTitle: string): Funcionario[] => {
-    return funcionarios.filter(
-      funcionario => {
-        if (funcionario.setor === 'Saúde' || 
-            (funcionario.setoresAdicionais && funcionario.setoresAdicionais.includes('Saúde'))) {
-          return true;
-        }
-        
-        if (funcionario.cargo.includes('Admin') || funcionario.cargo.includes('Gerente')) {
-          return true;
-        }
-        
-        return funcionarioTemPermissao(stepTitle, funcionario.permissaoEtapa);
-      }
-    );
+    console.log(`Getting funcionarios for step: ${stepTitle}, count: ${funcionarios.length}`);
+    return funcionarios;
   };
 
   return (
