@@ -16,30 +16,34 @@ export const GecomLogo: React.FC<GecomLogoProps> = ({ className = '', size = 48 
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <circle cx="24" cy="24" r="22" fill="white" stroke="white" strokeWidth="1" />
+      <rect width="48" height="48" rx="8" fill="#9b87f5" />
       <path
-        d="M25 15V17H29.5C29.7761 17 30 17.2239 30 17.5V21.5C30 21.7761 29.7761 22 29.5 22H25V24H29.5C30.8807 24 32 22.8807 32 21.5V17.5C32 16.1193 30.8807 15 29.5 15H25Z"
-        fill="#3E64FF"
+        d="M33 16L24 25L15 16"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
-        d="M25 24V27C25 27.5523 25.4477 28 26 28H29.5C29.7761 28 30 28.2239 30 28.5V32.5C30 32.7761 29.7761 33 29.5 33H25V35H29.5C30.8807 35 32 33.8807 32 32.5V28.5C32 27.1193 30.8807 26 29.5 26H27C26.4477 26 26 25.5523 26 25V24H25Z"
-        fill="#3E64FF"
+        d="M15 16H33V30C33 30.5304 32.7893 31.0391 32.4142 31.4142C32.0391 31.7893 31.5304 32 31 32H17C16.4696 32 15.9609 31.7893 15.5858 31.4142C15.2107 31.0391 15 30.5304 15 30V16Z"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
-        d="M24 35H20.5C19.1193 35 18 33.8807 18 32.5V28.5C18 27.1193 19.1193 26 20.5 26H24V28H20.5C20.2239 28 20 28.2239 20 28.5V32.5C20 32.7761 20.2239 33 20.5 33H24V35Z"
-        fill="#3E64FF"
+        d="M22 25V32"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
-        d="M24 15H20.5C19.1193 15 18 16.1193 18 17.5V21.5C18 22.8807 19.1193 24 20.5 24H24V26H20.5C20.2239 26 20 25.7761 20 25.5V23H18V25.5C18 26.8807 19.1193 28 20.5 28H24V24H20.5C20.2239 24 20 23.7761 20 23.5V17.5C20 17.2239 20.2239 17 20.5 17H24V15Z"
-        fill="#3E64FF"
-      />
-      <path
-        d="M26 20.5C26 21.3284 25.3284 22 24.5 22C23.6716 22 23 21.3284 23 20.5C23 19.6716 23.6716 19 24.5 19C25.3284 19 26 19.6716 26 20.5Z"
-        fill="#3E64FF"
-      />
-      <path
-        d="M26 29.5C26 30.3284 25.3284 31 24.5 31C23.6716 31 23 30.3284 23 29.5C23 28.6716 23.6716 28 24.5 28C25.3284 28 26 28.6716 26 29.5Z"
-        fill="#3E64FF"
+        d="M26 25V32"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
