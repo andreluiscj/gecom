@@ -37,10 +37,6 @@ const Login: React.FC = () => {
         loginSuccess('admin');
       } else if (selectedUser === 'amanda' && username === 'amanda' && password === 'amanda') {
         loginSuccess('manager', 'São Paulo', 'Amanda Amarante');
-      } else if (selectedUser === 'andre' && username === 'andre' && password === 'andre') {
-        loginSuccess('user', 'São Paulo', 'André Luis', 'Criação do TR');
-      } else if (selectedUser === 'breno' && username === 'breno' && password === 'breno') {
-        loginSuccess('user', 'São Paulo', 'Breno Jorge', 'Pesquisa de Preços');
       } else {
         toast.error('Credenciais inválidas. Tente novamente.');
       }
@@ -74,12 +70,6 @@ const Login: React.FC = () => {
     } else if (userType === 'amanda') {
       setUsername('amanda');
       setPassword('amanda');
-    } else if (userType === 'andre') {
-      setUsername('andre');
-      setPassword('andre');
-    } else if (userType === 'breno') {
-      setUsername('breno');
-      setPassword('breno');
     }
   };
 
@@ -151,20 +141,6 @@ const Login: React.FC = () => {
               onClick={() => handleQuickLogin('amanda')}
             >
               Amanda
-            </Button>
-            <Button
-              variant={selectedUser === 'andre' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleQuickLogin('andre')}
-            >
-              André
-            </Button>
-            <Button
-              variant={selectedUser === 'breno' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleQuickLogin('breno')}
-            >
-              Breno
             </Button>
           </div>
         </CardFooter>
