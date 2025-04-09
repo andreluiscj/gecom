@@ -112,12 +112,24 @@ export type UserRole = 'admin' | 'user' | 'manager';
 export interface Funcionario {
   id: string;
   nome: string;
+  cpf: string;
+  dataNascimento: Date;
   email: string;
   cargo: string;
   setor: Setor;
-  setoresAdicionais?: Setor[];  // New field to allow an employee to belong to multiple sectors
+  setoresAdicionais?: Setor[];
   dataContratacao: Date;
   ativo: boolean;
   senha?: string; // Only used for creation/update, not stored in state
-  permissaoEtapa?: string; // Specifies which workflow step the employee can edit
+  permissaoEtapa?: string;
+  username?: string; // Username for login
+}
+
+export interface UsuarioLogin {
+  id: string;
+  username: string;
+  senha: string;
+  funcionarioId: string;
+  role: UserRole;
+  ativo: boolean;
 }

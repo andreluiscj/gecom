@@ -45,16 +45,18 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
-import { Funcionario, Setor } from '@/types';
+import { Funcionario, Setor, UsuarioLogin } from '@/types';
 import {
   getFuncionarios,
   addFuncionario,
   updateFuncionario,
   deleteFuncionario,
+  getUsuariosLogin,
+  generateUsername,
 } from '@/data/funcionarios/mockFuncionarios';
 import { canAccessUserManagement } from '@/utils/authHelpers';
 import { toast } from 'sonner';
-import { CheckCircle, Edit, PlusCircle, Search, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle, Edit, PlusCircle, Search, Trash2 } from 'lucide-react';
 
 const setores: Setor[] = [
   'Saúde',
@@ -77,18 +79,22 @@ const setores: Setor[] = [
 const Funcionarios: React.FC = () => {
   const navigate = useNavigate();
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [usuariosLogin, setUsuariosLogin] = useState<UsuarioLogin[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isUserInfoDialogOpen, setIsUserInfoDialogOpen] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null);
+  const [selectedUsuarioLogin, setSelectedUsuarioLogin] = useState<UsuarioLogin | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState<Omit<Funcionario, 'id'>>({
     nome: '',
+    cpf: '',
+    dataNascimento: new Date(),
     email: '',
     cargo: '',
     setor: 'Administrativo',
     dataContratacao: new Date(),
     ativo: true,
-    senha: '',
   });
 
   useEffect(() => {
@@ -101,6 +107,7 @@ const Funcionarios: React.FC = () => {
 
     // Load employees data
     loadFuncionarios();
+    loadUsuariosLogin();
   }, [navigate]);
 
   const loadFuncionarios = () => {
@@ -108,16 +115,22 @@ const Funcionarios: React.FC = () => {
     setFuncionarios(data);
   };
 
+  const loadUsuariosLogin = () => {
+    const data = getUsuariosLogin();
+    setUsuariosLogin(data);
+  };
+
   const handleOpenAddDialog = () => {
     setSelectedFuncionario(null);
     setFormData({
       nome: '',
+      cpf: '',
+      dataNascimento: new Date(),
       email: '',
       cargo: '',
       setor: 'Administrativo',
       dataContratacao: new Date(),
       ativo: true,
-      senha: '',
     });
     setIsDialogOpen(true);
   };
@@ -126,12 +139,13 @@ const Funcionarios: React.FC = () => {
     setSelectedFuncionario(funcionario);
     setFormData({
       nome: funcionario.nome,
+      cpf: funcionario.cpf || '',
+      dataNascimento: funcionario.dataNascimento || new Date(),
       email: funcionario.email,
       cargo: funcionario.cargo,
       setor: funcionario.setor,
       dataContratacao: funcionario.dataContratacao,
       ativo: funcionario.ativo,
-      senha: '',
     });
     setIsDialogOpen(true);
   };
@@ -141,11 +155,30 @@ const Funcionarios: React.FC = () => {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleOpenUserInfoDialog = (funcionario: Funcionario) => {
+    const usuario = usuariosLogin.find(u => u.funcionarioId === funcionario.id);
+    if (usuario) {
+      setSelectedFuncionario(funcionario);
+      setSelectedUsuarioLogin(usuario);
+      setIsUserInfoDialogOpen(true);
+    } else {
+      toast.error('Informações de login não encontradas');
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    });
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    const dateValue = e.target.value ? new Date(e.target.value) : new Date();
+    setFormData({
+      ...formData,
+      [fieldName]: dateValue,
     });
   };
 
@@ -158,27 +191,49 @@ const Funcionarios: React.FC = () => {
 
   const handleSaveFuncionario = () => {
     // Validate form data
-    if (!formData.nome || !formData.email || !formData.cargo || !formData.setor) {
+    if (!formData.nome || !formData.cpf || !formData.email || !formData.cargo || !formData.setor) {
       toast.error('Por favor, preencha todos os campos obrigatórios');
       return;
     }
 
-    if (selectedFuncionario) {
-      // Update existing funcionario
-      updateFuncionario(selectedFuncionario.id, formData);
-      toast.success(`Funcionário ${formData.nome} atualizado com sucesso`);
-    } else {
-      // Create new funcionario
-      if (!formData.senha) {
-        toast.error('A senha é obrigatória para novos funcionários');
-        return;
-      }
-      addFuncionario(formData);
-      toast.success(`Funcionário ${formData.nome} adicionado com sucesso`);
+    // CPF validation (simple format check)
+    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/;
+    if (!cpfRegex.test(formData.cpf)) {
+      toast.error('CPF inválido. Utilize o formato 000.000.000-00 ou 00000000000');
+      return;
     }
 
-    setIsDialogOpen(false);
-    loadFuncionarios();
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Email inválido');
+      return;
+    }
+
+    try {
+      if (selectedFuncionario) {
+        // Update existing funcionario
+        updateFuncionario(selectedFuncionario.id, formData);
+        toast.success(`Funcionário ${formData.nome} atualizado com sucesso`);
+      } else {
+        // Create new funcionario and login
+        const result = addFuncionario(formData);
+        
+        toast.success(
+          <div className="flex flex-col gap-1">
+            <div>Funcionário {formData.nome} adicionado com sucesso</div>
+            <div className="text-sm">Login criado: {result.login.username} | Senha: 123</div>
+          </div>
+        );
+      }
+
+      setIsDialogOpen(false);
+      loadFuncionarios();
+      loadUsuariosLogin();
+    } catch (error) {
+      console.error('Error saving employee:', error);
+      toast.error('Erro ao salvar funcionário. Tente novamente.');
+    }
   };
 
   const handleDeleteFuncionario = () => {
@@ -187,6 +242,7 @@ const Funcionarios: React.FC = () => {
       toast.success(`Funcionário ${selectedFuncionario.nome} excluído com sucesso`);
       setIsDeleteDialogOpen(false);
       loadFuncionarios();
+      loadUsuariosLogin();
     }
   };
 
@@ -197,7 +253,8 @@ const Funcionarios: React.FC = () => {
       funcionario.nome.toLowerCase().includes(searchLower) ||
       funcionario.email.toLowerCase().includes(searchLower) ||
       funcionario.cargo.toLowerCase().includes(searchLower) ||
-      funcionario.setor.toLowerCase().includes(searchLower)
+      funcionario.setor.toLowerCase().includes(searchLower) ||
+      (funcionario.cpf && funcionario.cpf.includes(searchLower))
     );
   });
 
@@ -223,22 +280,23 @@ const Funcionarios: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-10"
-                placeholder="Pesquisar por nome, email, cargo ou setor..."
+                placeholder="Pesquisar por nome, email, CPF, cargo ou setor..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
+                  <TableHead>CPF</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Cargo</TableHead>
-                  <TableHead>Setor</TableHead>
-                  <TableHead>Data Contratação</TableHead>
+                  <TableHead>Secretaria</TableHead>
+                  <TableHead>Data Nascimento</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -248,11 +306,12 @@ const Funcionarios: React.FC = () => {
                   filteredFuncionarios.map((funcionario) => (
                     <TableRow key={funcionario.id}>
                       <TableCell className="font-medium">{funcionario.nome}</TableCell>
+                      <TableCell>{funcionario.cpf || '-'}</TableCell>
                       <TableCell>{funcionario.email}</TableCell>
                       <TableCell>{funcionario.cargo}</TableCell>
                       <TableCell>{funcionario.setor}</TableCell>
                       <TableCell>
-                        {format(new Date(funcionario.dataContratacao), 'dd/MM/yyyy')}
+                        {funcionario.dataNascimento ? format(new Date(funcionario.dataNascimento), 'dd/MM/yyyy') : '-'}
                       </TableCell>
                       <TableCell>
                         <span
@@ -267,6 +326,14 @@ const Funcionarios: React.FC = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenUserInfoDialog(funcionario)}
+                            title="Informações de Login"
+                          >
+                            Login
+                          </Button>
                           <Button
                             variant="outline"
                             size="icon"
@@ -288,7 +355,7 @@ const Funcionarios: React.FC = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6">
+                    <TableCell colSpan={8} className="text-center py-6">
                       Nenhum funcionário encontrado
                     </TableCell>
                   </TableRow>
@@ -325,6 +392,28 @@ const Funcionarios: React.FC = () => {
             </div>
             
             <div className="space-y-2">
+              <Label htmlFor="cpf">CPF*</Label>
+              <Input
+                id="cpf"
+                name="cpf"
+                value={formData.cpf}
+                onChange={handleInputChange}
+                placeholder="000.000.000-00"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="dataNascimento">Data de Nascimento*</Label>
+              <Input
+                id="dataNascimento"
+                name="dataNascimento"
+                type="date"
+                value={format(formData.dataNascimento, 'yyyy-MM-dd')}
+                onChange={(e) => handleDateChange(e, 'dataNascimento')}
+              />
+            </div>
+            
+            <div className="space-y-2">
               <Label htmlFor="email">Email*</Label>
               <Input
                 id="email"
@@ -346,13 +435,13 @@ const Funcionarios: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="setor">Setor*</Label>
+              <Label htmlFor="setor">Secretaria*</Label>
               <Select
                 value={formData.setor}
                 onValueChange={(value) => handleSelectChange(value, 'setor')}
               >
                 <SelectTrigger id="setor">
-                  <SelectValue placeholder="Selecione um setor" />
+                  <SelectValue placeholder="Selecione uma secretaria" />
                 </SelectTrigger>
                 <SelectContent>
                   {setores.map((setor) => (
@@ -365,15 +454,13 @@ const Funcionarios: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="senha">
-                {selectedFuncionario ? 'Senha (deixe em branco para manter)' : 'Senha*'}
-              </Label>
+              <Label htmlFor="dataContratacao">Data de Contratação*</Label>
               <Input
-                id="senha"
-                name="senha"
-                type="password"
-                value={formData.senha}
-                onChange={handleInputChange}
+                id="dataContratacao"
+                name="dataContratacao"
+                type="date"
+                value={format(formData.dataContratacao, 'yyyy-MM-dd')}
+                onChange={(e) => handleDateChange(e, 'dataContratacao')}
               />
             </div>
             
@@ -400,6 +487,55 @@ const Funcionarios: React.FC = () => {
             </Button>
             <Button onClick={handleSaveFuncionario}>
               {selectedFuncionario ? 'Atualizar' : 'Adicionar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Login Information Dialog */}
+      <Dialog open={isUserInfoDialogOpen} onOpenChange={setIsUserInfoDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Informações de Login</DialogTitle>
+            <DialogDescription>
+              Dados de acesso ao sistema para {selectedFuncionario?.nome}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedUsuarioLogin && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>Usuário:</Label>
+                  <div className="p-2 bg-muted rounded-md">{selectedUsuarioLogin.username}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Senha:</Label>
+                  <div className="p-2 bg-muted rounded-md">123 (padrão)</div>
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <Label>Perfil:</Label>
+                <div className="p-2 bg-muted rounded-md capitalize">{selectedUsuarioLogin.role}</div>
+              </div>
+              
+              <div className="space-y-1">
+                <Label>Status:</Label>
+                <div className={`p-2 rounded-md ${selectedUsuarioLogin.ativo ? 'bg-green-100' : 'bg-red-100'}`}>
+                  {selectedUsuarioLogin.ativo ? 'Ativo' : 'Inativo'}
+                </div>
+              </div>
+              
+              <div className="pt-2 text-sm text-muted-foreground">
+                Lembre-se de informar ao funcionário que ele deve alterar sua senha no primeiro acesso.
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setIsUserInfoDialogOpen(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>

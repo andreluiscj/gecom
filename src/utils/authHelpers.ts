@@ -1,26 +1,26 @@
 
-// Função para verificar se o usuário está autenticado
+// Function to check if user is authenticated
 export function isAuthenticated(): boolean {
   const isAuthed = localStorage.getItem('user-authenticated') === 'true';
   return isAuthed;
 }
 
-// Função para obter o papel do usuário atual
+// Function to get current user's role
 export function getUserRole(): string | null {
   return localStorage.getItem('user-role');
 }
 
-// Função para obter o nome do usuário atual
+// Function to get current user's name
 export function getUserName(): string | null {
   return localStorage.getItem('user-name');
 }
 
-// Função para obter o município selecionado
+// Function to get the selected municipality
 export function getSelectedMunicipality(): string | null {
   return localStorage.getItem('municipio-selecionado');
 }
 
-// Função para verificar se o usuário pode acessar uma rota específica
+// Function to check if user can access a specific route
 export function canAccess(requiredRole: string | string[]): boolean {
   const userRole = getUserRole();
   
@@ -33,7 +33,7 @@ export function canAccess(requiredRole: string | string[]): boolean {
   return userRole === requiredRole;
 }
 
-// Função para verificar se o usuário pode editar etapas de workflow
+// Function to get the workflow step a user is permitted to edit
 export function getPermittedWorkflowStep(): string | undefined {
   const userRole = getUserRole();
   const userName = getUserName();
@@ -42,30 +42,26 @@ export function getPermittedWorkflowStep(): string | undefined {
     return undefined; // Admin can edit any step
   }
   
-  if (userName === 'André Luis') {
-    // Health sector employee can edit any workflow step
-    return undefined;
-  }
-  
-  if (userName === 'Breno Jorge') {
-    return 'Pesquisa de Preços';
+  const funcionarioId = localStorage.getItem('user-id');
+  if (funcionarioId) {
+    // Get the employee data from localStorage
+    const funcionarios = JSON.parse(localStorage.getItem('funcionarios') || '[]');
+    const funcionario = funcionarios.find((f: any) => f.id === funcionarioId);
+    
+    if (funcionario && funcionario.permissaoEtapa) {
+      return funcionario.permissaoEtapa;
+    }
   }
   
   return undefined;
 }
 
-// Função para verificar se o usuário pode editar uma etapa específica do workflow
+// Function to check if user can edit a specific workflow step
 export function canEditWorkflowStep(stepTitle: string): boolean {
   const userRole = getUserRole();
-  const userName = getUserName();
   
   if (userRole === 'admin' || userRole === 'manager') {
     return true; // Admin and manager can edit any step
-  }
-  
-  // Check if user is a health sector employee (André) - can edit any step
-  if (userName === 'André Luis') {
-    return true;
   }
   
   // For non-admin users, check specific permissions
@@ -77,7 +73,7 @@ export function canEditWorkflowStep(stepTitle: string): boolean {
   return permittedStep === stepTitle;
 }
 
-// Função para verificar se o usuário tem permissão para acessar uma secretaria específica
+// Function to check if user has permission to access a specific sector
 export function canAccessSetor(setor: string): boolean {
   const userRole = getUserRole();
   
@@ -85,10 +81,10 @@ export function canAccessSetor(setor: string): boolean {
     return true;
   }
   
-  return true; // Temporariamente retornando true para todos setores
+  return true; // Temporarily returning true for all sectors
 }
 
-// Função para verificar se o usuário pode gerenciar usuários
+// Function to check if user can manage users
 export function canAccessUserManagement(): boolean {
   const userRole = getUserRole();
   return userRole === 'admin' || userRole === 'gerente' || userRole === 'manager';

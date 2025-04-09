@@ -1,106 +1,12 @@
-import { v4 as uuidv4 } from 'uuid';
-import { Funcionario } from '@/types';
 
-// Sample employees data
-export const mockFuncionarios: Funcionario[] = [
-  {
-    id: uuidv4(),
-    nome: 'João Silva',
-    email: 'joao.silva@municipio.gov.br',
-    cargo: 'Analista Administrativo',
-    setor: 'Administrativo',
-    setoresAdicionais: ['Saúde', 'Educação'],
-    dataContratacao: new Date('2020-01-10'),
-    ativo: true,
-  },
-  {
-    id: uuidv4(),
-    nome: 'Maria Oliveira',
-    email: 'maria.oliveira@municipio.gov.br',
-    cargo: 'Enfermeira Chefe',
-    setor: 'Saúde',
-    dataContratacao: new Date('2019-03-15'),
-    ativo: true,
-  },
-  {
-    id: uuidv4(),
-    nome: 'Carlos Santos',
-    email: 'carlos.santos@municipio.gov.br',
-    cargo: 'Professor',
-    setor: 'Educação',
-    setoresAdicionais: ['Cultura'],
-    dataContratacao: new Date('2021-02-05'),
-    ativo: true,
-  },
-  {
-    id: uuidv4(),
-    nome: 'Ana Pereira',
-    email: 'ana.pereira@municipio.gov.br',
-    cargo: 'Engenheira Civil',
-    setor: 'Obras',
-    setoresAdicionais: ['Transporte', 'Meio Ambiente'],
-    dataContratacao: new Date('2018-07-22'),
-    ativo: true,
-  },
-  {
-    id: uuidv4(),
-    nome: 'Paulo Mendes',
-    email: 'paulo.mendes@municipio.gov.br',
-    cargo: 'Guarda Municipal',
-    setor: 'Segurança Pública',
-    dataContratacao: new Date('2022-01-15'),
-    ativo: true,
-  },
-  {
-    id: uuidv4(),
-    nome: 'Fernanda Costa',
-    email: 'fernanda.costa@municipio.gov.br',
-    cargo: 'Assistente Social',
-    setor: 'Assistência Social',
-    setoresAdicionais: ['Saúde'],
-    dataContratacao: new Date('2020-09-10'),
-    ativo: false,
-  },
-  {
-    id: uuidv4(),
-    nome: 'Roberto Alves',
-    email: 'roberto.alves@municipio.gov.br',
-    cargo: 'Contador',
-    setor: 'Fazenda',
-    setoresAdicionais: ['Administrativo'],
-    dataContratacao: new Date('2019-11-03'),
-    ativo: true,
-  },
-  {
-    id: uuidv4(),
-    nome: 'Luciana Moreira',
-    email: 'luciana.moreira@municipio.gov.br',
-    cargo: 'Secretária de Cultura',
-    setor: 'Cultura',
-    dataContratacao: new Date('2021-05-12'),
-    ativo: true,
-  },
-  {
-    id: uuidv4(),
-    nome: 'André Luis',
-    email: 'andre.luis@municipio.gov.br',
-    cargo: 'Analista de Licitações',
-    setor: 'Saúde',
-    dataContratacao: new Date('2021-03-15'),
-    ativo: true,
-  },
-  {
-    id: uuidv4(),
-    nome: 'Breno Jorge',
-    email: 'breno.jorge@municipio.gov.br',
-    cargo: 'Analista de Compras',
-    setor: 'Administrativo',
-    setoresAdicionais: ['Educação'],
-    dataContratacao: new Date('2022-01-20'),
-    ativo: true,
-    permissaoEtapa: 'Pesquisa de Preços'
-  }
-];
+import { v4 as uuidv4 } from 'uuid';
+import { Funcionario, UsuarioLogin } from '@/types';
+
+// Empty employees data
+export const mockFuncionarios: Funcionario[] = [];
+
+// Login users data store
+export const mockUsuariosLogin: UsuarioLogin[] = [];
 
 // Get all employees
 export const getFuncionarios = () => {
@@ -111,7 +17,8 @@ export const getFuncionarios = () => {
     // Convert string dates back to Date objects
     return parsed.map((func: any) => ({
       ...func,
-      dataContratacao: new Date(func.dataContratacao)
+      dataContratacao: new Date(func.dataContratacao),
+      dataNascimento: new Date(func.dataNascimento)
     }));
   }
   
@@ -120,18 +27,63 @@ export const getFuncionarios = () => {
   return mockFuncionarios;
 };
 
-// Add a new employee
+// Get all login users
+export const getUsuariosLogin = () => {
+  const storedUsuarios = localStorage.getItem('usuarios-login');
+  if (storedUsuarios) {
+    return JSON.parse(storedUsuarios);
+  }
+  
+  localStorage.setItem('usuarios-login', JSON.stringify(mockUsuariosLogin));
+  return mockUsuariosLogin;
+};
+
+// Generate username from name (firstName.lastName)
+export const generateUsername = (nome: string): string => {
+  const nameParts = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(' ');
+  
+  if (nameParts.length >= 2) {
+    return `${nameParts[0]}.${nameParts[1]}`;
+  } else if (nameParts.length === 1) {
+    return nameParts[0];
+  } else {
+    return `user_${Date.now()}`;
+  }
+};
+
+// Add a new employee and create login
 export const addFuncionario = (funcionario: Omit<Funcionario, 'id'>) => {
   const funcionarios = getFuncionarios();
+  const usuarios = getUsuariosLogin();
+  
   const newFuncionario = {
     ...funcionario,
     id: uuidv4(),
   };
   
-  funcionarios.push(newFuncionario);
-  localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+  // Generate username for login
+  const username = generateUsername(funcionario.nome);
   
-  return newFuncionario;
+  // Create login for the employee
+  const newLogin: UsuarioLogin = {
+    id: uuidv4(),
+    username: username,
+    senha: "123", // Default password
+    funcionarioId: newFuncionario.id,
+    role: funcionario.cargo.toLowerCase().includes('gerente') || 
+          funcionario.cargo.toLowerCase().includes('secretário') ? 'manager' : 'user',
+    ativo: newFuncionario.ativo
+  };
+  
+  // Add new employee and login
+  funcionarios.push(newFuncionario);
+  usuarios.push(newLogin);
+  
+  // Save to localStorage
+  localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+  localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
+  
+  return { funcionario: newFuncionario, login: newLogin };
 };
 
 // Update an employee
@@ -142,6 +94,18 @@ export const updateFuncionario = (id: string, funcionario: Partial<Funcionario>)
   if (index !== -1) {
     funcionarios[index] = { ...funcionarios[index], ...funcionario };
     localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+    
+    // Update login if employee is active/inactive
+    if (funcionario.ativo !== undefined) {
+      const usuarios = getUsuariosLogin();
+      const userIndex = usuarios.findIndex(u => u.funcionarioId === id);
+      
+      if (userIndex !== -1) {
+        usuarios[userIndex].ativo = funcionario.ativo;
+        localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
+      }
+    }
+    
     return funcionarios[index];
   }
   
@@ -154,6 +118,12 @@ export const deleteFuncionario = (id: string) => {
   const filteredFuncionarios = funcionarios.filter(f => f.id !== id);
   
   localStorage.setItem('funcionarios', JSON.stringify(filteredFuncionarios));
+  
+  // Also delete associated login
+  const usuarios = getUsuariosLogin();
+  const filteredUsuarios = usuarios.filter(u => u.funcionarioId !== id);
+  localStorage.setItem('usuarios-login', JSON.stringify(filteredUsuarios));
+  
   return filteredFuncionarios;
 };
 
@@ -166,4 +136,44 @@ export const filtrarFuncionariosPorSetor = (setor: string) => {
       (funcionario.setoresAdicionais && funcionario.setoresAdicionais.includes(setor))
     )
   );
+};
+
+// Login functions
+export const autenticarUsuario = (username: string, senha: string) => {
+  const usuarios = getUsuariosLogin();
+  const usuario = usuarios.find(u => 
+    u.username === username && 
+    u.senha === senha && 
+    u.ativo === true
+  );
+  
+  if (usuario) {
+    // Get associated employee data
+    const funcionarios = getFuncionarios();
+    const funcionario = funcionarios.find(f => f.id === usuario.funcionarioId);
+    
+    if (funcionario) {
+      return {
+        authenticated: true,
+        role: usuario.role,
+        funcionario: funcionario
+      };
+    }
+  }
+  
+  return { authenticated: false };
+};
+
+// Update user password
+export const atualizarSenhaUsuario = (username: string, novaSenha: string) => {
+  const usuarios = getUsuariosLogin();
+  const index = usuarios.findIndex(u => u.username === username);
+  
+  if (index !== -1) {
+    usuarios[index].senha = novaSenha;
+    localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
+    return true;
+  }
+  
+  return false;
 };
