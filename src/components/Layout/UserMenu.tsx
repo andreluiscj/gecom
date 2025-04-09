@@ -134,6 +134,7 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
         open={openProfile} 
         onOpenChange={setOpenProfile} 
         userInfo={userInfo} 
+        onProfileUpdate={loadUserInfo}
       />
       
       <ChangePasswordDialog 
