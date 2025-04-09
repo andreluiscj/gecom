@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { ShoppingCart, Check, Key } from 'lucide-react';
+import { Key } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -23,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { autenticarUsuario, atualizarSenhaUsuario } from '@/data/funcionarios/mockFuncionarios';
 import { Label } from '@/components/ui/label';
+import GecomLogo from '@/assets/GecomLogo';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -34,7 +34,6 @@ const Login: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [currentUserId, setCurrentUserId] = useState<string>('');
 
-  // Check if user is already logged in
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
     if (isAuthenticated) {
@@ -45,13 +44,11 @@ const Login: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Implement basic validation
     if (!username || !password) {
       toast.error('Por favor, preencha todos os campos.');
       return;
     }
 
-    // Handle test users
     if (selectedUser === 'admin' && username === 'admin' && password === 'admin') {
       loginSuccess('admin', undefined, 'Administrador');
       return;
@@ -61,10 +58,8 @@ const Login: React.FC = () => {
       return;
     }
 
-    // Try to authenticate real users
     const result = autenticarUsuario(username, password);
     if (result.authenticated) {
-      // Check if it's first login, if so show password change dialog
       if (result.primeiroAcesso) {
         setShowChangePasswordDialog(true);
         setCurrentUserId(result.userId);
@@ -84,7 +79,6 @@ const Login: React.FC = () => {
   };
 
   const handlePasswordChange = () => {
-    // Validate passwords
     if (!newPassword || newPassword.length < 3) {
       toast.error('A nova senha deve ter pelo menos 3 caracteres.');
       return;
@@ -95,11 +89,9 @@ const Login: React.FC = () => {
       return;
     }
 
-    // Update password
     if (atualizarSenhaUsuario(currentUserId, newPassword)) {
       toast.success('Senha alterada com sucesso!');
       
-      // Login after password change
       const result = autenticarUsuario(username, newPassword);
       if (result.authenticated) {
         loginSuccess(
@@ -125,7 +117,6 @@ const Login: React.FC = () => {
     userId: string = '',
     funcionarioId: string = ''
   ) => {
-    // Set authenticated state in localStorage
     localStorage.setItem('user-authenticated', 'true');
     localStorage.setItem('user-role', role);
     localStorage.setItem('user-municipality', municipality);
@@ -160,10 +151,7 @@ const Login: React.FC = () => {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-2">
-            <div className="flex items-center space-x-2 bg-primary text-primary-foreground p-3 rounded-lg">
-              <ShoppingCart className="h-6 w-6" />
-              <Check className="h-6 w-6 -ml-3 -mt-1" />
-            </div>
+            <GecomLogo size={50} />
           </div>
           <CardTitle className="text-2xl font-bold">GECOM</CardTitle>
           <CardDescription>
@@ -228,7 +216,6 @@ const Login: React.FC = () => {
         </CardFooter>
       </Card>
       
-      {/* Password Change Dialog */}
       <Dialog open={showChangePasswordDialog} onOpenChange={setShowChangePasswordDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

@@ -35,6 +35,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { canAccessUserManagement } from '@/utils/authHelpers';
+import GecomLogo from '@/assets/GecomLogo';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -214,17 +215,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
       <div className="border-b border-sidebar-border py-5 px-5">
         <div className="flex items-center space-x-2">
           <div className="flex items-center">
-            <div className="flex text-white bg-sidebar-primary p-1.5 rounded-md">
-              <ShoppingCart className="h-5 w-5" />
-              <Check className="h-5 w-5 -ml-3 -mt-1" />
-            </div>
+            <GecomLogo size={32} />
             <h2 className="font-heading font-bold text-xl text-white ml-2">GECOM</h2>
-            <img 
-              src="/lovable-uploads/408ac38b-4584-43a1-b61d-be1c1ebe20ee.png" 
-              alt="Logo" 
-              className="h-8 ml-2" 
-              style={{ filter: 'brightness(0) invert(1)' }}
-            />
           </div>
         </div>
       </div>
