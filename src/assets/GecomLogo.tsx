@@ -16,7 +16,7 @@ export const GecomLogo: React.FC<GecomLogoProps> = ({ className = '', size = 48 
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <rect width="48" height="48" rx="8" fill="#2563EB" />
+      <rect width="48" height="48" rx="8" fill="#9b87f5" />
       <path
         d="M33 16L24 25L15 16"
         stroke="white"

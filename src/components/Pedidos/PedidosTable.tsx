@@ -40,12 +40,12 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>("todos");
-  const [setorFilter, setSetorFilter] = useState<string>("todos");
+  const [secretariaFilter, setSecretariaFilter] = useState<string>("todos");
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   
-  // Extract unique setores from pedidos for the filter dropdown
-  const uniqueSetores = Array.from(new Set(pedidos.map(p => p.setor)));
+  // Extract unique secretarias from pedidos for the filter dropdown
+  const uniqueSecretarias = Array.from(new Set(pedidos.map(p => p.setor)));
   
   // Sort pedidos by date (newest first) before filtering
   const sortedPedidos = [...pedidos].sort((a, b) => b.dataCompra.getTime() - a.dataCompra.getTime());
@@ -60,14 +60,14 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
       // Status filter
       const statusMatch = statusFilter === 'todos' || pedido.status === statusFilter;
       
-      // Setor filter
-      const setorMatch = setorFilter === 'todos' || pedido.setor === setorFilter;
+      // Secretaria filter
+      const secretariaMatch = secretariaFilter === 'todos' || pedido.setor === secretariaFilter;
       
       // Date range filter
       const dateFromMatch = !dateFrom || pedido.dataCompra >= dateFrom;
       const dateToMatch = !dateTo || pedido.dataCompra <= dateTo;
       
-      return textMatch && statusMatch && setorMatch && dateFromMatch && dateToMatch;
+      return textMatch && statusMatch && secretariaMatch && dateFromMatch && dateToMatch;
     }
   );
 
@@ -94,7 +94,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
   const resetFilters = () => {
     setSearchTerm('');
     setStatusFilter('todos');
-    setSetorFilter('todos');
+    setSecretariaFilter('todos');
     setDateFrom(undefined);
     setDateTo(undefined);
   };
@@ -129,14 +129,14 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
               </SelectContent>
             </Select>
             
-            <Select value={setorFilter} onValueChange={setSetorFilter}>
+            <Select value={secretariaFilter} onValueChange={setSecretariaFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Filtrar por setor" />
+                <SelectValue placeholder="Filtrar por secretaria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todos">Todos os setores</SelectItem>
-                {uniqueSetores.map((setor) => (
-                  <SelectItem key={setor} value={setor}>{setor}</SelectItem>
+                <SelectItem value="todos">Todas as secretarias</SelectItem>
+                {uniqueSecretarias.map((secretaria) => (
+                  <SelectItem key={secretaria} value={secretaria}>{secretaria}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -205,7 +205,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
                 <TableHead>Descrição</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Fundo</TableHead>
-                <TableHead>Setor</TableHead>
+                <TableHead>Secretaria</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Visualizar</TableHead>
               </TableRow>

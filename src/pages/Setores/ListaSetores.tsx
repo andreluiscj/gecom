@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -15,7 +16,7 @@ const ListaSetores: React.FC = () => {
   const dadosDashboard = obterDadosDashboard();
   const todosPedidos = obterPedidosFicticios();
 
-  const setores = [
+  const secretarias = [
     {
       id: 'saude',
       titulo: 'Saúde',
@@ -137,22 +138,22 @@ const ListaSetores: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {setores.map((setor) => {
-          const totalDFDs = getPedidosForSetor(setor.titulo);
-          const gastosRealizados = dadosDashboard.gastosPorSetor[setor.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 0;
+        {secretarias.map((secretaria) => {
+          const totalDFDs = getPedidosForSetor(secretaria.titulo);
+          const gastosRealizados = dadosDashboard.gastosPorSetor[secretaria.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 0;
           const hasPedidos = totalDFDs > 0 && gastosRealizados > 0;
           
-          const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[setor.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 0;
+          const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[secretaria.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 0;
           const percentualGasto = calcularPorcentagem(gastosRealizados, orcamentoPrevisto);
           
           return (
-            <Link to={setor.href} key={setor.id} className="block">
+            <Link to={secretaria.href} key={secretaria.id} className="block">
               <Card className="h-full hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="pb-2 flex flex-row items-center space-x-4 border-b">
                   <div className={`p-2 rounded-full bg-white shadow-sm`}>
-                    {setor.icone}
+                    {secretaria.icone}
                   </div>
-                  <CardTitle className="text-xl font-semibold">Secretária de {setor.titulo}</CardTitle>
+                  <CardTitle className="text-xl font-semibold">Secretária de {secretaria.titulo}</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4 space-y-4">
                   <div className="space-y-1">

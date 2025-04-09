@@ -53,8 +53,8 @@ const Task: React.FC<TaskProps> = ({ pedido }) => {
           <Progress 
             value={pedido.workflow.percentComplete} 
             className="h-1" 
-            color={pedido.workflow.percentComplete > 70 ? 'bg-green-500' : 
-                  pedido.workflow.percentComplete > 30 ? 'bg-yellow-500' : 'bg-red-500'}
+            color={pedido.workflow?.percentComplete > 70 ? 'bg-green-500' : 
+                  pedido.workflow?.percentComplete > 30 ? 'bg-yellow-500' : 'bg-red-500'}
           />
         </div>
       )}
@@ -76,7 +76,7 @@ const Task: React.FC<TaskProps> = ({ pedido }) => {
 
 const TarefasKanban = () => {
   const [tab, setTab] = useState('todos');
-  const [setorSelecionado, setSetorSelecionado] = useState<string | null>(null);
+  const [secretariaSelecionada, setSecretariaSelecionada] = useState<string | null>(null);
   const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
   
   useEffect(() => {
@@ -85,7 +85,7 @@ const TarefasKanban = () => {
   }, []);
 
   const pedidosFiltrados = pedidos.filter(p => {
-    if (setorSelecionado && p.setor !== setorSelecionado) {
+    if (secretariaSelecionada && p.setor !== secretariaSelecionada) {
       return false;
     }
     
@@ -100,7 +100,7 @@ const TarefasKanban = () => {
     return true;
   });
 
-  const setores: Setor[] = [
+  const secretarias: Setor[] = [
     'Saúde',
     'Educação',
     'Administrativo',
@@ -118,11 +118,11 @@ const TarefasKanban = () => {
     'Ciência e Tecnologia'
   ];
 
-  const handleSetorChange = (value: string) => {
+  const handleSecretariaChange = (value: string) => {
     if (value === 'todos') {
-      setSetorSelecionado(null);
+      setSecretariaSelecionada(null);
     } else {
-      setSetorSelecionado(value as Setor);
+      setSecretariaSelecionada(value as Setor);
     }
   };
 
@@ -131,15 +131,15 @@ const TarefasKanban = () => {
       <div className="flex justify-between">
         <h1 className="text-2xl font-bold">Demandas das Secretárias</h1>
         <div className="w-64">
-          <Select onValueChange={handleSetorChange}>
+          <Select onValueChange={handleSecretariaChange}>
             <SelectTrigger>
               <SelectValue placeholder="Filtrar por secretária" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todas as secretárias</SelectItem>
-              {setores.map((setor) => (
-                <SelectItem key={setor} value={setor}>
-                  {setor}
+              {secretarias.map((secretaria) => (
+                <SelectItem key={secretaria} value={secretaria}>
+                  {secretaria}
                 </SelectItem>
               ))}
             </SelectContent>

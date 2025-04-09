@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -58,7 +59,7 @@ import { canAccessUserManagement } from '@/utils/authHelpers';
 import { toast } from 'sonner';
 import { CheckCircle, Edit, PlusCircle, Search, Trash2, History } from 'lucide-react';
 
-const setores: Setor[] = [
+const secretarias: Setor[] = [
   'Saúde',
   'Educação',
   'Administrativo',
@@ -273,7 +274,7 @@ const Funcionarios: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-10"
-                placeholder="Pesquisar por nome, email, CPF, cargo ou setor..."
+                placeholder="Pesquisar por nome, email, CPF, cargo ou secretaria..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -438,9 +439,9 @@ const Funcionarios: React.FC = () => {
                   <SelectValue placeholder="Selecione uma secretaria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {setores.map((setor) => (
-                    <SelectItem key={setor} value={setor}>
-                      {setor}
+                  {secretarias.map((secretaria) => (
+                    <SelectItem key={secretaria} value={secretaria}>
+                      {secretaria}
                     </SelectItem>
                   ))}
                 </SelectContent>

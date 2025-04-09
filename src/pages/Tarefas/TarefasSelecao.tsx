@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,7 +46,7 @@ const TarefasSelecao: React.FC = () => {
     workflow: language === 'pt' ? 'Fluxo do Processo' : 'Workflow',
   };
 
-  const departamentos = [
+  const secretarias = [
     {
       nome: language === 'pt' ? 'Saúde' : 'Health',
       key: 'saude',
@@ -168,19 +169,19 @@ const TarefasSelecao: React.FC = () => {
     },
   ];
 
-  const departamentosComTarefas = departamentos.filter(dept => dept.tarefasPendentes > 0);
+  const secretariasComTarefas = secretarias.filter(dept => dept.tarefasPendentes > 0);
   
-  const totalPendentes = departamentos.reduce((sum, dept) => sum + dept.tarefasPendentes, 0);
+  const totalPendentes = secretarias.reduce((sum, dept) => sum + dept.tarefasPendentes, 0);
 
-  const [setorSelecionado, setSetorSelecionado] = useState<string | null>(null);
+  const [secretariaSelecionada, setSecretariaSelecionada] = useState<string | null>(null);
 
-  const handleSetorClick = (key: string) => {
-    const setor = departamentos.find(d => d.key === key)?.nome as any;
-    setSetorSelecionado(setor);
+  const handleSecretariaClick = (key: string) => {
+    const secretaria = secretarias.find(d => d.key === key)?.nome as any;
+    setSecretariaSelecionada(secretaria);
   };
 
-  const pedidosDoSetor = setorSelecionado 
-    ? obterPedidosPorSetor(setorSelecionado as any)
+  const pedidosDaSecretaria = secretariaSelecionada 
+    ? obterPedidosPorSetor(secretariaSelecionada as any)
     : [];
 
   return (
@@ -192,22 +193,22 @@ const TarefasSelecao: React.FC = () => {
         </p>
       </div>
 
-      {setorSelecionado ? (
+      {secretariaSelecionada ? (
         <Card>
           <CardHeader className="pb-0">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className={`p-2 rounded-md bg-white shadow-sm`}>
-                  {departamentos.find(d => d.nome === setorSelecionado)?.icone}
+                  {secretarias.find(d => d.nome === secretariaSelecionada)?.icone}
                 </div>
-                <CardTitle className="text-lg">{setorSelecionado}</CardTitle>
+                <CardTitle className="text-lg">{secretariaSelecionada}</CardTitle>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setSetorSelecionado(null)}>
+              <Button variant="ghost" size="sm" onClick={() => setSecretariaSelecionada(null)}>
                 Voltar
               </Button>
             </div>
             <CardDescription className="mt-2">
-              {pedidosDoSetor.length} {language === 'pt' ? 'demandas cadastradas' : 'registered demands'}
+              {pedidosDaSecretaria.length} {language === 'pt' ? 'demandas cadastradas' : 'registered demands'}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -224,7 +225,7 @@ const TarefasSelecao: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pedidosDoSetor.map((pedido) => (
+                  {pedidosDaSecretaria.map((pedido) => (
                     <TableRow key={pedido.id}>
                       <TableCell className="font-medium">{pedido.descricao}</TableCell>
                       <TableCell>{formatDate(pedido.dataCompra)}</TableCell>
@@ -284,9 +285,9 @@ const TarefasSelecao: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            {departamentosComTarefas.length > 0 ? (
+            {secretariasComTarefas.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {departamentosComTarefas.map((dept, index) => (
+                {secretariasComTarefas.map((dept, index) => (
                   <div key={index} className={`p-4 rounded-lg border ${dept.bgClass}`}>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
@@ -300,7 +301,7 @@ const TarefasSelecao: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => handleSetorClick(dept.key)}>
+                      <Button variant="ghost" size="sm" onClick={() => handleSecretariaClick(dept.key)}>
                         <ArrowRight className="h-4 w-4" />
                       </Button>
                     </div>
