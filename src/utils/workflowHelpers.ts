@@ -19,7 +19,7 @@ export function initializeWorkflow(): PedidoCompra['workflow'] {
   const steps = DEFAULT_WORKFLOW_STEPS.map(step => ({
     ...step,
     id: uuidv4(),
-    status: 'Pendente' as WorkflowStepStatus, // Explicit type casting to WorkflowStepStatus
+    status: 'Pendente' as WorkflowStepStatus,
   }));
 
   return {

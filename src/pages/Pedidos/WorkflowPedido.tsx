@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -344,7 +345,7 @@ const WorkflowPedido: React.FC = () => {
                       {/* Completion Date */}
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">
-                          <Calendar className="h-3 w-3 inline mr-1" /> Data de Conclusão
+                          <Calendar className="h-3 w-3 inline mr-1" /> Data de Conclusão <span className="text-gray-500">(opcional)</span>
                         </label>
                         <Popover>
                           <PopoverTrigger asChild disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}>
@@ -355,7 +356,7 @@ const WorkflowPedido: React.FC = () => {
                               disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}
                             >
                               <Calendar className="mr-2 h-3 w-3" />
-                              {step.dataConclusao ? format(new Date(step.dataConclusao), 'dd/MM/yyyy') : 'Selecionar data'}
+                              {step.dataConclusao ? format(new Date(step.dataConclusao), 'dd/MM/yyyy') : 'Selecionar data (opcional)'}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">

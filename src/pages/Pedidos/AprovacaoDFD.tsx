@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -70,9 +71,8 @@ const AprovacaoDFD: React.FC = () => {
   useEffect(() => {
     if (responsaveis.length === 0) return;
     
-    const todosPreenchidos = responsaveis.every(
-      r => r.responsavelId && r.dataLimite
-    );
+    // Modificado para considerar dataLimite como opcional
+    const todosPreenchidos = responsaveis.every(r => r.responsavelId);
     
     setTodosAtribuidos(todosPreenchidos);
   }, [responsaveis]);
@@ -125,7 +125,7 @@ const AprovacaoDFD: React.FC = () => {
     );
 
     responsaveis.forEach(resp => {
-      if (resp.responsavelId && resp.dataLimite) {
+      if (resp.responsavelId) {
         const funcionario = funcionarios.find(f => f.id === resp.responsavelId);
         if (funcionario) {
           atualizarEtapaWorkflow(
@@ -174,7 +174,7 @@ const AprovacaoDFD: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-lg">Detalhes do Pedido</CardTitle>
           <CardDescription>
-            {pedido.descricao} • Setor: {pedido.setor} • DFD #{pedido.id.substring(0, 8)}
+            {pedido.descricao} • Secretaria: {pedido.setor} • DFD #{pedido.id.substring(0, 8)}
           </CardDescription>
         </CardHeader>
         
@@ -183,14 +183,17 @@ const AprovacaoDFD: React.FC = () => {
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
               <h3 className="text-sm font-medium text-blue-800 mb-2">Instruções</h3>
               <p className="text-sm text-blue-700">
-                Como gestor(a), você precisa aprovar esta DFD e atribuir responsáveis e datas limite para cada etapa do processo.
-                Todos os campos devem ser preenchidos para prosseguir com a aprovação.
+                Como gestor(a), você precisa aprovar esta DFD e atribuir responsáveis para cada etapa do processo.
+                Todos os responsáveis devem ser atribuídos para prosseguir com a aprovação.
               </p>
               <p className="text-sm text-blue-700 mt-2">
-                Apenas funcionários do setor "{pedido.setor}" ou que atuam neste setor estão disponíveis para atribuição.
+                Apenas funcionários da secretaria "{pedido.setor}" ou que atuam nesta secretaria estão disponíveis para atribuição.
               </p>
               <p className="text-sm text-blue-700 mt-2">
-                Funcionários do setor de Saúde podem trabalhar em qualquer etapa do processo.
+                Funcionários da secretaria de Saúde podem trabalhar em qualquer etapa do processo.
+              </p>
+              <p className="text-sm text-blue-700 mt-2">
+                Data limite é opcional para cada etapa.
               </p>
             </div>
             
@@ -208,7 +211,7 @@ const AprovacaoDFD: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">
-                          <User className="h-3 w-3 inline mr-1" /> Responsável
+                          <User className="h-3 w-3 inline mr-1" /> Responsável <span className="text-red-500">*</span>
                         </label>
                         <Select
                           value={responsaveis[index]?.responsavelId || ''}
@@ -229,7 +232,7 @@ const AprovacaoDFD: React.FC = () => {
                       
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">
-                          <Calendar className="h-3 w-3 inline mr-1" /> Data Limite
+                          <Calendar className="h-3 w-3 inline mr-1" /> Data Limite <span className="text-gray-500">(opcional)</span>
                         </label>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -240,7 +243,7 @@ const AprovacaoDFD: React.FC = () => {
                               <Calendar className="mr-2 h-4 w-4" />
                               {responsaveis[index]?.dataLimite 
                                 ? format(responsaveis[index].dataLimite, 'dd/MM/yyyy') 
-                                : 'Selecionar data'}
+                                : 'Selecionar data (opcional)'}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0">
