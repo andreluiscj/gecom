@@ -15,9 +15,24 @@ export function getUserName(): string | null {
   return localStorage.getItem('user-name');
 }
 
+// Function to get the current user ID
+export function getUserId(): string | null {
+  return localStorage.getItem('user-id');
+}
+
+// Function to get the current funcionario ID
+export function getFuncionarioId(): string | null {
+  return localStorage.getItem('funcionario-id');
+}
+
 // Function to get the selected municipality
 export function getSelectedMunicipality(): string | null {
   return localStorage.getItem('municipio-selecionado');
+}
+
+// Function to check if user is on first login
+export function isFirstLogin(): boolean {
+  return localStorage.getItem('first-login') === 'true';
 }
 
 // Function to check if user can access a specific route

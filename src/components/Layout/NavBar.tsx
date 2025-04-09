@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -29,6 +30,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { getUserById } from '@/data/funcionarios/mockFuncionarios';
+import { format } from 'date-fns';
 
 interface NavBarProps {
   toggleSidebar: () => void;
@@ -41,6 +44,14 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [userInfo, setUserInfo] = useState<{
+    name: string;
+    role: string;
+    initials: string;
+    birthDate?: Date;
+    cpf?: string;
+    email?: string;
+  }>({ name: 'Usuário', role: 'user', initials: 'U' });
   
   useEffect(() => {
     const isDark = localStorage.getItem('dark-mode') === 'true';
@@ -53,7 +64,50 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
       document.documentElement.classList.add('light-theme');
       document.documentElement.classList.remove('dark-theme');
     }
+    
+    // Load user information
+    loadUserInfo();
   }, []);
+  
+  const loadUserInfo = () => {
+    const userId = localStorage.getItem('user-id');
+    const userName = localStorage.getItem('user-name');
+    const userRole = localStorage.getItem('user-role');
+    
+    if (userId) {
+      const userData = getUserById(userId);
+      if (userData) {
+        const { funcionario } = userData;
+        setUserInfo({
+          name: funcionario.nome,
+          role: userData.usuario.role,
+          initials: getInitials(funcionario.nome),
+          birthDate: funcionario.dataNascimento,
+          cpf: funcionario.cpf,
+          email: funcionario.email
+        });
+        return;
+      }
+    }
+    
+    // Fallback for test accounts
+    if (userName) {
+      setUserInfo({
+        name: userName,
+        role: userRole || 'user',
+        initials: getInitials(userName)
+      });
+    }
+  };
+  
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  };
   
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
@@ -75,6 +129,8 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
   const handleLogout = () => {
     localStorage.removeItem('municipio-selecionado');
     localStorage.removeItem('user-authenticated');
+    localStorage.removeItem('user-id');
+    localStorage.removeItem('funcionario-id');
     
     toast.success("Sessão encerrada com sucesso!");
     
@@ -103,6 +159,7 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
     name: "Nome",
     birthDate: "Data de Nascimento",
     cpf: "CPF",
+    email: "Email",
     confirmDelete: "Confirmar exclusão",
     confirmDeleteMsg: "Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.",
     cancel: "Cancelar",
@@ -194,12 +251,17 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300 font-medium">
-                A
+                {userInfo.initials}
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="shadow-lg rounded-xl">
-            <DropdownMenuLabel>{texts.myAccount}</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              <div className="flex flex-col">
+                <span>{userInfo.name}</span>
+                <span className="text-xs text-muted-foreground capitalize">{userInfo.role}</span>
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setOpenProfile(true)} className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
@@ -225,20 +287,35 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
           <div className="grid gap-4 py-4">
             <div className="flex justify-center mb-4">
               <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-2xl font-bold dark:bg-gray-700 dark:text-gray-300">
-                A
+                {userInfo.initials}
               </div>
             </div>
             <div className="grid gap-2">
               <Label>{texts.personalInfo}</Label>
               <div className="grid grid-cols-[120px_1fr] gap-2 items-center text-sm">
                 <span className="font-medium">{texts.name}:</span>
-                <span>André Luis Caldeira</span>
+                <span>{userInfo.name}</span>
                 
-                <span className="font-medium">{texts.birthDate}:</span>
-                <span>22/07/2004</span>
+                {userInfo.birthDate && (
+                  <>
+                    <span className="font-medium">{texts.birthDate}:</span>
+                    <span>{format(new Date(userInfo.birthDate), 'dd/MM/yyyy')}</span>
+                  </>
+                )}
                 
-                <span className="font-medium">{texts.cpf}:</span>
-                <span>022.221.586-05</span>
+                {userInfo.cpf && (
+                  <>
+                    <span className="font-medium">{texts.cpf}:</span>
+                    <span>{userInfo.cpf}</span>
+                  </>
+                )}
+                
+                {userInfo.email && (
+                  <>
+                    <span className="font-medium">{texts.email}:</span>
+                    <span>{userInfo.email}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -11,14 +11,28 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { ShoppingCart, Check } from 'lucide-react';
+import { ShoppingCart, Check, Key } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { autenticarUsuario, atualizarSenhaUsuario } from '@/data/funcionarios/mockFuncionarios';
+import { Label } from '@/components/ui/label';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<string>('admin');
+  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentUserId, setCurrentUserId] = useState<string>('');
 
   // Check if user is already logged in
   useEffect(() => {
@@ -31,25 +45,93 @@ const Login: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Implement basic login validation
-    if (username && password) {
-      if (selectedUser === 'admin' && username === 'admin' && password === 'admin') {
-        loginSuccess('admin');
-      } else if (selectedUser === 'amanda' && username === 'amanda' && password === 'amanda') {
-        loginSuccess('manager', 'São Paulo', 'Amanda Amarante');
+    // Implement basic validation
+    if (!username || !password) {
+      toast.error('Por favor, preencha todos os campos.');
+      return;
+    }
+
+    // Handle test users
+    if (selectedUser === 'admin' && username === 'admin' && password === 'admin') {
+      loginSuccess('admin', undefined, 'Administrador');
+      return;
+    } 
+    if (selectedUser === 'amanda' && username === 'amanda' && password === 'amanda') {
+      loginSuccess('manager', 'São Paulo', 'Amanda Amarante');
+      return;
+    }
+
+    // Try to authenticate real users
+    const result = autenticarUsuario(username, password);
+    if (result.authenticated) {
+      // Check if it's first login, if so show password change dialog
+      if (result.primeiroAcesso) {
+        setShowChangePasswordDialog(true);
+        setCurrentUserId(result.userId);
       } else {
-        toast.error('Credenciais inválidas. Tente novamente.');
+        loginSuccess(
+          result.role, 
+          'São Paulo', 
+          result.funcionario.nome, 
+          undefined, 
+          result.userId, 
+          result.funcionario.id
+        );
       }
     } else {
-      toast.error('Por favor, preencha todos os campos.');
+      toast.error('Credenciais inválidas. Tente novamente.');
     }
   };
 
-  const loginSuccess = (role: string, municipality: string = 'all', name: string = '', permittedStep: string = '') => {
+  const handlePasswordChange = () => {
+    // Validate passwords
+    if (!newPassword || newPassword.length < 3) {
+      toast.error('A nova senha deve ter pelo menos 3 caracteres.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error('As senhas não coincidem.');
+      return;
+    }
+
+    // Update password
+    if (atualizarSenhaUsuario(currentUserId, newPassword)) {
+      toast.success('Senha alterada com sucesso!');
+      
+      // Login after password change
+      const result = autenticarUsuario(username, newPassword);
+      if (result.authenticated) {
+        loginSuccess(
+          result.role, 
+          'São Paulo', 
+          result.funcionario.nome, 
+          undefined, 
+          result.userId,
+          result.funcionario.id
+        );
+        setShowChangePasswordDialog(false);
+      }
+    } else {
+      toast.error('Erro ao alterar senha. Tente novamente.');
+    }
+  };
+
+  const loginSuccess = (
+    role: string, 
+    municipality: string = 'all', 
+    name: string = '', 
+    permittedStep: string = '',
+    userId: string = '',
+    funcionarioId: string = ''
+  ) => {
     // Set authenticated state in localStorage
     localStorage.setItem('user-authenticated', 'true');
     localStorage.setItem('user-role', role);
     localStorage.setItem('user-municipality', municipality);
+    localStorage.setItem('user-id', userId);
+    localStorage.setItem('funcionario-id', funcionarioId);
+    
     if (name) {
       localStorage.setItem('user-name', name);
     }
@@ -145,6 +227,50 @@ const Login: React.FC = () => {
           </div>
         </CardFooter>
       </Card>
+      
+      {/* Password Change Dialog */}
+      <Dialog open={showChangePasswordDialog} onOpenChange={setShowChangePasswordDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Primeiro acesso</DialogTitle>
+            <DialogDescription>
+              Por favor, altere sua senha padrão para continuar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex justify-center mb-2">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary">
+                <Key className="h-6 w-6" />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="new-password">Nova senha</Label>
+              <Input 
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Digite sua nova senha"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="confirm-password">Confirmar senha</Label>
+              <Input 
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirme sua nova senha"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handlePasswordChange}>
+              Alterar senha e continuar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

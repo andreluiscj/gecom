@@ -125,6 +125,13 @@ export interface Funcionario {
   username?: string; // Username for login
 }
 
+export interface LoginLog {
+  userId: string;
+  timestamp: string;
+  success: boolean;
+  ip: string;
+}
+
 export interface UsuarioLogin {
   id: string;
   username: string;
@@ -132,4 +139,5 @@ export interface UsuarioLogin {
   funcionarioId: string;
   role: UserRole;
   ativo: boolean;
+  primeiroAcesso?: boolean;
 }

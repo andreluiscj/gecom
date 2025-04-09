@@ -8,6 +8,9 @@ export const mockFuncionarios: Funcionario[] = [];
 // Login users data store
 export const mockUsuariosLogin: UsuarioLogin[] = [];
 
+// Login logs storage
+export const mockLoginLogs: any[] = [];
+
 // Get all employees
 export const getFuncionarios = () => {
   // Get from localStorage if available, otherwise use mockFuncionarios
@@ -38,12 +41,38 @@ export const getUsuariosLogin = () => {
   return mockUsuariosLogin;
 };
 
+// Get login logs
+export const getLoginLogs = () => {
+  const storedLogs = localStorage.getItem('login-logs');
+  if (storedLogs) {
+    return JSON.parse(storedLogs);
+  }
+  
+  localStorage.setItem('login-logs', JSON.stringify(mockLoginLogs));
+  return mockLoginLogs;
+};
+
+// Add login log
+export const addLoginLog = (userId: string, success: boolean, ip: string = "127.0.0.1") => {
+  const logs = getLoginLogs();
+  const newLog = {
+    userId,
+    timestamp: new Date().toISOString(),
+    success,
+    ip
+  };
+  
+  logs.push(newLog);
+  localStorage.setItem('login-logs', JSON.stringify(logs));
+  return newLog;
+};
+
 // Generate username from name (firstName.lastName)
 export const generateUsername = (nome: string): string => {
   const nameParts = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(' ');
   
   if (nameParts.length >= 2) {
-    return `${nameParts[0]}.${nameParts[1]}`;
+    return `${nameParts[0]}.${nameParts[nameParts.length - 1]}`;
   } else if (nameParts.length === 1) {
     return nameParts[0];
   } else {
@@ -72,7 +101,8 @@ export const addFuncionario = (funcionario: Omit<Funcionario, 'id'>) => {
     funcionarioId: newFuncionario.id,
     role: funcionario.cargo.toLowerCase().includes('gerente') || 
           funcionario.cargo.toLowerCase().includes('secretário') ? 'manager' : 'user',
-    ativo: newFuncionario.ativo
+    ativo: newFuncionario.ativo,
+    primeiroAcesso: true // Flag for first-time access
   };
   
   // Add new employee and login
@@ -152,12 +182,23 @@ export const autenticarUsuario = (username: string, senha: string) => {
     const funcionarios = getFuncionarios();
     const funcionario = funcionarios.find(f => f.id === usuario.funcionarioId);
     
+    // Record successful login
+    addLoginLog(usuario.id, true);
+    
     if (funcionario) {
       return {
         authenticated: true,
         role: usuario.role,
-        funcionario: funcionario
+        funcionario: funcionario,
+        userId: usuario.id,
+        primeiroAcesso: usuario.primeiroAcesso
       };
+    }
+  } else {
+    // Record failed login attempt if the username exists
+    const userToLog = usuarios.find(u => u.username === username);
+    if (userToLog) {
+      addLoginLog(userToLog.id, false);
     }
   }
   
@@ -165,15 +206,38 @@ export const autenticarUsuario = (username: string, senha: string) => {
 };
 
 // Update user password
-export const atualizarSenhaUsuario = (username: string, novaSenha: string) => {
+export const atualizarSenhaUsuario = (userId: string, novaSenha: string) => {
   const usuarios = getUsuariosLogin();
-  const index = usuarios.findIndex(u => u.username === username);
+  const index = usuarios.findIndex(u => u.id === userId);
   
   if (index !== -1) {
     usuarios[index].senha = novaSenha;
+    usuarios[index].primeiroAcesso = false;
     localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
     return true;
   }
   
   return false;
+};
+
+// Get user by ID
+export const getUserById = (userId: string) => {
+  if (!userId) return null;
+  
+  const usuarios = getUsuariosLogin();
+  const usuario = usuarios.find(u => u.id === userId);
+  
+  if (usuario) {
+    const funcionarios = getFuncionarios();
+    const funcionario = funcionarios.find(f => f.id === usuario.funcionarioId);
+    
+    if (funcionario) {
+      return {
+        usuario,
+        funcionario
+      };
+    }
+  }
+  
+  return null;
 };

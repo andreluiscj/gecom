@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -53,10 +52,11 @@ import {
   deleteFuncionario,
   getUsuariosLogin,
   generateUsername,
+  getLoginLogs,
 } from '@/data/funcionarios/mockFuncionarios';
 import { canAccessUserManagement } from '@/utils/authHelpers';
 import { toast } from 'sonner';
-import { CheckCircle, Edit, PlusCircle, Search, Trash2 } from 'lucide-react';
+import { CheckCircle, Edit, PlusCircle, Search, Trash2, History } from 'lucide-react';
 
 const setores: Setor[] = [
   'Saúde',
@@ -82,9 +82,9 @@ const Funcionarios: React.FC = () => {
   const [usuariosLogin, setUsuariosLogin] = useState<UsuarioLogin[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isUserInfoDialogOpen, setIsUserInfoDialogOpen] = useState(false);
+  const [isLogsDialogOpen, setIsLogsDialogOpen] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null);
-  const [selectedUsuarioLogin, setSelectedUsuarioLogin] = useState<UsuarioLogin | null>(null);
+  const [loginLogs, setLoginLogs] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState<Omit<Funcionario, 'id'>>({
     nome: '',
@@ -98,14 +98,12 @@ const Funcionarios: React.FC = () => {
   });
 
   useEffect(() => {
-    // Check if user has access to this page
     if (!canAccessUserManagement()) {
       toast.error('Você não tem permissão para acessar esta página');
       navigate('/dashboard');
       return;
     }
 
-    // Load employees data
     loadFuncionarios();
     loadUsuariosLogin();
   }, [navigate]);
@@ -155,12 +153,13 @@ const Funcionarios: React.FC = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleOpenUserInfoDialog = (funcionario: Funcionario) => {
+  const handleOpenLogsDialog = (funcionario: Funcionario) => {
     const usuario = usuariosLogin.find(u => u.funcionarioId === funcionario.id);
     if (usuario) {
       setSelectedFuncionario(funcionario);
-      setSelectedUsuarioLogin(usuario);
-      setIsUserInfoDialogOpen(true);
+      const logs = getLoginLogs().filter(log => log.userId === usuario.id);
+      setLoginLogs(logs);
+      setIsLogsDialogOpen(true);
     } else {
       toast.error('Informações de login não encontradas');
     }
@@ -190,20 +189,17 @@ const Funcionarios: React.FC = () => {
   };
 
   const handleSaveFuncionario = () => {
-    // Validate form data
     if (!formData.nome || !formData.cpf || !formData.email || !formData.cargo || !formData.setor) {
       toast.error('Por favor, preencha todos os campos obrigatórios');
       return;
     }
 
-    // CPF validation (simple format check)
     const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/;
     if (!cpfRegex.test(formData.cpf)) {
       toast.error('CPF inválido. Utilize o formato 000.000.000-00 ou 00000000000');
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error('Email inválido');
@@ -212,11 +208,9 @@ const Funcionarios: React.FC = () => {
 
     try {
       if (selectedFuncionario) {
-        // Update existing funcionario
         updateFuncionario(selectedFuncionario.id, formData);
         toast.success(`Funcionário ${formData.nome} atualizado com sucesso`);
       } else {
-        // Create new funcionario and login
         const result = addFuncionario(formData);
         
         toast.success(
@@ -246,7 +240,6 @@ const Funcionarios: React.FC = () => {
     }
   };
 
-  // Filter funcionarios based on search term
   const filteredFuncionarios = funcionarios.filter((funcionario) => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -329,10 +322,12 @@ const Funcionarios: React.FC = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleOpenUserInfoDialog(funcionario)}
-                            title="Informações de Login"
+                            onClick={() => handleOpenLogsDialog(funcionario)}
+                            title="Registros de Login"
+                            className="flex items-center"
                           >
-                            Login
+                            <History className="h-4 w-4 mr-1" />
+                            Logs
                           </Button>
                           <Button
                             variant="outline"
@@ -366,7 +361,6 @@ const Funcionarios: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -492,56 +486,64 @@ const Funcionarios: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* User Login Information Dialog */}
-      <Dialog open={isUserInfoDialogOpen} onOpenChange={setIsUserInfoDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+      <Dialog open={isLogsDialogOpen} onOpenChange={setIsLogsDialogOpen}>
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>Informações de Login</DialogTitle>
+            <DialogTitle>Registros de Login</DialogTitle>
             <DialogDescription>
-              Dados de acesso ao sistema para {selectedFuncionario?.nome}
+              Histórico de acessos ao sistema para {selectedFuncionario?.nome}
             </DialogDescription>
           </DialogHeader>
 
-          {selectedUsuarioLogin && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Usuário:</Label>
-                  <div className="p-2 bg-muted rounded-md">{selectedUsuarioLogin.username}</div>
-                </div>
-                <div className="space-y-1">
-                  <Label>Senha:</Label>
-                  <div className="p-2 bg-muted rounded-md">123 (padrão)</div>
-                </div>
+          <div className="space-y-4">
+            {loginLogs.length > 0 ? (
+              <div className="max-h-80 overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Hora</TableHead>
+                      <TableHead>IP</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loginLogs.map((log, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{format(new Date(log.timestamp), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell>{format(new Date(log.timestamp), 'HH:mm:ss')}</TableCell>
+                        <TableCell>{log.ip}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                              log.success
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {log.success ? 'Sucesso' : 'Falha'}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-              
-              <div className="space-y-1">
-                <Label>Perfil:</Label>
-                <div className="p-2 bg-muted rounded-md capitalize">{selectedUsuarioLogin.role}</div>
+            ) : (
+              <div className="py-4 text-center text-muted-foreground">
+                Nenhum registro de login encontrado para este usuário.
               </div>
-              
-              <div className="space-y-1">
-                <Label>Status:</Label>
-                <div className={`p-2 rounded-md ${selectedUsuarioLogin.ativo ? 'bg-green-100' : 'bg-red-100'}`}>
-                  {selectedUsuarioLogin.ativo ? 'Ativo' : 'Inativo'}
-                </div>
-              </div>
-              
-              <div className="pt-2 text-sm text-muted-foreground">
-                Lembre-se de informar ao funcionário que ele deve alterar sua senha no primeiro acesso.
-              </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <DialogFooter>
-            <Button onClick={() => setIsUserInfoDialogOpen(false)}>
+            <Button onClick={() => setIsLogsDialogOpen(false)}>
               Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
