@@ -85,6 +85,13 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
     }
   };
 
+  const handleCloseDialog = () => {
+    // Reset any editing state
+    setIsEditing(false);
+    // Close the dialog using the provided callback
+    onOpenChange(false);
+  };
+
   const texts = {
     profile: "Perfil",
     personalInfo: "Informações Pessoais",
@@ -101,17 +108,7 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(open) => {
-        // This prevents the dialog from trapping focus when closed
-        if (!open) {
-          // Short timeout to ensure dialog is fully closed before releasing focus trapping
-          setTimeout(() => {
-            onOpenChange(false);
-          }, 0);
-        } else {
-          onOpenChange(true);
-        }
-      }}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => {
           // Prevent outside clicks from closing if editing
           if (isEditing) {
@@ -196,11 +193,11 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
               </div>
             ) : (
               <div className="flex justify-between w-full">
-                <Button variant="destructive" onClick={() => {onOpenChange(false); setOpenDeleteConfirm(true);}}>
+                <Button variant="destructive" onClick={() => {handleCloseDialog(); setOpenDeleteConfirm(true);}}>
                   {texts.deleteAccount}
                 </Button>
                 <div className="flex space-x-2">
-                  <Button variant="outline" onClick={() => onOpenChange(false)}>
+                  <Button variant="outline" onClick={handleCloseDialog}>
                     {texts.close}
                   </Button>
                   <Button onClick={() => setIsEditing(true)}>

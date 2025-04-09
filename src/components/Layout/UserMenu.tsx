@@ -89,6 +89,18 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
     }, 100);
   };
 
+  const handleOpenProfile = () => {
+    setOpenProfile(true);
+  };
+
+  const handleProfileDialogChange = (open: boolean) => {
+    setOpenProfile(open);
+  };
+
+  const handleChangePasswordDialogChange = (open: boolean) => {
+    setOpenChangePassword(open);
+  };
+
   const texts = {
     profile: "Perfil",
     editProfile: "Editar Perfil",
@@ -114,7 +126,7 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setOpenProfile(true)} className="cursor-pointer">
+          <DropdownMenuItem onClick={handleOpenProfile} className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
             <span>{texts.editProfile}</span>
           </DropdownMenuItem>
@@ -132,14 +144,14 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
 
       <ProfileDialog 
         open={openProfile} 
-        onOpenChange={setOpenProfile} 
+        onOpenChange={handleProfileDialogChange}
         userInfo={userInfo} 
         onProfileUpdate={loadUserInfo}
       />
       
       <ChangePasswordDialog 
         open={openChangePassword} 
-        onOpenChange={setOpenChangePassword} 
+        onOpenChange={handleChangePasswordDialogChange}
       />
     </>
   );
