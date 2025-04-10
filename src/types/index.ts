@@ -82,6 +82,7 @@ export interface Municipio {
   nome: string;
   estado: string;
   populacao: number;
+  logo?: string; // Added logo property as optional
   orcamento: number;
   orcamentoAnual: number;
   prefeito: string;
