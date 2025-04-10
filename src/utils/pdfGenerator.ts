@@ -132,7 +132,7 @@ export const gerarPDF = (pedido: PedidoCompra) => {
   }
 };
 
-// New function to export dashboard data as PDF
+// Enhanced function to export dashboard data as Excel/CSV
 export const exportDashboardAsPDF = (data: any) => {
   // In a real app, we'd use jsPDF or another library to create a proper PDF
   // This is a simplified HTML-based approach
@@ -218,4 +218,60 @@ export const exportDashboardAsPDF = (data: any) => {
     link.click();
     document.body.removeChild(link);
   }
+};
+
+// New function to export dashboard data to CSV with better structure
+export const exportDashboardToCSV = (data: any, chartData: any, departmentData: any) => {
+  // Header row with metadata
+  let csvContent = "data:text/csv;charset=utf-8,";
+  
+  // Add metadata section
+  csvContent += "RELATÓRIO DE DASHBOARD - SISTEMA GECOM\r\n";
+  csvContent += `Município:,${data.municipio}\r\n`;
+  csvContent += `Data do relatório:,${new Date().toLocaleDateString('pt-BR')}\r\n\r\n`;
+  
+  // Add summary stats section
+  csvContent += "RESUMO DOS INDICADORES\r\n";
+  csvContent += "Indicador,Valor\r\n";
+  csvContent += `Total de Pedidos,${data.totalPedidos}\r\n`;
+  csvContent += `Orçamento Executado,${formatCurrency(data.orcamentoExecutado)}\r\n`;
+  csvContent += `Pedidos Aprovados,${data.pedidosAprovados}\r\n`;
+  csvContent += `Secretarias,${data.secretarias}\r\n\r\n`;
+  
+  // Add monthly budget comparison data
+  csvContent += "COMPARATIVO ORÇAMENTÁRIO MENSAL\r\n";
+  csvContent += "Mês,Planejado,Executado,Diferença\r\n";
+  
+  chartData.forEach((row: any) => {
+    const diferenca = row.planejado - row.executado;
+    csvContent += `${row.name},${row.planejado},${row.executado},${diferenca}\r\n`;
+  });
+  
+  csvContent += "\r\n";
+  
+  // Add department data
+  csvContent += "DISTRIBUIÇÃO POR SECRETARIA\r\n";
+  csvContent += "Secretaria,Valor,Percentual\r\n";
+  
+  departmentData.forEach((row: any) => {
+    csvContent += `${row.name},${row.valor},${row.percent}%\r\n`;
+  });
+  
+  csvContent += "\r\n";
+  
+  // Add date-based analytics section
+  csvContent += "ANÁLISE POR PERÍODO\r\n";
+  csvContent += "Período,Orçamento Total,Executado Total,Percentual Executado\r\n";
+  csvContent += `Ano atual,${formatCurrency(data.orcamentoAnual)},${formatCurrency(data.orcamentoExecutado)},${(data.orcamentoExecutado/data.orcamentoAnual*100).toFixed(2)}%\r\n`;
+  
+  // Download the CSV file
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `dashboard_${data.municipio.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  return true;
 };

@@ -21,30 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from 'sonner';
-
-const monthlyData = [
-  { name: 'Jan', planejado: 240000, executado: 220000 },
-  { name: 'Fev', planejado: 300000, executado: 320000 },
-  { name: 'Mar', planejado: 280000, executado: 290000 },
-  { name: 'Abr', planejado: 320000, executado: 300000 },
-  { name: 'Mai', planejado: 350000, executado: 360000 },
-  { name: 'Jun', planejado: 380000, executado: 390000 },
-  { name: 'Jul', planejado: 400000, executado: 380000 },
-  { name: 'Ago', planejado: 420000, executado: 405000 },
-  { name: 'Set', planejado: 390000, executado: 400000 },
-  { name: 'Out', planejado: 450000, executado: 430000 },
-  { name: 'Nov', planejado: 480000, executado: 460000 },
-  { name: 'Dez', planejado: 520000, executado: 500000 },
-];
-
-const departmentData = [
-  { name: 'Saúde', valor: 1850000, percent: 28 },
-  { name: 'Educação', valor: 1520000, percent: 23 },
-  { name: 'Administração', valor: 950000, percent: 14 },
-  { name: 'Obras', valor: 1200000, percent: 18 },
-  { name: 'Transporte', valor: 650000, percent: 10 },
-  { name: 'Outros', valor: 450000, percent: 7 },
-];
+import { exportDashboardToCSV } from '@/utils/pdfGenerator';
 
 const COLORS = [
   '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d',
@@ -56,63 +33,51 @@ const quarterOptions = ['Q1', 'Q2', 'Q3', 'Q4'];
 const monthOptions = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
-const AdvancedAnalytics: React.FC = () => {
-  const [period, setPeriod] = useState('anual');
+interface AdvancedAnalyticsProps {
+  monthlyData: {
+    name: string;
+    planejado: number;
+    executado: number;
+  }[];
+  departmentData: {
+    name: string;
+    valor: number;
+    percent: number;
+  }[];
+  period: string;
+  setPeriod: (period: string) => void;
+  filters: {
+    year: string;
+    quarter: string;
+    month: string;
+    department: string;
+  };
+  setFilters: (filters: any) => void;
+}
+
+const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ 
+  monthlyData, 
+  departmentData, 
+  period, 
+  setPeriod, 
+  filters, 
+  setFilters 
+}) => {
   const [chartType, setChartType] = useState('area');
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [filters, setFilters] = useState({
-    year: '2024',
-    quarter: 'Q2',
-    month: 'Junho',
-    department: 'Todos'
-  });
   
-  const [filteredData, setFilteredData] = useState(monthlyData);
-  const [filteredDeptData, setFilteredDeptData] = useState(departmentData);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (period === 'mensal') {
-        setFilteredData(monthlyData.slice(0, 3));
-      } else if (period === 'trimestral') {
-        setFilteredData(monthlyData.slice(0, 6));
-      } else {
-        setFilteredData(monthlyData);
-      }
-      
-      if (filters.department !== 'Todos') {
-        setFilteredDeptData(departmentData.filter(
-          dept => dept.name === filters.department
-        ));
-      } else {
-        setFilteredDeptData(departmentData);
-      }
-      
-      toast.success('Filtros aplicados com sucesso');
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [period, filters]);
-
   const handleExport = (format: 'csv' | 'pdf') => {
     if (format === 'csv') {
-      let csvContent = "data:text/csv;charset=utf-8,";
+      const dashboardData = {
+        municipio: 'Dashboard Financeiro',
+        totalPedidos: 587,
+        orcamentoExecutado: 2400000,
+        pedidosAprovados: 432,
+        secretarias: 15,
+        orcamentoAnual: 28500000
+      };
       
-      csvContent += "Mês,Planejado,Executado\n";
-      
-      filteredData.forEach(row => {
-        csvContent += `${row.name},${row.planejado},${row.executado}\n`;
-      });
-      
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `dashboard_data_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      
-      link.click();
-      document.body.removeChild(link);
-      
+      exportDashboardToCSV(dashboardData, monthlyData, departmentData);
       toast.success('Dados exportados com sucesso');
     } else {
       toast.success('Exportação de PDF iniciada');
@@ -120,6 +85,11 @@ const AdvancedAnalytics: React.FC = () => {
         toast.success('Arquivo PDF gerado com sucesso');
       }, 1500);
     }
+  };
+
+  const applyFilters = () => {
+    toast.success('Filtros aplicados com sucesso');
+    setFilterDialogOpen(false);
   };
 
   return (
@@ -161,7 +131,7 @@ const AdvancedAnalytics: React.FC = () => {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <label className="text-right text-sm">Ano:</label>
                   <Select 
-                    defaultValue={filters.year} 
+                    value={filters.year} 
                     onValueChange={(value) => setFilters({...filters, year: value})}
                   >
                     <SelectTrigger className="col-span-3">
@@ -178,7 +148,7 @@ const AdvancedAnalytics: React.FC = () => {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <label className="text-right text-sm">Trimestre:</label>
                   <Select 
-                    defaultValue={filters.quarter} 
+                    value={filters.quarter} 
                     onValueChange={(value) => setFilters({...filters, quarter: value})}
                   >
                     <SelectTrigger className="col-span-3">
@@ -195,7 +165,7 @@ const AdvancedAnalytics: React.FC = () => {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <label className="text-right text-sm">Mês:</label>
                   <Select 
-                    defaultValue={filters.month} 
+                    value={filters.month} 
                     onValueChange={(value) => setFilters({...filters, month: value})}
                   >
                     <SelectTrigger className="col-span-3">
@@ -212,7 +182,7 @@ const AdvancedAnalytics: React.FC = () => {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <label className="text-right text-sm">Secretaria:</label>
                   <Select 
-                    defaultValue={filters.department} 
+                    value={filters.department} 
                     onValueChange={(value) => setFilters({...filters, department: value})}
                   >
                     <SelectTrigger className="col-span-3">
@@ -229,7 +199,7 @@ const AdvancedAnalytics: React.FC = () => {
               </div>
               
               <DialogFooter>
-                <Button onClick={() => setFilterDialogOpen(false)}>Aplicar Filtros</Button>
+                <Button onClick={applyFilters}>Aplicar Filtros</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -279,7 +249,7 @@ const AdvancedAnalytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatCurrency(4530000)}
+                  {formatCurrency(monthlyData.reduce((sum, item) => sum + item.planejado, 0))}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   +20.1% em relação ao ano anterior
@@ -296,10 +266,11 @@ const AdvancedAnalytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatCurrency(4455000)}
+                  {formatCurrency(monthlyData.reduce((sum, item) => sum + item.executado, 0))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  98.3% do orçamento planejado
+                  {(monthlyData.reduce((sum, item) => sum + item.executado, 0) / 
+                   monthlyData.reduce((sum, item) => sum + item.planejado, 0) * 100).toFixed(1)}% do orçamento planejado
                 </p>
               </CardContent>
             </Card>
@@ -313,10 +284,16 @@ const AdvancedAnalytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatCurrency(75000)}
+                  {formatCurrency(
+                    monthlyData.reduce((sum, item) => sum + item.planejado, 0) - 
+                    monthlyData.reduce((sum, item) => sum + item.executado, 0)
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  1.7% abaixo do orçamento planejado
+                  {(
+                    (1 - (monthlyData.reduce((sum, item) => sum + item.executado, 0) / 
+                    monthlyData.reduce((sum, item) => sum + item.planejado, 0))) * 100
+                  ).toFixed(1)}% abaixo do orçamento planejado
                 </p>
               </CardContent>
             </Card>
@@ -358,7 +335,7 @@ const AdvancedAnalytics: React.FC = () => {
               <ResponsiveContainer width="100%" height="100%">
                 {chartType === 'area' ? (
                   <AreaChart
-                    data={filteredData}
+                    data={monthlyData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -391,7 +368,7 @@ const AdvancedAnalytics: React.FC = () => {
                   </AreaChart>
                 ) : chartType === 'bar' ? (
                   <BarChart
-                    data={filteredData}
+                    data={monthlyData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -410,7 +387,7 @@ const AdvancedAnalytics: React.FC = () => {
                   </BarChart>
                 ) : (
                   <LineChart
-                    data={filteredData}
+                    data={monthlyData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -462,7 +439,7 @@ const AdvancedAnalytics: React.FC = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={filteredDeptData}
+                      data={departmentData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -472,7 +449,7 @@ const AdvancedAnalytics: React.FC = () => {
                       nameKey="name"
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     >
-                      {filteredDeptData.map((entry, index) => (
+                      {departmentData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -494,7 +471,7 @@ const AdvancedAnalytics: React.FC = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     layout="vertical"
-                    data={filteredDeptData}
+                    data={departmentData}
                     margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -509,7 +486,7 @@ const AdvancedAnalytics: React.FC = () => {
                     <YAxis type="category" dataKey="name" />
                     <Tooltip formatter={(value) => formatCurrency(value as number)} />
                     <Bar dataKey="valor" fill="#9b87f5">
-                      {filteredDeptData.map((entry, index) => (
+                      {departmentData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Bar>
@@ -576,8 +553,8 @@ const AdvancedAnalytics: React.FC = () => {
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={filteredData.map((item, index) => {
-                    if (index < filteredData.length - 3) {
+                  data={monthlyData.map((item, index) => {
+                    if (index < monthlyData.length - 3) {
                       return item;
                     } else {
                       return {
