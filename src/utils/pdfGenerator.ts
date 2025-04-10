@@ -131,3 +131,91 @@ export const gerarPDF = (pedido: PedidoCompra) => {
     document.body.removeChild(link);
   }
 };
+
+// New function to export dashboard data as PDF
+export const exportDashboardAsPDF = (data: any) => {
+  // In a real app, we'd use jsPDF or another library to create a proper PDF
+  // This is a simplified HTML-based approach
+  const htmlContent = `
+    <html>
+    <head>
+      <title>Dashboard - ${data.municipio}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1 { text-align: center; margin-bottom: 30px; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .section { margin-bottom: 20px; }
+        .section h3 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        table th, table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        table th { background-color: #f2f2f2; }
+        .footer { margin-top: 50px; text-align: center; }
+        .chart-placeholder { height: 300px; border: 1px dashed #ccc; display: flex; justify-content: center; align-items: center; margin: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <h1>Relatório de Dashboard - ${data.municipio}</h1>
+      <div class="header">
+        <div>Data de geração: ${new Date().toLocaleDateString('pt-BR')}</div>
+      </div>
+      
+      <div class="section">
+        <h3>Resumo dos Indicadores</h3>
+        <table>
+          <tr>
+            <th>Indicador</th>
+            <th>Valor</th>
+          </tr>
+          <tr>
+            <td>Total de Pedidos</td>
+            <td>${data.totalPedidos}</td>
+          </tr>
+          <tr>
+            <td>Orçamento Executado</td>
+            <td>${formatCurrency(data.orcamentoExecutado)}</td>
+          </tr>
+          <tr>
+            <td>Pedidos Aprovados</td>
+            <td>${data.pedidosAprovados}</td>
+          </tr>
+          <tr>
+            <td>Secretarias</td>
+            <td>${data.secretarias}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="section">
+        <h3>Gráficos de Análise</h3>
+        <div class="chart-placeholder">
+          Visualização de Gráficos Disponível no Dashboard Online
+        </div>
+      </div>
+      
+      <div class="footer">
+        <p>Relatório gerado automaticamente pelo sistema GECOM</p>
+        <p>© ${new Date().getFullYear()} - Todos os direitos reservados</p>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  // Open new window with the PDF preview
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(htmlContent);
+    win.document.close();
+    win.setTimeout(() => {
+      win.print();
+    }, 500);
+  } else {
+    // If popup is blocked, offer download instead
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Dashboard_${data.municipio.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+};

@@ -10,6 +10,7 @@ import { Building, Receipt, ShoppingCart, Wallet } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
 import { DadosDashboard, Municipio } from '@/types';
+import { toast } from 'sonner';
 
 // Default municipality object
 const defaultMunicipio: Municipio = {
@@ -92,6 +93,37 @@ const Dashboard: React.FC = () => {
   const orcamentoExecutado = municipio.id === 'janauba' ? 12000000 : 2400000;
   const pedidosAprovados = 432;
   const secretarias = 15;
+
+  // Handle data export from dashboard
+  const handleExportDashboard = () => {
+    toast.success('Exportando dados do dashboard...');
+    
+    setTimeout(() => {
+      const element = document.createElement('a');
+      const dashboardData = {
+        municipio: municipio.nome,
+        totalPedidos,
+        orcamentoExecutado,
+        pedidosAprovados,
+        secretarias,
+        data: new Date().toLocaleDateString('pt-BR')
+      };
+      
+      const file = new Blob(
+        [JSON.stringify(dashboardData, null, 2)], 
+        {type: 'application/json'}
+      );
+      
+      element.href = URL.createObjectURL(file);
+      element.download = `dashboard_${municipio.nome.toLowerCase().replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+      
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      
+      toast.success('Dados exportados com sucesso!');
+    }, 1000);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">

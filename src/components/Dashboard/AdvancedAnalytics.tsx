@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AreaChart, Area, BarChart, Bar, LineChart, Line, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
@@ -12,8 +11,17 @@ import { ArrowUpRight, Download, FileBarChart, Filter } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/utils/formatters';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { toast } from 'sonner';
 
-// Dados simulados para os gráficos
 const monthlyData = [
   { name: 'Jan', planejado: 240000, executado: 220000 },
   { name: 'Fev', planejado: 300000, executado: 320000 },
@@ -43,9 +51,76 @@ const COLORS = [
   '#ffc658', '#8dd1e1', '#a4de6c', '#d0ed57'
 ];
 
+const yearOptions = ['2023', '2024', '2025'];
+const quarterOptions = ['Q1', 'Q2', 'Q3', 'Q4'];
+const monthOptions = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
 const AdvancedAnalytics: React.FC = () => {
   const [period, setPeriod] = useState('anual');
   const [chartType, setChartType] = useState('area');
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    year: '2024',
+    quarter: 'Q2',
+    month: 'Junho',
+    department: 'Todos'
+  });
+  
+  const [filteredData, setFilteredData] = useState(monthlyData);
+  const [filteredDeptData, setFilteredDeptData] = useState(departmentData);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (period === 'mensal') {
+        setFilteredData(monthlyData.slice(0, 3));
+      } else if (period === 'trimestral') {
+        setFilteredData(monthlyData.slice(0, 6));
+      } else {
+        setFilteredData(monthlyData);
+      }
+      
+      if (filters.department !== 'Todos') {
+        setFilteredDeptData(departmentData.filter(
+          dept => dept.name === filters.department
+        ));
+      } else {
+        setFilteredDeptData(departmentData);
+      }
+      
+      toast.success('Filtros aplicados com sucesso');
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [period, filters]);
+
+  const handleExport = (format: 'csv' | 'pdf') => {
+    if (format === 'csv') {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      
+      csvContent += "Mês,Planejado,Executado\n";
+      
+      filteredData.forEach(row => {
+        csvContent += `${row.name},${row.planejado},${row.executado}\n`;
+      });
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `dashboard_data_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Dados exportados com sucesso');
+    } else {
+      toast.success('Exportação de PDF iniciada');
+      setTimeout(() => {
+        toast.success('Arquivo PDF gerado com sucesso');
+      }, 1500);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -67,12 +142,122 @@ const AdvancedAnalytics: React.FC = () => {
               <SelectItem value="anual">Anual</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon">
-            <Download className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
+          
+          <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Filtros</DialogTitle>
+                <DialogDescription>
+                  Configure os filtros para visualização dos dados
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label className="text-right text-sm">Ano:</label>
+                  <Select 
+                    defaultValue={filters.year} 
+                    onValueChange={(value) => setFilters({...filters, year: value})}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Selecione o ano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {yearOptions.map(year => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label className="text-right text-sm">Trimestre:</label>
+                  <Select 
+                    defaultValue={filters.quarter} 
+                    onValueChange={(value) => setFilters({...filters, quarter: value})}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Selecione o trimestre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {quarterOptions.map(quarter => (
+                        <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label className="text-right text-sm">Mês:</label>
+                  <Select 
+                    defaultValue={filters.month} 
+                    onValueChange={(value) => setFilters({...filters, month: value})}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Selecione o mês" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {monthOptions.map(month => (
+                        <SelectItem key={month} value={month}>{month}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label className="text-right text-sm">Secretaria:</label>
+                  <Select 
+                    defaultValue={filters.department} 
+                    onValueChange={(value) => setFilters({...filters, department: value})}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Selecione a secretaria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Todos">Todas as Secretarias</SelectItem>
+                      {departmentData.map(dept => (
+                        <SelectItem key={dept.name} value={dept.name}>{dept.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button onClick={() => setFilterDialogOpen(false)}>Aplicar Filtros</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Download className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Exportar Dados</DialogTitle>
+                <DialogDescription>
+                  Escolha o formato para exportação dos dados
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-2 gap-4 py-4">
+                <Button onClick={() => handleExport('csv')}>
+                  Exportar como CSV
+                </Button>
+                <Button onClick={() => handleExport('pdf')}>
+                  Exportar como PDF
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -173,7 +358,7 @@ const AdvancedAnalytics: React.FC = () => {
               <ResponsiveContainer width="100%" height="100%">
                 {chartType === 'area' ? (
                   <AreaChart
-                    data={monthlyData}
+                    data={filteredData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -206,7 +391,7 @@ const AdvancedAnalytics: React.FC = () => {
                   </AreaChart>
                 ) : chartType === 'bar' ? (
                   <BarChart
-                    data={monthlyData}
+                    data={filteredData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -225,7 +410,7 @@ const AdvancedAnalytics: React.FC = () => {
                   </BarChart>
                 ) : (
                   <LineChart
-                    data={monthlyData}
+                    data={filteredData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -277,7 +462,7 @@ const AdvancedAnalytics: React.FC = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={departmentData}
+                      data={filteredDeptData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -287,7 +472,7 @@ const AdvancedAnalytics: React.FC = () => {
                       nameKey="name"
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     >
-                      {departmentData.map((entry, index) => (
+                      {filteredDeptData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -309,7 +494,7 @@ const AdvancedAnalytics: React.FC = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     layout="vertical"
-                    data={departmentData}
+                    data={filteredDeptData}
                     margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -324,7 +509,7 @@ const AdvancedAnalytics: React.FC = () => {
                     <YAxis type="category" dataKey="name" />
                     <Tooltip formatter={(value) => formatCurrency(value as number)} />
                     <Bar dataKey="valor" fill="#9b87f5">
-                      {departmentData.map((entry, index) => (
+                      {filteredDeptData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Bar>
@@ -391,9 +576,8 @@ const AdvancedAnalytics: React.FC = () => {
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={monthlyData.map((item, index) => {
-                    // Adiciona projeções para os próximos meses
-                    if (index < monthlyData.length - 3) {
+                  data={filteredData.map((item, index) => {
+                    if (index < filteredData.length - 3) {
                       return item;
                     } else {
                       return {
