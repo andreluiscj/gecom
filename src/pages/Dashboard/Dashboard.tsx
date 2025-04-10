@@ -9,18 +9,67 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Building, Receipt, ShoppingCart, Wallet } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
+import { DadosDashboard, Municipio } from '@/types';
 
-const municipio = {
-  id: 1,
+// Updated municipio object with all required properties
+const municipio: Municipio = {
+  id: '1',
   nome: 'Novo Horizonte',
   estado: 'SP',
   populacao: 36593,
   logo: '/logo-municipio.png',
+  orcamento: 4500000,
+  orcamentoAnual: 54000000,
+  prefeito: 'João da Silva',
+};
+
+// Sample dashboard data
+const dadosDashboard: DadosDashboard = {
+  resumoFinanceiro: {
+    orcamentoAnual: 54000000,
+    orcamentoUtilizado: 4500000,
+    percentualUtilizado: 8.33,
+    totalPedidos: 587,
+  },
+  cartoes: [
+    {
+      titulo: 'Total de Pedidos',
+      valor: 587,
+      percentualMudanca: 12.5,
+      icon: 'Receipt',
+      classeCor: 'bg-blue-500',
+    },
+    {
+      titulo: 'Orçamento Executado',
+      valor: formatCurrency(4450000),
+      percentualMudanca: 8.2,
+      icon: 'Wallet',
+      classeCor: 'bg-green-500',
+    },
+  ],
+  orcamentoPrevisto: { 'Trimestre 1': 12000000, 'Trimestre 2': 15000000, 'Trimestre 3': 13000000, 'Trimestre 4': 14000000 },
+  gastosPorSetor: {
+    'Saúde': 1200000,
+    'Educação': 950000,
+    'Administrativo': 450000,
+    'Obras': 730000,
+    'Transporte': 340000,
+  },
+  gastosTotais: 4450000,
+  pedidosPorSetor: {
+    'Saúde': 143,
+    'Educação': 125,
+    'Administrativo': 98,
+    'Obras': 87,
+    'Transporte': 62,
+    'Outros': 72,
+  },
 };
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('grafico');
+  const [language, setLanguage] = useState('pt'); // Default language is Portuguese
 
   // Valores para os cards de estatísticas
   const totalPedidos = 587;
@@ -31,7 +80,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Cabeçalho com informações do município */}
-      <DashboardHeader municipio={municipio} />
+      <DashboardHeader municipio={municipio} language={language} />
       
       {/* Cards de estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -77,7 +126,11 @@ const Dashboard: React.FC = () => {
         </TabsList>
         
         <TabsContent value="grafico" className="space-y-4">
-          <DashboardSummary />
+          <DashboardSummary 
+            dadosDashboard={dadosDashboard}
+            municipio={municipio}
+            language={language}
+          />
         </TabsContent>
         
         <TabsContent value="avancado">
