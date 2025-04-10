@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardHeader from '@/components/Dashboard/DashboardHeader';
@@ -11,24 +11,23 @@ import { formatCurrency } from '@/utils/formatters';
 import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
 import { DadosDashboard, Municipio } from '@/types';
 
-// Updated municipio object with all required properties
-const municipio: Municipio = {
-  id: '1',
-  nome: 'Novo Horizonte',
-  estado: 'SP',
-  populacao: 36593,
-  logo: '/logo-municipio.png',
-  orcamento: 4500000,
-  orcamentoAnual: 54000000,
-  prefeito: 'João da Silva',
+// Default municipality object
+const defaultMunicipio: Municipio = {
+  id: 'pai-pedro',
+  nome: 'Pai Pedro',
+  estado: 'MG',
+  populacao: 6083,
+  orcamento: 28500000,
+  orcamentoAnual: 28500000,
+  prefeito: 'Maria Silva',
 };
 
 // Sample dashboard data
 const dadosDashboard: DadosDashboard = {
   resumoFinanceiro: {
-    orcamentoAnual: 54000000,
-    orcamentoUtilizado: 4500000,
-    percentualUtilizado: 8.33,
+    orcamentoAnual: 28500000,
+    orcamentoUtilizado: 2400000,
+    percentualUtilizado: 8.42,
     totalPedidos: 587,
   },
   cartoes: [
@@ -41,21 +40,21 @@ const dadosDashboard: DadosDashboard = {
     },
     {
       titulo: 'Orçamento Executado',
-      valor: formatCurrency(4450000),
+      valor: formatCurrency(2400000),
       percentualMudanca: 8.2,
       icon: 'Wallet',
       classeCor: 'bg-green-500',
     },
   ],
-  orcamentoPrevisto: { 'Trimestre 1': 12000000, 'Trimestre 2': 15000000, 'Trimestre 3': 13000000, 'Trimestre 4': 14000000 },
+  orcamentoPrevisto: { 'Trimestre 1': 7000000, 'Trimestre 2': 7500000, 'Trimestre 3': 7000000, 'Trimestre 4': 7000000 },
   gastosPorSetor: {
-    'Saúde': 1200000,
-    'Educação': 950000,
-    'Administrativo': 450000,
-    'Obras': 730000,
-    'Transporte': 340000,
+    'Saúde': 800000,
+    'Educação': 650000,
+    'Administrativo': 350000,
+    'Obras': 430000,
+    'Transporte': 170000,
   },
-  gastosTotais: 4450000,
+  gastosTotais: 2400000,
   pedidosPorSetor: {
     'Saúde': 143,
     'Educação': 125,
@@ -70,10 +69,27 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('grafico');
   const [language, setLanguage] = useState('pt'); // Default language is Portuguese
+  const [municipio, setMunicipio] = useState<Municipio>(defaultMunicipio);
+
+  // Effect to load selected municipality
+  useEffect(() => {
+    const municipioId = localStorage.getItem('municipio-selecionado');
+    if (municipioId === 'janauba') {
+      setMunicipio({
+        id: 'janauba',
+        nome: 'Janaúba',
+        estado: 'MG',
+        populacao: 72018,
+        orcamento: 145300000,
+        orcamentoAnual: 145300000,
+        prefeito: 'José Santos',
+      });
+    }
+  }, []);
 
   // Valores para os cards de estatísticas
   const totalPedidos = 587;
-  const orcamentoExecutado = 4450000;
+  const orcamentoExecutado = municipio.id === 'janauba' ? 12000000 : 2400000;
   const pedidosAprovados = 432;
   const secretarias = 15;
 

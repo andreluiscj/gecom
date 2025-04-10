@@ -140,7 +140,13 @@ const Login: React.FC = () => {
     }
 
     toast.success('Login realizado com sucesso!');
-    navigate('/dashboard');
+    
+    // Direct admin users to the admin panel, others to dashboard
+    if (role === 'admin') {
+      navigate('/admin');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const handleQuickLogin = (userType: string) => {

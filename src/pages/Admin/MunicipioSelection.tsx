@@ -25,16 +25,6 @@ const municipios: Municipio[] = [
     orcamento: 145300000,
     orcamentoAnual: 145300000,
     prefeito: 'José Santos',
-  },
-  {
-    id: 'novo-horizonte',
-    nome: 'Novo Horizonte',
-    estado: 'SP',
-    populacao: 36593,
-    logo: '/logo-municipio.png',
-    orcamento: 54000000,
-    orcamentoAnual: 54000000,
-    prefeito: 'João da Silva',
   }
 ];
 
