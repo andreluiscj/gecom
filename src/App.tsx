@@ -25,6 +25,7 @@ function App() {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/municipios" element={<MunicipioSelection />} />
 
       <Route path="/" element={<AppLayout />}>
         <Route path="dashboard" element={<Dashboard />} />
@@ -37,7 +38,6 @@ function App() {
         <Route path="pedidos/workflow/:id" element={<WorkflowPedido />} />
         <Route path="pedidos/aprovacao/:id" element={<AprovacaoDFD />} />
         <Route path="pedidos/novo" element={<NovoPedido />} />
-        <Route path="admin/municipios" element={<MunicipioSelection />} />
         <Route path="admin/gerentes" element={<CadastroGerente />} />
         <Route path="gerenciamento/funcionarios" element={<Funcionarios />} />
       </Route>

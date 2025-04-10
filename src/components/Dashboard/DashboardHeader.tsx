@@ -25,7 +25,7 @@ const getTranslation = (key: string, language: string = 'pt') => {
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ municipio, language = 'pt' }) => {
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-1">{getTranslation('dashboardTitle', language)} - {municipio.nome}</h1>
+      <h1 className="text-2xl font-bold mb-1">{getTranslation('dashboardTitle', language)}</h1>
       <p className="text-muted-foreground text-sm">
         {getTranslation('overview', language)}
       </p>

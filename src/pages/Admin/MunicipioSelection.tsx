@@ -27,13 +27,14 @@ const municipios: Municipio[] = [
     prefeito: 'José Santos',
   },
   {
-    id: 'espinosa',
-    nome: 'Espinosa',
-    estado: 'MG',
-    populacao: 31113,
-    orcamento: 87600000,
-    orcamentoAnual: 87600000,
-    prefeito: 'Carlos Oliveira',
+    id: 'novo-horizonte',
+    nome: 'Novo Horizonte',
+    estado: 'SP',
+    populacao: 36593,
+    logo: '/logo-municipio.png',
+    orcamento: 54000000,
+    orcamentoAnual: 54000000,
+    prefeito: 'João da Silva',
   }
 ];
 

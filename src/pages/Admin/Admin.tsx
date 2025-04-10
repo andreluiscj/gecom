@@ -12,11 +12,15 @@ const Admin: React.FC = () => {
   // Check if user is authenticated
   useEffect(() => {
     const auth = localStorage.getItem('user-authenticated') === 'true';
+    const userRole = localStorage.getItem('user-role');
+    
     setIsAuthenticated(auth);
     
     if (!auth) {
       toast.error('Você precisa estar autenticado para acessar esta página');
       navigate('/login');
+    } else if (userRole === 'admin') {
+      navigate('/admin/municipios');
     }
   }, [navigate]);
 
