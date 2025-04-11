@@ -1,5 +1,5 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardHeader from '@/components/Dashboard/DashboardHeader';
 import StatCard from '@/components/Dashboard/StatCard';
@@ -92,7 +92,6 @@ const departmentData = [
 ];
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('grafico');
   const [language, setLanguage] = useState('pt'); // Default language is Portuguese
   const [municipio, setMunicipio] = useState<Municipio>(defaultMunicipio);
@@ -124,6 +123,10 @@ const Dashboard: React.FC = () => {
 
   // Effect to apply filters
   useEffect(() => {
+    applyFilters();
+  }, [period, filters]);
+
+  const applyFilters = () => {
     // Apply period filter
     let periodFilteredData = [...monthlyData];
     if (period === 'mensal') {
@@ -167,7 +170,7 @@ const Dashboard: React.FC = () => {
     
     setFilteredData(periodFilteredData);
     setFilteredDeptData(deptFilteredData);
-  }, [period, filters]);
+  };
 
   // Valores para os cards de estatísticas
   const totalPedidos = 587;
@@ -201,79 +204,149 @@ const Dashboard: React.FC = () => {
       <DashboardHeader municipio={municipio} language={language} />
       
       {/* Cards de estatísticas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard 
-          title="Total de Pedidos"
-          value={totalPedidos}
-          percentChange={12.5}
-          icon={Receipt}
-          colorClass="bg-blue-500"
-        />
-        <StatCard 
-          title="Orçamento Executado"
-          value={formatCurrency(orcamentoExecutado)}
-          percentChange={8.2}
-          icon={Wallet}
-          colorClass="bg-green-500"
-        />
-        <StatCard 
-          title="Pedidos Aprovados"
-          value={pedidosAprovados}
-          percentChange={4.3}
-          icon={ShoppingCart}
-          colorClass="bg-yellow-500"
-        />
-        <StatCard 
-          title="Secretarias"
-          value={secretarias}
-          percentChange={0}
-          icon={Building}
-          colorClass="bg-purple-500"
-        />
-      </div>
+      <DashboardStatCards 
+        totalPedidos={totalPedidos}
+        orcamentoExecutado={orcamentoExecutado}
+        pedidosAprovados={pedidosAprovados}
+        secretarias={secretarias}
+      />
 
       {/* Tabs para alternar entre gráficos e resumo */}
-      <Tabs 
-        defaultValue={activeTab} 
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
-        <div className="flex justify-between items-center">
-          <TabsList className="grid w-full md:w-[400px] grid-cols-2">
-            <TabsTrigger value="grafico">Gráficos</TabsTrigger>
-            <TabsTrigger value="avancado">Analytics Avançado</TabsTrigger>
-          </TabsList>
-          
-          <button
-            onClick={handleExportDashboard}
-            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700"
-          >
-            <Printer className="h-4 w-4 mr-2" />
-            Exportar PDF
-          </button>
-        </div>
-        
-        <TabsContent value="grafico" className="space-y-4">
-          <DashboardSummary 
-            dadosDashboard={dadosDashboard}
-            municipio={municipio}
-            language={language}
-          />
-        </TabsContent>
-        
-        <TabsContent value="avancado">
-          <AdvancedAnalytics 
-            monthlyData={filteredData} 
-            departmentData={filteredDeptData}
-            period={period}
-            setPeriod={setPeriod}
-            filters={filters}
-            setFilters={setFilters}
-          />
-        </TabsContent>
-      </Tabs>
+      <DashboardTabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        handleExportDashboard={handleExportDashboard}
+        dadosDashboard={dadosDashboard}
+        municipio={municipio}
+        language={language}
+        filteredData={filteredData}
+        filteredDeptData={filteredDeptData}
+        period={period}
+        setPeriod={setPeriod}
+        filters={filters}
+        setFilters={setFilters}
+      />
     </div>
   );
 };
+
+interface DashboardStatCardsProps {
+  totalPedidos: number;
+  orcamentoExecutado: number;
+  pedidosAprovados: number;
+  secretarias: number;
+}
+
+function DashboardStatCards({ 
+  totalPedidos, 
+  orcamentoExecutado, 
+  pedidosAprovados, 
+  secretarias 
+}: DashboardStatCardsProps) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <StatCard 
+        title="Total de Pedidos"
+        value={totalPedidos}
+        percentChange={12.5}
+        icon={Receipt}
+        colorClass="bg-blue-500"
+      />
+      <StatCard 
+        title="Orçamento Executado"
+        value={formatCurrency(orcamentoExecutado)}
+        percentChange={8.2}
+        icon={Wallet}
+        colorClass="bg-green-500"
+      />
+      <StatCard 
+        title="Pedidos Aprovados"
+        value={pedidosAprovados}
+        percentChange={4.3}
+        icon={ShoppingCart}
+        colorClass="bg-yellow-500"
+      />
+      <StatCard 
+        title="Secretarias"
+        value={secretarias}
+        percentChange={0}
+        icon={Building}
+        colorClass="bg-purple-500"
+      />
+    </div>
+  );
+}
+
+interface DashboardTabsProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  handleExportDashboard: () => void;
+  dadosDashboard: DadosDashboard;
+  municipio: Municipio;
+  language: string;
+  filteredData: any[];
+  filteredDeptData: any[];
+  period: string;
+  setPeriod: (period: string) => void;
+  filters: any;
+  setFilters: (filters: any) => void;
+}
+
+function DashboardTabs({
+  activeTab,
+  setActiveTab,
+  handleExportDashboard,
+  dadosDashboard,
+  municipio,
+  language,
+  filteredData,
+  filteredDeptData,
+  period,
+  setPeriod,
+  filters,
+  setFilters
+}: DashboardTabsProps) {
+  return (
+    <Tabs 
+      defaultValue={activeTab} 
+      onValueChange={setActiveTab}
+      className="space-y-4"
+    >
+      <div className="flex justify-between items-center">
+        <TabsList className="grid w-full md:w-[400px] grid-cols-2">
+          <TabsTrigger value="grafico">Gráficos</TabsTrigger>
+          <TabsTrigger value="avancado">Analytics Avançado</TabsTrigger>
+        </TabsList>
+        
+        <button
+          onClick={handleExportDashboard}
+          className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700"
+        >
+          <Printer className="h-4 w-4 mr-2" />
+          Exportar PDF
+        </button>
+      </div>
+      
+      <TabsContent value="grafico" className="space-y-4">
+        <DashboardSummary 
+          dadosDashboard={dadosDashboard}
+          municipio={municipio}
+          language={language}
+        />
+      </TabsContent>
+      
+      <TabsContent value="avancado">
+        <AdvancedAnalytics 
+          monthlyData={filteredData} 
+          departmentData={filteredDeptData}
+          period={period}
+          setPeriod={setPeriod}
+          filters={filters}
+          setFilters={setFilters}
+        />
+      </TabsContent>
+    </Tabs>
+  );
+}
 
 export default Dashboard;

@@ -11,32 +11,29 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { ShoppingCart, Check, Key, Mail } from 'lucide-react';
-import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { autenticarUsuario, atualizarSenhaUsuario } from '@/data/funcionarios/mockFuncionarios';
-import { Label } from '@/components/ui/label';
+import { ShoppingCart, Check } from 'lucide-react';
 import { GDPRConsentDialog } from '@/components/Auth/GDPRConsentDialog';
 import { ForgotPasswordDialog } from '@/components/Auth/ForgotPasswordDialog';
+import { useAuth } from '@/hooks/useAuth';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
-  const [showGDPRDialog, setShowGDPRDialog] = useState(false);
-  const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [currentUserId, setCurrentUserId] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
+  
+  const { 
+    isSubmitting, 
+    showChangePasswordDialog, 
+    setShowChangePasswordDialog,
+    showGDPRDialog,
+    setShowGDPRDialog,
+    handleLogin,
+    handlePasswordChange,
+    handleGDPRConsent
+  } = useAuth();
 
   // Check if user is already logged in
   useEffect(() => {
@@ -46,125 +43,17 @@ const Login: React.FC = () => {
     }
   }, [navigate]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const onSubmitLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    // Implement basic validation
-    if (!username || !password) {
-      toast.error('Por favor, preencha todos os campos.');
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Try to authenticate real users
-    const result = autenticarUsuario(username, password);
-    if (result.authenticated) {
-      // Check if it's first login, if so show password change dialog
-      if (result.primeiroAcesso) {
-        setShowChangePasswordDialog(true);
-        setCurrentUserId(result.userId);
-        setIsSubmitting(false);
-      } else {
-        // Check if GDPR consent is needed
-        const gdprAccepted = localStorage.getItem(`gdpr-accepted-${result.userId}`);
-        if (!gdprAccepted) {
-          setCurrentUserId(result.userId);
-          setShowGDPRDialog(true);
-          setIsSubmitting(false);
-        } else {
-          loginSuccess(
-            result.role, 
-            'São Paulo', 
-            result.funcionario.nome, 
-            undefined, 
-            result.userId, 
-            result.funcionario.id
-          );
-        }
-      }
-    } else {
-      toast.error('Credenciais inválidas. Tente novamente.');
-      setIsSubmitting(false);
-    }
+    handleLogin(username, password);
   };
 
-  const handlePasswordChange = () => {
-    // Validate passwords
-    if (!newPassword || newPassword.length < 3) {
-      toast.error('A nova senha deve ter pelo menos 3 caracteres.');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast.error('As senhas não coincidem.');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    // Update password
-    if (atualizarSenhaUsuario(currentUserId, newPassword)) {
-      toast.success('Senha alterada com sucesso!');
-      
-      // Login after password change - show GDPR dialog
-      setShowChangePasswordDialog(false);
-      setShowGDPRDialog(true);
-    } else {
-      toast.error('Erro ao alterar senha. Tente novamente.');
-      setIsSubmitting(false);
-    }
+  const onSubmitPasswordChange = () => {
+    handlePasswordChange(newPassword, confirmPassword);
   };
 
-  const handleGDPRConsent = () => {
-    // Save GDPR consent
-    localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
-    setShowGDPRDialog(false);
-    
-    // Complete login process
-    const result = autenticarUsuario(username, password);
-    if (result.authenticated) {
-      loginSuccess(
-        result.role, 
-        'São Paulo', 
-        result.funcionario.nome, 
-        undefined, 
-        result.userId,
-        result.funcionario.id
-      );
-    }
-  };
-
-  const loginSuccess = (
-    role: string, 
-    municipality: string = 'all', 
-    name: string = '', 
-    permittedStep: string = '',
-    userId: string = '',
-    funcionarioId: string = ''
-  ) => {
-    // Set authenticated state in localStorage
-    localStorage.setItem('user-authenticated', 'true');
-    localStorage.setItem('user-role', role);
-    localStorage.setItem('user-municipality', municipality);
-    localStorage.setItem('user-id', userId);
-    localStorage.setItem('funcionario-id', funcionarioId);
-    
-    if (name) {
-      localStorage.setItem('user-name', name);
-    }
-    if (permittedStep) {
-      localStorage.setItem('user-permitted-step', permittedStep);
-    }
-
-    toast.success('Login realizado com sucesso!');
-    
-    // Direct admin users to the admin panel, others to dashboard
-    if (role === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/dashboard');
-    }
+  const onGDPRConsent = () => {
+    handleGDPRConsent(username, password);
   };
 
   return (
@@ -183,7 +72,7 @@ const Login: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={onSubmitLogin} className="space-y-4">
             <div className="space-y-2">
               <div className="relative">
                 <Input
@@ -233,53 +122,21 @@ const Login: React.FC = () => {
       </Card>
       
       {/* Password Change Dialog */}
-      <Dialog open={showChangePasswordDialog} onOpenChange={setShowChangePasswordDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Primeiro acesso</DialogTitle>
-            <DialogDescription>
-              Por favor, altere sua senha padrão para continuar.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="flex justify-center mb-2">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary">
-                <Key className="h-6 w-6" />
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="new-password">Nova senha</Label>
-              <Input 
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Digite sua nova senha"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="confirm-password">Confirmar senha</Label>
-              <Input 
-                id="confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirme sua nova senha"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handlePasswordChange} disabled={isSubmitting}>
-              {isSubmitting ? 'Alterando...' : 'Alterar senha e continuar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PasswordChangeDialog
+        open={showChangePasswordDialog}
+        onOpenChange={setShowChangePasswordDialog}
+        newPassword={newPassword}
+        confirmPassword={confirmPassword}
+        setNewPassword={setNewPassword}
+        setConfirmPassword={setConfirmPassword}
+        onSubmit={onSubmitPasswordChange}
+        isSubmitting={isSubmitting}
+      />
 
       {/* GDPR Consent Dialog */}
       <GDPRConsentDialog
         open={showGDPRDialog}
-        onAccept={handleGDPRConsent}
+        onAccept={onGDPRConsent}
         onOpenChange={setShowGDPRDialog}
       />
 
@@ -291,5 +148,76 @@ const Login: React.FC = () => {
     </div>
   );
 };
+
+interface PasswordChangeDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  newPassword: string;
+  confirmPassword: string;
+  setNewPassword: (password: string) => void;
+  setConfirmPassword: (password: string) => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+}
+
+import { Dialog as UIDialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Key } from 'lucide-react';
+
+function PasswordChangeDialog({
+  open,
+  onOpenChange,
+  newPassword,
+  confirmPassword,
+  setNewPassword,
+  setConfirmPassword,
+  onSubmit,
+  isSubmitting
+}: PasswordChangeDialogProps) {
+  return (
+    <UIDialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Primeiro acesso</DialogTitle>
+          <DialogDescription>
+            Por favor, altere sua senha padrão para continuar.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="flex justify-center mb-2">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary">
+              <Key className="h-6 w-6" />
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="new-password">Nova senha</Label>
+            <Input 
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Digite sua nova senha"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="confirm-password">Confirmar senha</Label>
+            <Input 
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirme sua nova senha"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={onSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Alterando...' : 'Alterar senha e continuar'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </UIDialog>
+  );
+}
 
 export default Login;
