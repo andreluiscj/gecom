@@ -2,7 +2,7 @@ import { PedidoCompra } from '@/types';
 import { formatCurrency, formatDate } from './formatters';
 import { GecomLogo } from '@/assets/GecomLogo';
 import { MosaicoLogo } from '@/assets/MosaicoLogo';
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const gerarPDF = (pedido: PedidoCompra) => {
   // In a real application, we would use a library like jspdf or pdfmake
@@ -379,7 +379,7 @@ export const exportDashboardAsPDF = (data: any, activeTab: string, chartData: an
     link.click();
     document.body.removeChild(link);
     
-    toast.info('Seu navegador bloqueou a janela de impressão. O arquivo foi baixado automaticamente.');
+    toast("Seu navegador bloqueou a janela de impressão. O arquivo foi baixado automaticamente.");
   }
   
   return true;
