@@ -22,23 +22,28 @@ interface ForgotPasswordDialogProps {
 
 export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialogProps) {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   
   const handlePasswordRecovery = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!username) {
-      toast.error('Por favor, informe seu nome de usuário');
+    if (!username && !email) {
+      toast.error('Por favor, informe seu nome de usuário ou email');
       return;
     }
     
     setIsSubmitting(true);
     
-    // Find user by username
+    // Find user by username or email
     const usuarios = getUsuariosLogin();
-    const foundUser = usuarios.find(u => u.username === username);
+    const foundUser = usuarios.find(u => 
+      u.username === username || 
+      (email && getUserById(u.id)?.email === email)
+    );
     
+    // Simulate email sending with a delay
     setTimeout(() => {
       setIsSubmitting(false);
       
@@ -46,9 +51,28 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
         const userData = getUserById(foundUser.id);
         if (userData) {
           // In a real app, this would send an email
-          // For demo purposes, we'll just show a success message
+          // For demo purposes, show email content as a toast
           setSubmitted(true);
-          toast.success('Instruções enviadas para o seu email');
+          
+          // Show detailed toast with email preview
+          toast.success(
+            <div className="space-y-2">
+              <p className="font-medium">Email enviado para {userData.email || 'seu endereço de email'}</p>
+              <div className="text-sm bg-muted p-2 rounded">
+                <p><strong>Assunto:</strong> Recuperação de Senha - GECOM</p>
+                <p><strong>Para:</strong> {userData.email || 'seu email'}</p>
+                <p><strong>Mensagem:</strong></p>
+                <p>Olá {userData.nome},</p>
+                <p>Recebemos uma solicitação para redefinir sua senha. Para concluir o processo, por favor clique no link abaixo:</p>
+                <p className="text-primary">[Link de Recuperação de Senha]</p>
+                <p>Se você não solicitou esta mudança, ignore este email.</p>
+                <p>Atenciosamente,<br/>Equipe GECOM</p>
+              </div>
+            </div>,
+            {
+              duration: 8000,
+            }
+          );
         } else {
           toast.error('Ocorreu um erro ao recuperar os dados do usuário');
         }
@@ -62,6 +86,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
   
   const handleClose = () => {
     setUsername('');
+    setEmail('');
     setSubmitted(false);
     onOpenChange(false);
   };
@@ -72,7 +97,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
         <DialogHeader>
           <DialogTitle>Recuperação de Senha</DialogTitle>
           <DialogDescription>
-            Informe seu nome de usuário para receber instruções de recuperação.
+            Informe seu nome de usuário ou email para receber instruções de recuperação.
           </DialogDescription>
         </DialogHeader>
         
@@ -95,6 +120,18 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
                   disabled={isSubmitting}
                 />
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Ou email</Label>
+                <Input 
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Seu endereço de email"
+                  disabled={isSubmitting}
+                />
+                <p className="text-xs text-muted-foreground">Você pode usar seu nome de usuário ou email para recuperação</p>
+              </div>
             </div>
             <DialogFooter>
               <Button onClick={handleClose} variant="outline" type="button" disabled={isSubmitting}>
@@ -114,6 +151,9 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
               <h3 className="font-medium text-lg">Email enviado</h3>
               <p className="text-muted-foreground">
                 Se o usuário existir, enviamos as instruções de recuperação para o email associado à conta.
+              </p>
+              <p className="text-xs text-muted-foreground mt-4">
+                Por favor, verifique sua caixa de entrada e pasta de spam.
               </p>
             </div>
             <Button onClick={handleClose} className="mt-2">

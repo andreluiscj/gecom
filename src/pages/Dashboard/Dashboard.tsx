@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardHeader from '@/components/Dashboard/DashboardHeader';
 import StatCard from '@/components/Dashboard/StatCard';
 import DashboardSummary from '@/components/Dashboard/DashboardSummary';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, Printer, Receipt, ShoppingCart, Wallet } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
@@ -194,12 +192,11 @@ const Dashboard: React.FC = () => {
       
       // Use the PDF export function with the current active tab
       exportDashboardAsPDF(dashboardData, activeTab === 'grafico' ? 'orcamento' : 'secretarias', filteredData, filteredDeptData);
-      toast.success('Relatório PDF gerado com sucesso!');
     }, 500);
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in dashboard-view">
       {/* Cabeçalho com informações do município */}
       <DashboardHeader municipio={municipio} language={language} />
       

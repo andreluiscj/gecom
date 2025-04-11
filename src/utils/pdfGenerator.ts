@@ -3,6 +3,7 @@ import { formatCurrency, formatDate } from './formatters';
 import { GecomLogo } from '@/assets/GecomLogo';
 import { MosaicoLogo } from '@/assets/MosaicoLogo';
 import { toast } from "sonner";
+import html2canvas from 'html2canvas';
 
 export const gerarPDF = (pedido: PedidoCompra) => {
   // In a real application, we would use a library like jspdf or pdfmake
@@ -135,254 +136,104 @@ export const gerarPDF = (pedido: PedidoCompra) => {
 };
 
 // Function to export dashboard data as PDF based on current active tab
-export const exportDashboardAsPDF = (data: any, activeTab: string, chartData: any, deptData: any) => {
-  const htmlContent = `
-    <html>
-    <head>
-      <title>Dashboard - ${data.municipio}</title>
-      <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        h1 { text-align: center; margin-bottom: 20px; color: #333; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .gecom-logo { text-align: left; }
-        .mosaico-logo { text-align: right; }
-        .section { margin-bottom: 30px; }
-        .section h3 { border-bottom: 1px solid #ccc; padding-bottom: 5px; color: #555; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        table th, table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        table th { background-color: #f2f2f2; }
-        .chart-placeholder { height: 300px; border: 1px dashed #ccc; display: flex; justify-content: center; align-items: center; margin: 20px 0; background-color: #f9f9f9; }
-        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #777; }
-        .stat-card { border: 1px solid #eaeaea; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #f9f9f9; }
-        .stat-card .title { font-size: 14px; color: #666; margin-bottom: 5px; }
-        .stat-card .value { font-size: 20px; font-weight: bold; color: #333; }
-        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .dept-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .dept-item { padding: 10px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 10px; }
-        .dept-name { font-weight: bold; margin-bottom: 5px; }
-        .trend-note { background-color: #f0f7ff; padding: 15px; border-left: 4px solid #3b82f6; margin: 20px 0; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="logos">
-          <div class="gecom-logo">
-            <div style="width: 48px; height: 48px; background-color: white; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 28px; color: #9b87f5; font-weight: bold;">G</div>
-          </div>
-          <div class="mosaico-logo">
-            <img src="/lovable-uploads/b81639ad-2b05-401a-8fbe-8b05c81df9ce.png" alt="Mosaico Logo" width="150" />
-          </div>
-        </div>
-      </div>
-      
-      <h1>Dashboard - ${data.municipio}</h1>
-      <p style="text-align: center; margin-bottom: 30px; color: #666;">Data de geração: ${new Date().toLocaleDateString('pt-BR')}</p>
-      
-      <div class="section">
-        <h3>Indicadores Principais</h3>
-        <div class="stat-grid">
-          <div class="stat-card">
-            <div class="title">Total de Pedidos</div>
-            <div class="value">${data.totalPedidos}</div>
-            <div style="color: green; font-size: 12px;">↑ 12.5% em relação ao período anterior</div>
-          </div>
-          <div class="stat-card">
-            <div class="title">Orçamento Executado</div>
-            <div class="value">${formatCurrency(data.orcamentoExecutado)}</div>
-            <div style="color: green; font-size: 12px;">↑ 8.2% em relação ao período anterior</div>
-          </div>
-          <div class="stat-card">
-            <div class="title">Pedidos Aprovados</div>
-            <div class="value">${data.pedidosAprovados}</div>
-            <div style="color: green; font-size: 12px;">↑ 4.3% em relação ao período anterior</div>
-          </div>
-        </div>
-      </div>
-      
-      ${activeTab === 'orcamento' ? `
-        <div class="section">
-          <h3>Análise Orçamentária</h3>
-          <div class="chart-placeholder">
-            <p style="text-align: center;">
-              <strong>Gráfico: Comparativo Orçamento Planejado vs. Executado</strong><br>
-              <span style="color: #666;">O gráfico mostra a comparação entre orçamento planejado e executado ao longo do período.</span>
-            </p>
-          </div>
-          
-          <table>
-            <tr>
-              <th>Mês</th>
-              <th>Planejado</th>
-              <th>Executado</th>
-              <th>Diferença</th>
-              <th>% Executado</th>
-            </tr>
-            ${chartData.map((item: any) => `
-            <tr>
-              <td>${item.name}</td>
-              <td>${formatCurrency(item.planejado)}</td>
-              <td>${formatCurrency(item.executado)}</td>
-              <td>${formatCurrency(item.planejado - item.executado)}</td>
-              <td>${((item.executado / item.planejado) * 100).toFixed(1)}%</td>
-            </tr>
-            `).join('')}
-            <tr>
-              <td colspan="1" style="text-align: right; font-weight: bold">TOTAL</td>
-              <td style="font-weight: bold">${formatCurrency(chartData.reduce((sum: number, item: any) => sum + item.planejado, 0))}</td>
-              <td style="font-weight: bold">${formatCurrency(chartData.reduce((sum: number, item: any) => sum + item.executado, 0))}</td>
-              <td style="font-weight: bold">${formatCurrency(
-                chartData.reduce((sum: number, item: any) => sum + item.planejado, 0) - 
-                chartData.reduce((sum: number, item: any) => sum + item.executado, 0)
-              )}</td>
-              <td style="font-weight: bold">${(
-                (chartData.reduce((sum: number, item: any) => sum + item.executado, 0) / 
-                chartData.reduce((sum: number, item: any) => sum + item.planejado, 0)) * 100
-              ).toFixed(1)}%</td>
-            </tr>
-          </table>
-          
-          <div class="chart-placeholder">
-            <p style="text-align: center;">
-              <strong>Gráfico: Tendência de Gastos Mensais</strong><br>
-              <span style="color: #666;">O gráfico ilustra a tendência de gastos ao longo dos meses.</span>
-            </p>
-          </div>
-        </div>
-      ` : activeTab === 'secretarias' ? `
-        <div class="section">
-          <h3>Distribuição por Secretaria</h3>
-          
-          <div style="display: flex; margin-bottom: 30px;">
-            <div style="flex: 1;">
-              <div class="chart-placeholder">
-                <p style="text-align: center;">
-                  <strong>Gráfico: Distribuição por Secretaria</strong><br>
-                  <span style="color: #666;">O gráfico de pizza mostra a distribuição percentual do orçamento.</span>
-                </p>
-              </div>
-            </div>
-            <div style="flex: 1;">
-              <div class="chart-placeholder">
-                <p style="text-align: center;">
-                  <strong>Gráfico: Gastos por Secretaria</strong><br>
-                  <span style="color: #666;">O gráfico de barras compara os gastos entre secretarias.</span>
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <table>
-            <tr>
-              <th>Secretaria</th>
-              <th>Valor</th>
-              <th>Percentual</th>
-            </tr>
-            ${deptData.map((item: any) => `
-            <tr>
-              <td>${item.name}</td>
-              <td>${formatCurrency(item.valor)}</td>
-              <td>${item.percent}%</td>
-            </tr>
-            `).join('')}
-            <tr>
-              <td style="text-align: right; font-weight: bold">TOTAL</td>
-              <td style="font-weight: bold">${formatCurrency(deptData.reduce((sum: number, item: any) => sum + item.valor, 0))}</td>
-              <td style="font-weight: bold">100%</td>
-            </tr>
-          </table>
-          
-          <h4 style="margin-top: 30px;">Detalhamento por Secretaria</h4>
-          <div class="dept-grid">
-            ${deptData.slice(0, 6).map((dept: any) => `
-              <div class="dept-item">
-                <div class="dept-name">${dept.name}</div>
-                <div>Valor: ${formatCurrency(dept.valor)}</div>
-                <div>Percentual: ${dept.percent}%</div>
-                <div style="background-color: #eee; height: 10px; margin-top: 5px;">
-                  <div style="background-color: #9b87f5; height: 10px; width: ${dept.percent}%;"></div>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      ` : `
-        <div class="section">
-          <h3>Tendências e Projeções</h3>
-          
-          <div class="chart-placeholder">
-            <p style="text-align: center;">
-              <strong>Gráfico: Tendências e Projeções</strong><br>
-              <span style="color: #666;">O gráfico mostra tendências e projeções para o próximo período.</span>
-            </p>
-          </div>
-          
-          <div class="trend-note">
-            <strong>Análise de Tendência:</strong> Com base nos dados históricos, projeta-se um aumento de aproximadamente 5% nos gastos para os próximos meses. A execução orçamentária segue dentro dos limites planejados.
-          </div>
-          
-          <h4>Projeções para os Próximos Períodos</h4>
-          <table>
-            <tr>
-              <th>Mês</th>
-              <th>Executado</th>
-              <th>Projeção</th>
-              <th>Variação</th>
-            </tr>
-            ${chartData.slice(chartData.length > 6 ? chartData.length - 3 : 0).map((item: any, index: number) => `
-            <tr>
-              <td>${item.name}</td>
-              <td>${formatCurrency(item.executado)}</td>
-              <td>${formatCurrency(item.executado * 1.05)}</td>
-              <td>+5.0%</td>
-            </tr>
-            `).join('')}
-            ${['Próximo', 'Em 2 meses', 'Em 3 meses'].map((label: string, index: number) => {
-              const lastItem = chartData[chartData.length - 1];
-              const projectedValue = lastItem.executado * Math.pow(1.05, index + 1);
-              return `
-              <tr>
-                <td>${label}</td>
-                <td>-</td>
-                <td>${formatCurrency(projectedValue)}</td>
-                <td>+${((Math.pow(1.05, index + 1) - 1) * 100).toFixed(1)}%</td>
-              </tr>
-              `;
-            }).join('')}
-          </table>
-        </div>
-      `}
-      
-      <div class="footer">
-        <p>Relatório gerado automaticamente pelo sistema GECOM</p>
-        <p>© ${new Date().getFullYear()} - Todos os direitos reservados</p>
-      </div>
-    </body>
-    </html>
-  `;
-  
-  // Open new window with the PDF preview
-  const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(htmlContent);
-    win.document.close();
-    win.setTimeout(() => {
-      win.print();
-    }, 800);  // Increased timeout for better rendering
-  } else {
-    // If popup is blocked, offer download instead
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `Dashboard_${data.municipio.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+export const exportDashboardAsPDF = async (data: any, activeTab: string, chartData: any, deptData: any) => {
+  try {
+    toast.success('Capturando dashboard para PDF...');
     
-    toast("Seu navegador bloqueou a janela de impressão. O arquivo foi baixado automaticamente.");
+    // First, capture the current dashboard view as an image
+    const dashboardView = document.querySelector('.dashboard-view') || document.querySelector('.space-y-6');
+    if (!dashboardView) {
+      toast.error('Não foi possível localizar a visualização do dashboard');
+      return false;
+    }
+    
+    // Take a screenshot of the dashboard content
+    const canvas = await html2canvas(dashboardView as HTMLElement, {
+      scale: 2, // Higher resolution
+      useCORS: true, // Allow cross-origin images
+      logging: false,
+      backgroundColor: '#ffffff',
+      windowWidth: 1200,
+      windowHeight: 1800,
+      ignoreElements: (element) => {
+        // Ignore sidebar, navigation, and other elements that shouldn't be in the PDF
+        return element.classList.contains('sidebar') || 
+               element.classList.contains('navbar') ||
+               element.tagName === 'BUTTON';
+      }
+    });
+    
+    const dashboardImage = canvas.toDataURL('image/png');
+    
+    // Generate PDF content
+    const htmlContent = `
+      <html>
+      <head>
+        <title>Dashboard - ${data.municipio}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+          .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaeaea; }
+          .logos { display: flex; justify-content: space-between; width: 100%; }
+          .gecom-logo { text-align: left; }
+          .mosaico-logo { text-align: right; }
+          h1 { text-align: center; margin: 20px 0; }
+          .timestamp { text-align: center; color: #666; margin-bottom: 20px; }
+          .dashboard-image { width: 100%; max-width: 100%; }
+          .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eaeaea; padding-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logos">
+            <div class="gecom-logo">
+              <div style="width: 48px; height: 48px; background-color: white; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 28px; color: #9b87f5; font-weight: bold;">G</div>
+            </div>
+            <div class="mosaico-logo">
+              <img src="/lovable-uploads/b81639ad-2b05-401a-8fbe-8b05c81df9ce.png" alt="Mosaico Logo" width="150" />
+            </div>
+          </div>
+        </div>
+        
+        <h1>Dashboard - ${data.municipio}</h1>
+        <div class="timestamp">Data de geração: ${new Date().toLocaleDateString('pt-BR')}</div>
+        
+        <img src="${dashboardImage}" alt="Dashboard Screenshot" class="dashboard-image">
+        
+        <div class="footer">
+          <p>Relatório gerado automaticamente pelo sistema GECOM</p>
+          <p>© ${new Date().getFullYear()} - Todos os direitos reservados</p>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    // Open new window with the PDF preview
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(htmlContent);
+      win.document.close();
+      win.setTimeout(() => {
+        win.print();
+      }, 1000);  // Increased timeout for better rendering
+    } else {
+      // If popup is blocked, offer download instead
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Dashboard_${data.municipio.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast("Seu navegador bloqueou a janela de impressão. O arquivo foi baixado automaticamente.");
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao gerar PDF:', error);
+    toast.error('Erro ao gerar PDF. Verifique o console para mais detalhes.');
+    return false;
   }
-  
-  return true;
 };
 
 // Keep the CSV export function
