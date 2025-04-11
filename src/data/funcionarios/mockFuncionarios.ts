@@ -1,18 +1,67 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { Funcionario, UsuarioLogin } from '@/types';
 
-// Empty employees data
-export const mockFuncionarios: Funcionario[] = [];
+// Admin user data
+const adminUserId = "admin-user-id";
+const adminFuncionarioId = "admin-funcionario-id";
 
-// Login users data store
-export const mockUsuariosLogin: UsuarioLogin[] = [];
+// Empty employees data with admin
+export const mockFuncionarios: Funcionario[] = [
+  {
+    id: adminFuncionarioId,
+    nome: "Administrador",
+    cargo: "Administrador do Sistema",
+    setor: "TI",
+    email: "admin@sistema.gov.br",
+    telefone: "(00) 0000-0000",
+    dataContratacao: new Date(),
+    dataNascimento: new Date(),
+    ativo: true,
+    permissaoEtapa: "all"
+  }
+];
+
+// Login users data store with admin user
+export const mockUsuariosLogin: UsuarioLogin[] = [
+  {
+    id: adminUserId,
+    username: "admin",
+    senha: "admin",
+    funcionarioId: adminFuncionarioId,
+    role: "admin",
+    ativo: true,
+    primeiroAcesso: false
+  }
+];
 
 // Login logs storage
 export const mockLoginLogs: any[] = [];
 
 // Password reset tokens storage
 export const mockPasswordResetTokens: Record<string, { token: string, expires: Date, userId: string }> = {};
+
+// Ensure admin account exists
+const ensureAdminExists = () => {
+  const usuarios = getUsuariosLogin();
+  const funcionarios = getFuncionarios();
+  
+  // Check if admin user exists
+  const adminUserExists = usuarios.some(user => user.username === 'admin' && user.role === 'admin');
+  
+  if (!adminUserExists) {
+    // Add admin user if it doesn't exist
+    const adminUser = mockUsuariosLogin[0];
+    const adminFuncionario = mockFuncionarios[0];
+    
+    usuarios.push(adminUser);
+    funcionarios.push(adminFuncionario);
+    
+    localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
+    localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+    
+    console.log('Admin account created');
+  }
+};
 
 // Get all employees
 export const getFuncionarios = () => {
@@ -23,8 +72,8 @@ export const getFuncionarios = () => {
     // Convert string dates back to Date objects
     return parsed.map((func: any) => ({
       ...func,
-      dataContratacao: new Date(func.dataContratacao),
-      dataNascimento: new Date(func.dataNascimento)
+      dataContratacao: func.dataContratacao ? new Date(func.dataContratacao) : new Date(),
+      dataNascimento: func.dataNascimento ? new Date(func.dataNascimento) : new Date()
     }));
   }
   
@@ -43,6 +92,9 @@ export const getUsuariosLogin = () => {
   localStorage.setItem('usuarios-login', JSON.stringify(mockUsuariosLogin));
   return mockUsuariosLogin;
 };
+
+// Call ensureAdminExists when the module is imported
+ensureAdminExists();
 
 // Get login logs
 export const getLoginLogs = () => {

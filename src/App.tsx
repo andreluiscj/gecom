@@ -18,8 +18,17 @@ import WorkflowPedido from "./pages/Pedidos/WorkflowPedido";
 import AprovacaoDFD from "./pages/Pedidos/AprovacaoDFD";
 import Funcionarios from "./pages/Gerenciamento/Funcionarios";
 import CadastroGerente from "./pages/Admin/CadastroGerente";
+import { useEffect } from "react";
+import { getFuncionarios, getUsuariosLogin } from "./data/funcionarios/mockFuncionarios";
 
 function App() {
+  // Initialize data on app start
+  useEffect(() => {
+    // These calls ensure the admin user is created
+    getFuncionarios();
+    getUsuariosLogin();
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={<Index />} />

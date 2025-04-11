@@ -1,4 +1,3 @@
-
 // Function to check if user is authenticated
 export function isAuthenticated(): boolean {
   const isAuthed = localStorage.getItem('user-authenticated') === 'true';
@@ -93,6 +92,9 @@ export function canAccess(requiredRole: string | string[]): boolean {
   
   if (!userRole) return false;
   
+  // Admin can access everything
+  if (userRole === 'admin') return true;
+  
   if (Array.isArray(requiredRole)) {
     return requiredRole.includes(userRole);
   }
@@ -127,14 +129,15 @@ export function getPermittedWorkflowStep(): string | undefined {
 export function canEditWorkflowStep(stepTitle: string): boolean {
   const userRole = getUserRole();
   
-  if (userRole === 'admin' || userRole === 'manager') {
-    return true; // Admin and manager can edit any step
+  // Admin can edit any step
+  if (userRole === 'admin') {
+    return true;
   }
   
   // For non-admin users, check specific permissions
   const permittedStep = getPermittedWorkflowStep();
   
-  // If permittedStep is undefined but not admin/manager, no permission
+  // If permittedStep is undefined but not admin, no permission
   if (permittedStep === undefined) {
     return false;
   }
