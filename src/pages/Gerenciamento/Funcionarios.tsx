@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -95,6 +94,7 @@ const Funcionarios: React.FC = () => {
     setor: 'Administrativo',
     dataContratacao: new Date(),
     ativo: true,
+    telefone: '',
   });
 
   useEffect(() => {
@@ -111,10 +111,13 @@ const Funcionarios: React.FC = () => {
   const loadFuncionarios = () => {
     // Get all funcionarios and filter out admins and managers
     const allFuncionarios = getFuncionarios();
+    const usuariosLogin = getUsuariosLogin();
+    
+    // Filter out admins and managers - only keep regular employees
     const onlyEmployees = allFuncionarios.filter(funcionario => {
-      // Check if the user is not an admin or manager
-      const userLogin = getUsuariosLogin().find(u => u.funcionarioId === funcionario.id);
-      return userLogin && userLogin.perfil === 'funcionario';
+      const userLogin = usuariosLogin.find(u => u.funcionarioId === funcionario.id);
+      // Keep only if user is not admin and not manager (role is 'user')
+      return userLogin && userLogin.role === 'user';
     });
     
     setFuncionarios(onlyEmployees);
@@ -136,6 +139,7 @@ const Funcionarios: React.FC = () => {
       setor: 'Administrativo',
       dataContratacao: new Date(),
       ativo: true,
+      telefone: '',
     });
     setIsDialogOpen(true);
   };
@@ -151,6 +155,7 @@ const Funcionarios: React.FC = () => {
       setor: funcionario.setor,
       dataContratacao: funcionario.dataContratacao,
       ativo: funcionario.ativo,
+      telefone: funcionario.telefone,
     });
     setIsDialogOpen(true);
   };
@@ -462,6 +467,16 @@ const Funcionarios: React.FC = () => {
                 type="date"
                 value={format(formData.dataContratacao, 'yyyy-MM-dd')}
                 onChange={(e) => handleDateChange(e, 'dataContratacao')}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input
+                id="telefone"
+                name="telefone"
+                value={formData.telefone}
+                onChange={handleInputChange}
               />
             </div>
             
