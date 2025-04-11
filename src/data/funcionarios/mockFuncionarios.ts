@@ -11,6 +11,9 @@ export const mockUsuariosLogin: UsuarioLogin[] = [];
 // Login logs storage
 export const mockLoginLogs: any[] = [];
 
+// Password reset tokens storage
+export const mockPasswordResetTokens: Record<string, { token: string, expires: Date, userId: string }> = {};
+
 // Get all employees
 export const getFuncionarios = () => {
   // Get from localStorage if available, otherwise use mockFuncionarios
@@ -218,6 +221,70 @@ export const atualizarSenhaUsuario = (userId: string, novaSenha: string) => {
   }
   
   return false;
+};
+
+// Create password reset token
+export const criarTokenRecuperacaoSenha = (username: string) => {
+  const usuarios = getUsuariosLogin();
+  const usuario = usuarios.find(u => u.username === username && u.ativo === true);
+  
+  if (!usuario) {
+    return { success: false };
+  }
+  
+  // Generate a reset token
+  const token = uuidv4();
+  const expires = new Date();
+  expires.setHours(expires.getHours() + 1); // Token valid for 1 hour
+  
+  // Store token
+  mockPasswordResetTokens[token] = {
+    token,
+    expires,
+    userId: usuario.id
+  };
+  
+  // In a real application, an email would be sent
+  return { 
+    success: true, 
+    token,
+    email: 'user@example.com' // In a real app, would get email from user data
+  };
+};
+
+// Validate password reset token
+export const validarTokenRecuperacaoSenha = (token: string) => {
+  const tokenData = mockPasswordResetTokens[token];
+  
+  if (!tokenData) {
+    return { valid: false, message: 'Token inválido' };
+  }
+  
+  if (new Date() > new Date(tokenData.expires)) {
+    return { valid: false, message: 'Token expirado' };
+  }
+  
+  return { valid: true, userId: tokenData.userId };
+};
+
+// Reset password using token
+export const recuperarSenhaComToken = (token: string, novaSenha: string) => {
+  const validation = validarTokenRecuperacaoSenha(token);
+  
+  if (!validation.valid) {
+    return { success: false, message: validation.message };
+  }
+  
+  // Update password
+  const success = atualizarSenhaUsuario(validation.userId, novaSenha);
+  
+  if (success) {
+    // Remove the used token
+    delete mockPasswordResetTokens[token];
+    return { success: true };
+  }
+  
+  return { success: false, message: 'Erro ao atualizar senha' };
 };
 
 // Get user by ID

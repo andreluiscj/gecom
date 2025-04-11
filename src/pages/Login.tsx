@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { ShoppingCart, Check, Key } from 'lucide-react';
+import { ShoppingCart, Check, Key, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -23,16 +23,20 @@ import {
 } from '@/components/ui/dialog';
 import { autenticarUsuario, atualizarSenhaUsuario } from '@/data/funcionarios/mockFuncionarios';
 import { Label } from '@/components/ui/label';
+import { GDPRConsentDialog } from '@/components/Auth/GDPRConsentDialog';
+import { ForgotPasswordDialog } from '@/components/Auth/ForgotPasswordDialog';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [selectedUser, setSelectedUser] = useState<string>('admin');
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
+  const [showGDPRDialog, setShowGDPRDialog] = useState(false);
+  const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -44,20 +48,12 @@ const Login: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     // Implement basic validation
     if (!username || !password) {
       toast.error('Por favor, preencha todos os campos.');
-      return;
-    }
-
-    // Handle test users
-    if (selectedUser === 'admin' && username === 'admin' && password === 'admin') {
-      loginSuccess('admin', undefined, 'Administrador');
-      return;
-    } 
-    if (selectedUser === 'amanda' && username === 'amanda' && password === 'amanda') {
-      loginSuccess('manager', 'São Paulo', 'Amanda Amarante');
+      setIsSubmitting(false);
       return;
     }
 
@@ -68,18 +64,28 @@ const Login: React.FC = () => {
       if (result.primeiroAcesso) {
         setShowChangePasswordDialog(true);
         setCurrentUserId(result.userId);
+        setIsSubmitting(false);
       } else {
-        loginSuccess(
-          result.role, 
-          'São Paulo', 
-          result.funcionario.nome, 
-          undefined, 
-          result.userId, 
-          result.funcionario.id
-        );
+        // Check if GDPR consent is needed
+        const gdprAccepted = localStorage.getItem(`gdpr-accepted-${result.userId}`);
+        if (!gdprAccepted) {
+          setCurrentUserId(result.userId);
+          setShowGDPRDialog(true);
+          setIsSubmitting(false);
+        } else {
+          loginSuccess(
+            result.role, 
+            'São Paulo', 
+            result.funcionario.nome, 
+            undefined, 
+            result.userId, 
+            result.funcionario.id
+          );
+        }
       }
     } else {
       toast.error('Credenciais inválidas. Tente novamente.');
+      setIsSubmitting(false);
     }
   };
 
@@ -95,25 +101,37 @@ const Login: React.FC = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     // Update password
     if (atualizarSenhaUsuario(currentUserId, newPassword)) {
       toast.success('Senha alterada com sucesso!');
       
-      // Login after password change
-      const result = autenticarUsuario(username, newPassword);
-      if (result.authenticated) {
-        loginSuccess(
-          result.role, 
-          'São Paulo', 
-          result.funcionario.nome, 
-          undefined, 
-          result.userId,
-          result.funcionario.id
-        );
-        setShowChangePasswordDialog(false);
-      }
+      // Login after password change - show GDPR dialog
+      setShowChangePasswordDialog(false);
+      setShowGDPRDialog(true);
     } else {
       toast.error('Erro ao alterar senha. Tente novamente.');
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGDPRConsent = () => {
+    // Save GDPR consent
+    localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
+    setShowGDPRDialog(false);
+    
+    // Complete login process
+    const result = autenticarUsuario(username, password);
+    if (result.authenticated) {
+      loginSuccess(
+        result.role, 
+        'São Paulo', 
+        result.funcionario.nome, 
+        undefined, 
+        result.userId,
+        result.funcionario.id
+      );
     }
   };
 
@@ -149,18 +167,6 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleQuickLogin = (userType: string) => {
-    setSelectedUser(userType);
-    
-    if (userType === 'admin') {
-      setUsername('admin');
-      setPassword('admin');
-    } else if (userType === 'amanda') {
-      setUsername('amanda');
-      setPassword('amanda');
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <Card className="w-full max-w-md shadow-lg">
@@ -189,6 +195,7 @@ const Login: React.FC = () => {
                   autoCorrect="off"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -203,33 +210,24 @@ const Login: React.FC = () => {
                   autoCorrect="off"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full">
-              Entrar
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-center text-sm text-muted-foreground">
-            <p>Para testar o sistema, utilize um dos logins abaixo:</p>
-          </div>
-          <div className="flex justify-center gap-2 flex-wrap">
-            <Button
-              variant={selectedUser === 'admin' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleQuickLogin('admin')}
+            <button 
+              type="button" 
+              onClick={() => setShowForgotPasswordDialog(true)}
+              className="text-primary hover:underline"
             >
-              Admin
-            </Button>
-            <Button
-              variant={selectedUser === 'amanda' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleQuickLogin('amanda')}
-            >
-              Amanda
-            </Button>
+              Esqueceu sua senha?
+            </button>
           </div>
         </CardFooter>
       </Card>
@@ -271,12 +269,25 @@ const Login: React.FC = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handlePasswordChange}>
-              Alterar senha e continuar
+            <Button onClick={handlePasswordChange} disabled={isSubmitting}>
+              {isSubmitting ? 'Alterando...' : 'Alterar senha e continuar'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* GDPR Consent Dialog */}
+      <GDPRConsentDialog
+        open={showGDPRDialog}
+        onAccept={handleGDPRConsent}
+        onOpenChange={setShowGDPRDialog}
+      />
+
+      {/* Forgot Password Dialog */}
+      <ForgotPasswordDialog
+        open={showForgotPasswordDialog}
+        onOpenChange={setShowForgotPasswordDialog}
+      />
     </div>
   );
 };

@@ -40,6 +40,22 @@ export function setFirstLogin(status: boolean): void {
   localStorage.setItem('first-login', status.toString());
 }
 
+// Function to check if user has accepted GDPR terms
+export function hasAcceptedGDPR(): boolean {
+  const userId = getUserId();
+  if (!userId) return false;
+  
+  return localStorage.getItem(`gdpr-accepted-${userId}`) === 'true';
+}
+
+// Function to set GDPR acceptance status
+export function setGDPRAccepted(status: boolean): void {
+  const userId = getUserId();
+  if (userId) {
+    localStorage.setItem(`gdpr-accepted-${userId}`, status.toString());
+  }
+}
+
 // Function to check if user can access a specific route
 export function canAccess(requiredRole: string | string[]): boolean {
   const userRole = getUserRole();
