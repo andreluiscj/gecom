@@ -52,7 +52,6 @@ import {
   updateFuncionario,
   deleteFuncionario,
   getUsuariosLogin,
-  generateUsername,
   getLoginLogs,
 } from '@/data/funcionarios/mockFuncionarios';
 import { canAccessUserManagement } from '@/utils/authHelpers';
@@ -110,8 +109,15 @@ const Funcionarios: React.FC = () => {
   }, [navigate]);
 
   const loadFuncionarios = () => {
-    const data = getFuncionarios();
-    setFuncionarios(data);
+    // Get all funcionarios and filter out admins and managers
+    const allFuncionarios = getFuncionarios();
+    const onlyEmployees = allFuncionarios.filter(funcionario => {
+      // Check if the user is not an admin or manager
+      const userLogin = getUsuariosLogin().find(u => u.funcionarioId === funcionario.id);
+      return userLogin && userLogin.perfil === 'funcionario';
+    });
+    
+    setFuncionarios(onlyEmployees);
   };
 
   const loadUsuariosLogin = () => {

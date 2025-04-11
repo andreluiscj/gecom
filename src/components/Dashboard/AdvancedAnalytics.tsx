@@ -7,7 +7,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ArrowUpRight, Download, FileBarChart, Filter } from 'lucide-react';
+import { ArrowUpRight, Download, FileBarChart, Filter, Printer } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/utils/formatters';
@@ -21,7 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from 'sonner';
-import { exportDashboardToCSV } from '@/utils/pdfGenerator';
+import { exportDashboardToCSV, exportDashboardAsPDF } from '@/utils/pdfGenerator';
 
 const COLORS = [
   '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d',
@@ -65,25 +65,24 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
 }) => {
   const [chartType, setChartType] = useState('area');
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('orcamento');
   
-  const handleExport = (format: 'csv' | 'pdf') => {
-    if (format === 'csv') {
-      const dashboardData = {
-        municipio: 'Dashboard Financeiro',
-        totalPedidos: 587,
-        orcamentoExecutado: 2400000,
-        pedidosAprovados: 432,
-        secretarias: 15,
-        orcamentoAnual: 28500000
-      };
-      
-      exportDashboardToCSV(dashboardData, monthlyData, departmentData);
-      toast.success('Dados exportados com sucesso');
-    } else {
-      toast.success('Exportação de PDF iniciada');
+  const handleExport = (format: 'pdf') => {
+    const dashboardData = {
+      municipio: 'Dashboard Financeiro',
+      totalPedidos: 587,
+      orcamentoExecutado: 2400000,
+      pedidosAprovados: 432,
+      secretarias: 15,
+      orcamentoAnual: 28500000
+    };
+    
+    if (format === 'pdf') {
+      toast.success('Exportando relatório PDF...');
       setTimeout(() => {
-        toast.success('Arquivo PDF gerado com sucesso');
-      }, 1500);
+        exportDashboardAsPDF(dashboardData, activeTab, monthlyData, departmentData);
+        toast.success('Relatório PDF gerado com sucesso');
+      }, 500);
     }
   };
 
@@ -204,34 +203,17 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
             </DialogContent>
           </Dialog>
           
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Download className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Exportar Dados</DialogTitle>
-                <DialogDescription>
-                  Escolha o formato para exportação dos dados
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <Button onClick={() => handleExport('csv')}>
-                  Exportar como CSV
-                </Button>
-                <Button onClick={() => handleExport('pdf')}>
-                  Exportar como PDF
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button variant="outline" size="icon" onClick={() => handleExport('pdf')}>
+            <Printer className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="orcamento" className="space-y-4">
+      <Tabs 
+        defaultValue="orcamento" 
+        className="space-y-4" 
+        onValueChange={(value) => setActiveTab(value)}
+      >
         <TabsList>
           <TabsTrigger value="orcamento">Orçamento</TabsTrigger>
           <TabsTrigger value="secretarias">Por Secretarias</TabsTrigger>
