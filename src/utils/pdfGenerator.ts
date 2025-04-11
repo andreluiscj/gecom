@@ -1,8 +1,8 @@
-
 import { PedidoCompra } from '@/types';
 import { formatCurrency, formatDate } from './formatters';
 import { GecomLogo } from '@/assets/GecomLogo';
 import { MosaicoLogo } from '@/assets/MosaicoLogo';
+import { toast } from "@/hooks/use-toast";
 
 export const gerarPDF = (pedido: PedidoCompra) => {
   // In a real application, we would use a library like jspdf or pdfmake
