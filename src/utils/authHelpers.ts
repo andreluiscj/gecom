@@ -56,13 +56,13 @@ export function canAccess(requiredRole: string | string[]): boolean {
 // Function to get the workflow step a user is permitted to edit
 export function getPermittedWorkflowStep(): string | undefined {
   const userRole = getUserRole();
-  const userName = getUserName();
   
-  if (userRole === 'admin') {
-    return undefined; // Admin can edit any step
+  // Admin or manager can edit any step
+  if (userRole === 'admin' || userRole === 'manager') {
+    return undefined; // Undefined means all steps are permitted
   }
   
-  const funcionarioId = localStorage.getItem('user-id');
+  const funcionarioId = getFuncionarioId();
   if (funcionarioId) {
     // Get the employee data from localStorage
     const funcionarios = JSON.parse(localStorage.getItem('funcionarios') || '[]');
@@ -86,11 +86,23 @@ export function canEditWorkflowStep(stepTitle: string): boolean {
   
   // For non-admin users, check specific permissions
   const permittedStep = getPermittedWorkflowStep();
+  
+  // If permittedStep is undefined but not admin/manager, no permission
   if (permittedStep === undefined) {
     return false;
   }
   
-  return permittedStep === stepTitle;
+  // Allow if the permitted step exactly matches the current step
+  if (permittedStep === stepTitle) {
+    return true;
+  }
+  
+  // Allow if the user has "all" permissions
+  if (permittedStep === "all") {
+    return true;
+  }
+  
+  return false;
 }
 
 // Function to check if user has permission to access a specific sector

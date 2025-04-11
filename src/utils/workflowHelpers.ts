@@ -131,8 +131,17 @@ export function funcionarioTemPermissao(
     return true;
   }
   
-  // For other sectors, check specific step permissions or allow if no specific permissions are set
-  if (!funcionarioPermissao) return true; // Changed to true to allow all employees
+  // Check if the employee is assigned to this specific step
+  if (funcionarioPermissao === stepTitle) {
+    return true;
+  }
   
-  return stepTitle === funcionarioPermissao || funcionarioPermissao === "all";
+  // Check if the employee has "all" permissions
+  if (funcionarioPermissao === "all") {
+    return true;
+  }
+  
+  // Check if the step title matches the employee's permission (for direct step assignments)
+  return false;
 }
+
