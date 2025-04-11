@@ -40,7 +40,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
     const usuarios = getUsuariosLogin();
     const foundUser = usuarios.find(u => 
       u.username === username || 
-      (email && getUserById(u.id)?.email === email)
+      (email && getUserById(u.id)?.funcionario?.email === email)
     );
     
     // Simulate email sending with a delay
@@ -57,12 +57,12 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
           // Show detailed toast with email preview
           toast.success(
             <div className="space-y-2">
-              <p className="font-medium">Email enviado para {userData.email || 'seu endereço de email'}</p>
+              <p className="font-medium">Email enviado para {userData.funcionario.email || 'seu endereço de email'}</p>
               <div className="text-sm bg-muted p-2 rounded">
                 <p><strong>Assunto:</strong> Recuperação de Senha - GECOM</p>
-                <p><strong>Para:</strong> {userData.email || 'seu email'}</p>
+                <p><strong>Para:</strong> {userData.funcionario.email || 'seu email'}</p>
                 <p><strong>Mensagem:</strong></p>
-                <p>Olá {userData.nome},</p>
+                <p>Olá {userData.funcionario.nome},</p>
                 <p>Recebemos uma solicitação para redefinir sua senha. Para concluir o processo, por favor clique no link abaixo:</p>
                 <p className="text-primary">[Link de Recuperação de Senha]</p>
                 <p>Se você não solicitou esta mudança, ignore este email.</p>
