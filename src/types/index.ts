@@ -124,6 +124,7 @@ export interface Funcionario {
   senha?: string; // Only used for creation/update, not stored in state
   permissaoEtapa?: string;
   username?: string; // Username for login
+  telefone?: string; // Added the missing telefone property
 }
 
 export interface LoginLog {
