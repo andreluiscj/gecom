@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { getUserById } from '@/data/funcionarios/mockFuncionarios';
 import { ChangePasswordDialog } from '@/components/Auth/ChangePasswordDialog';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileDialog } from './ProfileDialog';
 
 interface UserMenuProps {
@@ -25,6 +25,7 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
     birthDate?: Date;
     cpf?: string;
     email?: string;
+    profilePhoto?: string | null;
   }>({ name: 'Usuário', role: 'user', initials: 'U' });
 
   useEffect(() => {
@@ -35,6 +36,7 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
     const userId = localStorage.getItem('user-id');
     const userName = localStorage.getItem('user-name');
     const userRole = localStorage.getItem('user-role');
+    const profilePhoto = localStorage.getItem('user-profile-photo');
     
     if (userId) {
       const userData = getUserById(userId);
@@ -46,7 +48,8 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
           initials: getInitials(funcionario.nome),
           birthDate: funcionario.dataNascimento,
           cpf: funcionario.cpf,
-          email: funcionario.email
+          email: funcionario.email,
+          profilePhoto: profilePhoto
         });
         return;
       }
@@ -57,7 +60,8 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
       setUserInfo({
         name: userName,
         role: userRole || 'user',
-        initials: getInitials(userName)
+        initials: getInitials(userName),
+        profilePhoto: profilePhoto
       });
     }
   };
@@ -101,6 +105,10 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
     setOpenChangePassword(open);
   };
 
+  const handleProfileUpdate = () => {
+    loadUserInfo(); // Reload user info after update
+  };
+
   const texts = {
     profile: "Perfil",
     editProfile: "Editar Perfil",
@@ -114,6 +122,9 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-8 w-8">
+              {userInfo.profilePhoto ? (
+                <AvatarImage src={userInfo.profilePhoto} alt={userInfo.name} />
+              ) : null}
               <AvatarFallback>{userInfo.initials}</AvatarFallback>
             </Avatar>
           </Button>
@@ -146,7 +157,7 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
         open={openProfile} 
         onOpenChange={handleProfileDialogChange}
         userInfo={userInfo} 
-        onProfileUpdate={loadUserInfo}
+        onProfileUpdate={handleProfileUpdate}
       />
       
       <ChangePasswordDialog 
