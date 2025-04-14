@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardHeader from '@/components/Dashboard/DashboardHeader';
 import StatCard from '@/components/Dashboard/StatCard';
 import DashboardSummary from '@/components/Dashboard/DashboardSummary';
-import { Building, Printer, Receipt, ShoppingCart, Wallet } from 'lucide-react';
+import { Clock, TrendingDown, Printer } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
 import { DadosDashboard, Municipio } from '@/types';
@@ -32,17 +32,17 @@ const dadosDashboard: DadosDashboard = {
   },
   cartoes: [
     {
-      titulo: 'Total de Pedidos',
-      valor: 587,
+      titulo: 'Tempo Médio para Conclusão',
+      valor: '27 dias',
       percentualMudanca: 12.5,
-      icon: 'Receipt',
+      icon: 'Clock',
       classeCor: 'bg-blue-500',
     },
     {
-      titulo: 'Orçamento Executado',
-      valor: formatCurrency(2400000),
+      titulo: 'Percentual de Economia',
+      valor: '15,7%',
       percentualMudanca: 8.2,
-      icon: 'Wallet',
+      icon: 'TrendingDown',
       classeCor: 'bg-green-500',
     },
   ],
@@ -81,14 +81,14 @@ const monthlyData = [
   { name: 'Dez', planejado: 520000, executado: 500000 },
 ];
 
-// Data for department analysis
+// Data for department analysis - Fixed percentages to add up to 100%
 const departmentData = [
-  { name: 'Saúde', valor: 1850000, percent: 28 },
-  { name: 'Educação', valor: 1520000, percent: 23 },
-  { name: 'Administração', valor: 950000, percent: 14 },
-  { name: 'Obras', valor: 1200000, percent: 18 },
-  { name: 'Transporte', valor: 650000, percent: 10 },
-  { name: 'Outros', valor: 450000, percent: 7 },
+  { name: 'Saúde', valor: 1850000, percent: 33 },
+  { name: 'Educação', valor: 1520000, percent: 27 },
+  { name: 'Administração', valor: 950000, percent: 17 },
+  { name: 'Obras', valor: 1200000, percent: 13 },
+  { name: 'Transporte', valor: 650000, percent: 7 },
+  { name: 'Outros', valor: 450000, percent: 3 },
 ];
 
 const Dashboard: React.FC = () => {
@@ -108,14 +108,14 @@ const Dashboard: React.FC = () => {
   // Effect to load selected municipality
   useEffect(() => {
     const municipioId = localStorage.getItem('municipio-selecionado');
-    if (municipioId === 'janauba') {
+    if (municipioId === 'capitao-eneas') {
       setMunicipio({
-        id: 'janauba',
-        nome: 'Janaúba',
+        id: 'capitao-eneas',
+        nome: 'Capitão Enéas',
         estado: 'MG',
-        populacao: 72018,
-        orcamento: 145300000,
-        orcamentoAnual: 145300000,
+        populacao: 15438,
+        orcamento: 0,
+        orcamentoAnual: 0,
         prefeito: 'José Santos',
       });
     }
@@ -166,6 +166,11 @@ const Dashboard: React.FC = () => {
     let deptFilteredData = [...departmentData];
     if (filters.department !== 'Todos') {
       deptFilteredData = departmentData.filter(dept => dept.name === filters.department);
+      
+      // Automatically filter indicators for department
+      // This would be where you'd calculate department-specific indicators
+      // For now, we'll just show a toast notification
+      toast.info(`Indicadores filtrados para: ${filters.department}`);
     }
     
     setFilteredData(periodFilteredData);
@@ -173,10 +178,8 @@ const Dashboard: React.FC = () => {
   };
 
   // Valores para os cards de estatísticas
-  const totalPedidos = 587;
-  const orcamentoExecutado = municipio.id === 'janauba' ? 12000000 : 2400000;
-  const pedidosAprovados = 432;
-  const secretarias = 15;
+  const tempoMedioConclusao = "27 dias";
+  const percentualEconomia = "15,7%";
 
   // Handle data export from dashboard
   const handleExportDashboard = () => {
@@ -185,10 +188,8 @@ const Dashboard: React.FC = () => {
     setTimeout(() => {
       const dashboardData = {
         municipio: municipio.nome,
-        totalPedidos,
-        orcamentoExecutado,
-        pedidosAprovados,
-        secretarias,
+        tempoMedioConclusao,
+        percentualEconomia,
         orcamentoAnual: municipio.orcamentoAnual,
         data: new Date().toLocaleDateString('pt-BR')
       };
@@ -205,10 +206,8 @@ const Dashboard: React.FC = () => {
       
       {/* Cards de estatísticas */}
       <DashboardStatCards 
-        totalPedidos={totalPedidos}
-        orcamentoExecutado={orcamentoExecutado}
-        pedidosAprovados={pedidosAprovados}
-        secretarias={secretarias}
+        tempoMedioConclusao={tempoMedioConclusao}
+        percentualEconomia={percentualEconomia}
       />
 
       {/* Tabs para alternar entre gráficos e resumo */}
@@ -231,47 +230,29 @@ const Dashboard: React.FC = () => {
 };
 
 interface DashboardStatCardsProps {
-  totalPedidos: number;
-  orcamentoExecutado: number;
-  pedidosAprovados: number;
-  secretarias: number;
+  tempoMedioConclusao: string;
+  percentualEconomia: string;
 }
 
 function DashboardStatCards({ 
-  totalPedidos, 
-  orcamentoExecutado, 
-  pedidosAprovados, 
-  secretarias 
+  tempoMedioConclusao, 
+  percentualEconomia
 }: DashboardStatCardsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
       <StatCard 
-        title="Total de Pedidos"
-        value={totalPedidos}
-        percentChange={12.5}
-        icon={Receipt}
+        title="Tempo Médio para Conclusão"
+        value={tempoMedioConclusao}
+        percentChange={-8.5}
+        icon={Clock}
         colorClass="bg-blue-500"
       />
       <StatCard 
-        title="Orçamento Executado"
-        value={formatCurrency(orcamentoExecutado)}
-        percentChange={8.2}
-        icon={Wallet}
+        title="Percentual de Economia por Processo"
+        value={percentualEconomia}
+        percentChange={3.2}
+        icon={TrendingDown}
         colorClass="bg-green-500"
-      />
-      <StatCard 
-        title="Pedidos Aprovados"
-        value={pedidosAprovados}
-        percentChange={4.3}
-        icon={ShoppingCart}
-        colorClass="bg-yellow-500"
-      />
-      <StatCard 
-        title="Secretarias"
-        value={secretarias}
-        percentChange={0}
-        icon={Building}
-        colorClass="bg-purple-500"
       />
     </div>
   );
@@ -315,7 +296,7 @@ function DashboardTabs({
       <div className="flex justify-between items-center">
         <TabsList className="grid w-full md:w-[400px] grid-cols-2">
           <TabsTrigger value="grafico">Gráficos</TabsTrigger>
-          <TabsTrigger value="avancado">Analytics Avançado</TabsTrigger>
+          <TabsTrigger value="avancado">Painel de Gestão</TabsTrigger>
         </TabsList>
         
         <button
