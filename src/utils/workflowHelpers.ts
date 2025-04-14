@@ -11,6 +11,7 @@ export const DEFAULT_WORKFLOW_STEPS = [
   { title: 'Parecer Jurídico', status: 'Pendente' as WorkflowStepStatus },
   { title: 'Edital', status: 'Pendente' as WorkflowStepStatus },
   { title: 'Sessão Licitação', status: 'Pendente' as WorkflowStepStatus },
+  { title: 'Recursos', status: 'Pendente' as WorkflowStepStatus },
   { title: 'Homologação', status: 'Pendente' as WorkflowStepStatus },
 ];
 

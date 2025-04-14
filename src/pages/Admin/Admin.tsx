@@ -26,10 +26,19 @@ const Admin: React.FC = () => {
     <div className="container mx-auto py-8">
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-2xl">Painel Administrativo</CardTitle>
-          <CardDescription>
-            Gerencie configurações do sistema
-          </CardDescription>
+          <div className="flex items-center gap-4">
+            <img 
+              src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
+              alt="Logo" 
+              className="h-12" 
+            />
+            <div>
+              <CardTitle className="text-2xl">Painel Administrativo</CardTitle>
+              <CardDescription>
+                Gerencie configurações do sistema
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

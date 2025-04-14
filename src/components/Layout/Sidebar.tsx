@@ -217,8 +217,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
             <img 
               src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
               alt="Logo" 
-              className="h-8 ml-2" 
-              style={{ filter: 'brightness(0) invert(1)' }}
+              className="h-8" 
             />
           </div>
         </div>
@@ -252,7 +251,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
             >
               <div className="flex items-center">
                 <span className="mr-3"><Folder className="h-5 w-5" /></span>
-                <span>Secretárias</span>
+                <span>Secretarias</span>
               </div>
               {secretariasOpen ? (
                 <ChevronDown className="h-4 w-4" />
