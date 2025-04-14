@@ -17,7 +17,8 @@ const MunicipioSelection = lazy(() => import("./pages/Admin/MunicipioSelection")
 const Admin = lazy(() => import("./pages/Admin/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Index = lazy(() => import("./pages/Index"));
-const Login = lazy(() => import("./pages/Login"));
+// Import Login directly instead of lazy loading to avoid issues
+import Login from "./pages/Login";
 const WorkflowPedido = lazy(() => import("./pages/Pedidos/WorkflowPedido"));
 const AprovacaoDFD = lazy(() => import("./pages/Pedidos/AprovacaoDFD"));
 const Funcionarios = lazy(() => import("./pages/Gerenciamento/Funcionarios"));
@@ -48,6 +49,7 @@ function App() {
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
         <Route path="/" element={<Index />} />
+        {/* Use non-lazy-loaded Login component */}
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={
           <ProtectedRoute>

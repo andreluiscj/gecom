@@ -61,7 +61,7 @@ const Login: React.FC = () => {
             <img 
               src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
               alt="GECOM Logo" 
-              className="h-16"
+              className="h-20" // Increased from h-16 to h-20 for larger logo
             />
           </div>
         </CardHeader>
