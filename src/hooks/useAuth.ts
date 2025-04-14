@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { autenticarUsuario, atualizarSenhaUsuario } from '@/data/funcionarios/mockFuncionarios';
+import { signIn, changePassword } from '@/services/authService';
 
 export function useAuth() {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ export function useAuth() {
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
   const [showGDPRDialog, setShowGDPRDialog] = useState(false);
 
-  const handleLogin = (username: string, password: string) => {
+  const handleLogin = async (username: string, password: string) => {
     setIsSubmitting(true);
 
     // Basic validation
@@ -21,39 +21,46 @@ export function useAuth() {
       return;
     }
 
-    // Try to authenticate user
-    const result = autenticarUsuario(username, password);
-    if (result.authenticated) {
-      // Check if it's first login, if so show password change dialog
-      if (result.primeiroAcesso) {
-        setShowChangePasswordDialog(true);
-        setCurrentUserId(result.userId);
-        setIsSubmitting(false);
-      } else {
-        // Check if GDPR consent is needed
-        const gdprAccepted = localStorage.getItem(`gdpr-accepted-${result.userId}`);
-        if (!gdprAccepted) {
+    try {
+      // Use email as username for Supabase
+      const result = await signIn(username, password);
+      
+      if (result.authenticated) {
+        // Check if it's first login, if so show password change dialog
+        if (result.primeiroAcesso) {
+          setShowChangePasswordDialog(true);
           setCurrentUserId(result.userId);
-          setShowGDPRDialog(true);
           setIsSubmitting(false);
         } else {
-          loginSuccess(
-            result.role, 
-            'São Paulo', 
-            result.funcionario.nome, 
-            undefined, 
-            result.userId, 
-            result.funcionario.id
-          );
+          // Check if GDPR consent is needed
+          const gdprAccepted = localStorage.getItem(`gdpr-accepted-${result.userId}`);
+          if (!gdprAccepted) {
+            setCurrentUserId(result.userId);
+            setShowGDPRDialog(true);
+            setIsSubmitting(false);
+          } else {
+            loginSuccess(
+              result.role, 
+              'São Paulo', 
+              result.name, 
+              undefined, 
+              result.userId, 
+              result.userId
+            );
+          }
         }
+      } else {
+        toast.error('Credenciais inválidas. Tente novamente.');
+        setIsSubmitting(false);
       }
-    } else {
-      toast.error('Credenciais inválidas. Tente novamente.');
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error('Erro ao fazer login. Tente novamente.');
       setIsSubmitting(false);
     }
   };
 
-  const handlePasswordChange = (newPassword: string, confirmPassword: string) => {
+  const handlePasswordChange = async (newPassword: string, confirmPassword: string) => {
     // Validate passwords
     if (!newPassword || newPassword.length < 3) {
       toast.error('A nova senha deve ter pelo menos 3 caracteres.');
@@ -67,35 +74,44 @@ export function useAuth() {
 
     setIsSubmitting(true);
 
-    // Update password
-    if (atualizarSenhaUsuario(currentUserId, newPassword)) {
-      toast.success('Senha alterada com sucesso!');
+    try {
+      // Update password
+      const success = await changePassword(currentUserId, newPassword);
       
-      // Login after password change - show GDPR dialog
-      setShowChangePasswordDialog(false);
-      setShowGDPRDialog(true);
-    } else {
+      if (success) {
+        toast.success('Senha alterada com sucesso!');
+        
+        // Login after password change - show GDPR dialog
+        setShowChangePasswordDialog(false);
+        setShowGDPRDialog(true);
+      } else {
+        toast.error('Erro ao alterar senha. Tente novamente.');
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("Password change error:", error);
       toast.error('Erro ao alterar senha. Tente novamente.');
       setIsSubmitting(false);
     }
   };
 
-  const handleGDPRConsent = (username: string, password: string) => {
-    // Save GDPR consent
-    localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
-    setShowGDPRDialog(false);
-    
-    // Complete login process
-    const result = autenticarUsuario(username, password);
-    if (result.authenticated) {
-      loginSuccess(
-        result.role, 
-        'São Paulo', 
-        result.funcionario.nome, 
-        undefined, 
-        result.userId,
-        result.funcionario.id
-      );
+  const handleGDPRConsent = async () => {
+    try {
+      // Save GDPR consent
+      localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
+      setShowGDPRDialog(false);
+      
+      // Get user info from localStorage (set during login)
+      const role = localStorage.getItem('user-role') || '';
+      const name = localStorage.getItem('user-name') || '';
+      const userId = localStorage.getItem('user-id') || '';
+      
+      // Complete login process
+      loginSuccess(role, 'São Paulo', name, undefined, userId, userId);
+    } catch (error) {
+      console.error("GDPR consent error:", error);
+      toast.error('Erro ao processar consentimento. Tente novamente.');
+      setIsSubmitting(false);
     }
   };
 
@@ -107,21 +123,8 @@ export function useAuth() {
     userId: string = '',
     funcionarioId: string = ''
   ) => {
-    // Set authenticated state in localStorage
-    localStorage.setItem('user-authenticated', 'true');
-    localStorage.setItem('user-role', role);
-    localStorage.setItem('user-municipality', municipality);
-    localStorage.setItem('user-id', userId);
-    localStorage.setItem('funcionario-id', funcionarioId);
-    
-    if (name) {
-      localStorage.setItem('user-name', name);
-    }
-    if (permittedStep) {
-      localStorage.setItem('user-permitted-step', permittedStep);
-    }
-
     toast.success('Login realizado com sucesso!');
+    setIsSubmitting(false);
     
     // Direct admin users to the admin panel, others to dashboard
     if (role === 'admin') {

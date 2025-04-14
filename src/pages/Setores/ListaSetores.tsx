@@ -1,20 +1,38 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { 
   HeartPulse, BookOpen, Building2, Bus, Shield, Heart, 
   Leaf, Coins, Briefcase, Music, Globe, Award, PieChart, 
-  Radio, MapPin 
+  Radio, MapPin, Loader2
 } from 'lucide-react';
-import { obterDadosDashboard } from '@/data/extended-mockData';
+import { obterDadosDashboard } from '@/services/dashboardService';
 import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
 import { Link } from 'react-router-dom';
-import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
+import { getPedidos } from '@/services/pedidoService';
+import { DadosDashboard, PedidoCompra } from '@/types';
 
 const ListaSetores: React.FC = () => {
-  const dadosDashboard = obterDadosDashboard();
-  const todosPedidos = obterPedidosFicticios();
+  const [dadosDashboard, setDadosDashboard] = useState<DadosDashboard | null>(null);
+  const [todosPedidos, setTodosPedidos] = useState<PedidoCompra[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const [dashboardData, pedidosData] = await Promise.all([
+        obterDadosDashboard(),
+        getPedidos()
+      ]);
+      
+      if (dashboardData) setDadosDashboard(dashboardData);
+      setTodosPedidos(pedidosData);
+      setLoading(false);
+    };
+    
+    fetchData();
+  }, []);
 
   const secretarias = [
     {
@@ -128,6 +146,14 @@ const ListaSetores: React.FC = () => {
     return todosPedidos.filter(pedido => pedido.setor === titulo).length;
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -140,10 +166,10 @@ const ListaSetores: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {secretarias.map((secretaria) => {
           const totalDFDs = getPedidosForSetor(secretaria.titulo);
-          const gastosRealizados = dadosDashboard.gastosPorSetor[secretaria.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 0;
+          const gastosRealizados = dadosDashboard?.gastosPorSetor[secretaria.titulo] || 0;
           const hasPedidos = totalDFDs > 0 && gastosRealizados > 0;
           
-          const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[secretaria.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 0;
+          const orcamentoPrevisto = dadosDashboard?.orcamentoPrevisto[secretaria.titulo] || 0;
           const percentualGasto = calcularPorcentagem(gastosRealizados, orcamentoPrevisto);
           
           return (

@@ -1,15 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
-import { obterTodosPedidos } from '@/data/mockData';
+import { getPedidos } from '@/services/pedidoService';
 import { PedidoCompra } from '@/types';
+import { Loader2 } from 'lucide-react';
 
 const ListaPedidos: React.FC = () => {
   const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Fetch pedidos whenever the component renders to ensure fresh data
+  // Fetch pedidos from Supabase
   useEffect(() => {
-    setPedidos(obterTodosPedidos());
+    const fetchPedidos = async () => {
+      setLoading(true);
+      const data = await getPedidos();
+      setPedidos(data);
+      setLoading(false);
+    };
+
+    fetchPedidos();
   }, []);
 
   return (
@@ -21,7 +30,13 @@ const ListaPedidos: React.FC = () => {
         </p>
       </div>
 
-      <PedidosTable pedidos={pedidos} />
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <PedidosTable pedidos={pedidos} />
+      )}
     </div>
   );
 };
