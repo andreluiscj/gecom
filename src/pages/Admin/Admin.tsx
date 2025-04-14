@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +30,7 @@ const Admin: React.FC = () => {
               src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
               alt="Logo" 
               className="h-12" 
+              style={{ filter: 'brightness(0) invert(1)' }}
             />
             <div>
               <CardTitle className="text-2xl">Painel Administrativo</CardTitle>

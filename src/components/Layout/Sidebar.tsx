@@ -218,6 +218,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
               src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
               alt="Logo" 
               className="h-8" 
+              style={{ filter: 'brightness(0) invert(1)' }}
             />
           </div>
         </div>
@@ -287,17 +288,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
       <div className="border-t border-sidebar-border p-4">
         <Button 
           variant="outline" 
-          className="w-full flex items-center justify-center gap-2 mb-3"
+          className="w-full flex items-center justify-center gap-2"
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" /> 
           <span>Sair</span>
         </Button>
-        <div className="flex items-center justify-center">
-          <p className="text-xs text-sidebar-foreground/70">
-            © 2023 GECOM • Sistema de Gestão de Compras
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -10,8 +10,8 @@ interface DashboardHeaderProps {
 const getTranslation = (key: string, language: string = 'pt') => {
   const translations: Record<string, Record<string, string>> = {
     dashboardTitle: {
-      pt: 'Dashboard',
-      en: 'Dashboard'
+      pt: 'Painel de Gestão',
+      en: 'Management Panel'
     },
     overview: {
       pt: 'Visão geral da gestão municipal e dos recursos financeiros.',
