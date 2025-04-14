@@ -18,12 +18,12 @@ const municipios: Municipio[] = [
     prefeito: 'Maria Silva',
   },
   {
-    id: 'janauba',
-    nome: 'Janaúba',
+    id: 'capitao-eneas',
+    nome: 'Capitão Enéas',
     estado: 'MG',
-    populacao: 72018,
-    orcamento: 145300000,
-    orcamentoAnual: 145300000,
+    populacao: 15438,
+    orcamento: 48000000,
+    orcamentoAnual: 48000000,
     prefeito: 'José Santos',
   }
 ];

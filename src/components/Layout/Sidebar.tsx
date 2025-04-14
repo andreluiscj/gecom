@@ -42,7 +42,7 @@ interface SidebarProps {
   userMunicipality?: string | null;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [secretariasOpen, setSecretariasOpen] = useState(false);
@@ -215,10 +215,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
         <div className="flex items-center space-x-2">
           <div className="flex items-center">
             <img 
-              src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
+              src="/lovable-uploads/16b8bdb2-a18d-4ef2-8b14-ce836cb5bef0.png" 
               alt="Logo" 
-              className="h-8" 
-              style={{ filter: 'brightness(0) invert(1)' }}
+              className="h-8"
             />
           </div>
         </div>

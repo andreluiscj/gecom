@@ -1,14 +1,15 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Building2 } from 'lucide-react';
 
 const Admin: React.FC = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   
-  // Check if user is authenticated
   useEffect(() => {
     const auth = localStorage.getItem('user-authenticated') === 'true';
     const userRole = localStorage.getItem('user-role');
@@ -27,10 +28,9 @@ const Admin: React.FC = () => {
         <CardHeader>
           <div className="flex items-center gap-4">
             <img 
-              src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
-              alt="Logo" 
-              className="h-12" 
-              style={{ filter: 'brightness(0) invert(1)' }}
+              src="/lovable-uploads/16b8bdb2-a18d-4ef2-8b14-ce836cb5bef0.png" 
+              alt="GECOM Logo" 
+              className="h-12"
             />
             <div>
               <CardTitle className="text-2xl">Painel Administrativo</CardTitle>
@@ -42,28 +42,20 @@ const Admin: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer" 
-                  onClick={() => navigate('/admin/municipios')}>
+            <Card 
+              className="bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer" 
+              onClick={() => navigate('/admin/municipios')}
+            >
               <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-2">Municípios</h3>
-                <p className="text-sm text-muted-foreground">
+                <div className="flex items-center gap-3">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-medium">Municípios</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
                   Gerencie os municípios cadastrados no sistema
                 </p>
               </CardContent>
             </Card>
-          </div>
-          
-          <div className="mt-8">
-            <Button 
-              variant="destructive" 
-              onClick={() => {
-                localStorage.removeItem('user-authenticated');
-                toast.success('Logout realizado com sucesso');
-                navigate('/login');
-              }}
-            >
-              Sair
-            </Button>
           </div>
         </CardContent>
       </Card>
