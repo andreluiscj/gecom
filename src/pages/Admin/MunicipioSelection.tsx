@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, Users, Building, ArrowRight } from 'lucide-react';
+import { ShoppingCart, Check, MapPin, Users, Building, ArrowRight } from 'lucide-react';
+import { formatCurrency } from '@/utils/formatters';
 import { Municipio } from '@/types';
 
 const municipios: Municipio[] = [
@@ -21,8 +22,8 @@ const municipios: Municipio[] = [
     nome: 'Capitão Enéas',
     estado: 'MG',
     populacao: 15438,
-    orcamento: 0,
-    orcamentoAnual: 0,
+    orcamento: 48000000,
+    orcamentoAnual: 48000000,
     prefeito: 'José Santos',
   }
 ];
@@ -40,20 +41,17 @@ const MunicipioSelection: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-indigo-900 p-4 shadow-md">
         <div className="container mx-auto flex items-center">
-          <div className="flex items-center">
-            <img 
-              src="/lovable-uploads/16b8bdb2-a18d-4ef2-8b14-ce836cb5bef0.png" 
-              alt="GECOM Logo" 
-              className="h-10"
-            />
+          <div className="flex text-white mr-2">
+            <ShoppingCart className="h-6 w-6" />
+            <Check className="h-6 w-6 -ml-3 -mt-1" />
           </div>
-          <h1 className="text-2xl font-bold text-white ml-4">Sistema de Gestão de Compras Municipais</h1>
+          <h1 className="text-2xl font-bold text-white">GECOM</h1>
         </div>
       </header>
 
       <main className="flex-1 container mx-auto p-6">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Seleção de Município</h2>
+          <h2 className="text-3xl font-bold mb-2">Área Administrativa</h2>
           <p className="text-muted-foreground">
             Selecione um município para gerenciar
           </p>
@@ -61,14 +59,17 @@ const MunicipioSelection: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {municipios.map((municipio) => (
-            <Card key={municipio.id} className="hover:shadow-lg transition-shadow border-l-4 border-l-indigo-600">
-              <CardHeader className="pb-2">
+            <Card key={municipio.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-indigo-600" />
                   {municipio.nome} - {municipio.estado}
                 </CardTitle>
+                <CardDescription>
+                  Prefeitura Municipal
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 pb-2">
+              <CardContent className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">População: {municipio.populacao.toLocaleString()} habitantes</span>
@@ -77,10 +78,13 @@ const MunicipioSelection: React.FC = () => {
                   <Building className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">Prefeito(a): {municipio.prefeito}</span>
                 </div>
+                <div className="flex items-center gap-2 font-medium">
+                  <span className="text-sm">Orçamento Anual: {formatCurrency(municipio.orcamentoAnual)}</span>
+                </div>
               </CardContent>
               <CardFooter>
                 <Button 
-                  className="w-full bg-indigo-600 hover:bg-indigo-700" 
+                  className="w-full" 
                   onClick={() => handleSelectMunicipio(municipio.id)}
                 >
                   Acessar <ArrowRight className="ml-2 h-4 w-4" />
