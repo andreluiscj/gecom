@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardHeader from '@/components/Dashboard/DashboardHeader';
@@ -25,8 +24,8 @@ const defaultMunicipio: Municipio = {
 // Sample dashboard data
 const dadosDashboard: DadosDashboard = {
   resumoFinanceiro: {
-    orcamentoAnual: 28500000,
-    orcamentoUtilizado: 2400000,
+    estimativaDespesa: 28500000,
+    valorContratadoTotal: 2400000,
     percentualUtilizado: 8.42,
     totalPedidos: 587,
   },
@@ -54,7 +53,7 @@ const dadosDashboard: DadosDashboard = {
     'Obras': 430000,
     'Transporte': 170000,
   },
-  gastosTotais: 2400000,
+  valorContratadoTotal: 2400000,
   pedidosPorSetor: {
     'Saúde': 143,
     'Educação': 125,
@@ -62,6 +61,10 @@ const dadosDashboard: DadosDashboard = {
     'Obras': 87,
     'Transporte': 62,
     'Outros': 72,
+  },
+  indicadoresDesempenho: {
+    tempoMedioConclusao: 45,
+    percentualEconomia: 12.5,
   },
 };
 

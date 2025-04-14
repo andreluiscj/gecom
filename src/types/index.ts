@@ -1,3 +1,4 @@
+
 export type Role = "admin" | "editor" | null;
 
 export type Tarefa = {
@@ -93,6 +94,7 @@ export interface DadosDashboard {
     valorContratadoTotal: number;
     percentualUtilizado: number;
     totalPedidos: number;
+    orcamentoAnual?: number; // Added orcamentoAnual as optional to match usage
   };
   cartoes: Array<{
     titulo: string;
