@@ -5,15 +5,10 @@ import { Input } from '@/components/ui/input';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { ShoppingCart, Check } from 'lucide-react';
-import { GDPRConsentDialog } from '@/components/Auth/GDPRConsentDialog';
-import { ForgotPasswordDialog } from '@/components/Auth/ForgotPasswordDialog';
-import { PasswordChangeDialog } from '@/components/Auth/PasswordChangeDialog';
 import { useAuth } from '@/hooks/useAuth';
 
 const Login: React.FC = () => {
@@ -61,12 +56,11 @@ const Login: React.FC = () => {
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-2">
             <img 
-              src="/lovable-uploads/3ce91e14-27e4-47a1-b1f0-d19a2109cd33.png" 
+              src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
               alt="GECOM Logo" 
               className="h-16"
             />
           </div>
-          <CardTitle className="text-2xl font-bold">GECOM</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={onSubmitLogin} className="space-y-4">
