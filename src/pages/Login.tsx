@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -36,7 +35,6 @@ const Login: React.FC = () => {
     handleGDPRConsent
   } = useAuth();
 
-  // Check if user is already logged in
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
     if (isAuthenticated) {
@@ -62,15 +60,13 @@ const Login: React.FC = () => {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-2">
-            <div className="flex items-center space-x-2 bg-primary text-primary-foreground p-3 rounded-lg">
-              <ShoppingCart className="h-6 w-6" />
-              <Check className="h-6 w-6 -ml-3 -mt-1" />
-            </div>
+            <img 
+              src="/lovable-uploads/3ce91e14-27e4-47a1-b1f0-d19a2109cd33.png" 
+              alt="GECOM Logo" 
+              className="h-16"
+            />
           </div>
           <CardTitle className="text-2xl font-bold">GECOM</CardTitle>
-          <CardDescription>
-            Sistema de Gestão de Compras Municipais
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={onSubmitLogin} className="space-y-4">
@@ -122,7 +118,6 @@ const Login: React.FC = () => {
         </CardFooter>
       </Card>
       
-      {/* Password Change Dialog */}
       <PasswordChangeDialog
         open={showChangePasswordDialog}
         onOpenChange={setShowChangePasswordDialog}
@@ -134,14 +129,12 @@ const Login: React.FC = () => {
         isSubmitting={isSubmitting}
       />
 
-      {/* GDPR Consent Dialog */}
       <GDPRConsentDialog
         open={showGDPRDialog}
         onAccept={onGDPRConsent}
         onOpenChange={setShowGDPRDialog}
       />
 
-      {/* Forgot Password Dialog */}
       <ForgotPasswordDialog
         open={showForgotPasswordDialog}
         onOpenChange={setShowForgotPasswordDialog}

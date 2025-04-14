@@ -8,27 +8,13 @@ interface GecomLogoProps {
 
 export const GecomLogo: React.FC<GecomLogoProps> = ({ className = '', size = 48 }) => {
   return (
-    <svg
+    <img
+      src="/lovable-uploads/3ce91e14-27e4-47a1-b1f0-d19a2109cd33.png"
+      alt="GECOM Logo"
       width={size}
       height={size}
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
       className={className}
-    >
-      <rect width="48" height="48" rx="8" fill="#FFFFFF" />
-      <text
-        x="50%"
-        y="55%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fill="#9b87f5"
-        fontSize="28"
-        fontWeight="bold"
-      >
-        $
-      </text>
-    </svg>
+    />
   );
 };
 

@@ -64,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
 
   const menuItems = [
     {
-      title: 'Dashboard',
+      title: 'Painel de Gestão',
       path: '/dashboard',
       icon: <Home className="h-5 w-5" />,
       roles: ['admin', 'gerente', 'user', 'manager'],
@@ -94,13 +94,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality })
       roles: ['admin'],
     },
     {
-      title: 'Cadastro de Gerente',
+      title: 'Cadastro de Gestor',
       path: '/admin/gerentes',
       icon: <UserPlus className="h-5 w-5" />,
       roles: ['admin'],
     },
     {
-      title: 'Gerenciamento de Funcionários',
+      title: 'Gerenciamento de Servidores',
       path: '/gerenciamento/funcionarios',
       icon: <Users className="h-5 w-5" />,
       roles: ['admin', 'manager', 'gerente'],
