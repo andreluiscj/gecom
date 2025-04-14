@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { signIn, changePassword } from '@/services/authService';
+import { signIn, changePassword, saveGDPRConsent } from '@/services/authService';
 
 export function useAuth() {
   const navigate = useNavigate();
@@ -29,23 +29,23 @@ export function useAuth() {
         // Check if it's first login, if so show password change dialog
         if (result.primeiroAcesso) {
           setShowChangePasswordDialog(true);
-          setCurrentUserId(result.userId);
+          setCurrentUserId(result.userId || '');
           setIsSubmitting(false);
         } else {
           // Check if GDPR consent is needed
           const gdprAccepted = localStorage.getItem(`gdpr-accepted-${result.userId}`);
           if (!gdprAccepted) {
-            setCurrentUserId(result.userId);
+            setCurrentUserId(result.userId || '');
             setShowGDPRDialog(true);
             setIsSubmitting(false);
           } else {
             loginSuccess(
-              result.role, 
+              result.role || 'user', 
               'São Paulo', 
-              result.name, 
+              result.name || 'Usuário', 
               undefined, 
-              result.userId, 
-              result.userId
+              result.userId || '', 
+              result.userId || ''
             );
           }
         }
@@ -98,6 +98,7 @@ export function useAuth() {
   const handleGDPRConsent = async () => {
     try {
       // Save GDPR consent
+      await saveGDPRConsent(currentUserId);
       localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
       setShowGDPRDialog(false);
       

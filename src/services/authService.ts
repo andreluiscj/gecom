@@ -1,150 +1,105 @@
 
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { hashPassword, verifyPassword } from '@/utils/passwordHelpers';
 
-export async function signIn(email: string, password: string) {
+interface SignInResult {
+  authenticated: boolean;
+  userId?: string;
+  role?: string;
+  name?: string;
+  primeiroAcesso?: boolean;
+}
+
+export async function signIn(email: string, password: string): Promise<SignInResult> {
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // First, get user by email
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('id, name, email, password_hash, role_id, first_access')
+      .eq('email', email)
+      .eq('active', true);
 
-    if (error) {
-      toast.error('Credenciais inválidas. Tente novamente.');
+    if (error || !users || users.length === 0) {
+      console.error('User not found or error:', error);
       return { authenticated: false };
     }
 
-    // If authentication is successful, get the user's details from users table
-    if (data.user) {
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select(`
-          id, name, email, role_id, active, first_access,
-          roles (id, name)
-        `)
-        .eq('id', data.user.id)
-        .single();
+    const user = users[0];
 
-      if (userError || !userData) {
-        toast.error('Erro ao buscar informações do usuário.');
-        return { authenticated: false };
-      }
-
-      const isFirstAccess = userData.first_access;
-      
-      // Store user data in localStorage
-      localStorage.setItem('user-authenticated', 'true');
-      localStorage.setItem('user-id', userData.id);
-      localStorage.setItem('user-name', userData.name);
-      localStorage.setItem('user-role', userData.roles.name.toLowerCase());
-
-      if (isFirstAccess) {
-        return {
-          authenticated: true,
-          userId: userData.id,
-          role: userData.roles.name.toLowerCase(),
-          primeiroAcesso: true
-        };
-      }
-
-      return {
-        authenticated: true,
-        userId: userData.id,
-        role: userData.roles.name.toLowerCase(),
-        primeiroAcesso: false
-      };
+    // Verify password
+    const passwordValid = await verifyPassword(password, user.password_hash);
+    if (!passwordValid) {
+      console.error('Invalid password');
+      return { authenticated: false };
     }
 
-    return { authenticated: false };
+    // Get role info
+    const { data: roles } = await supabase
+      .from('roles')
+      .select('id, name')
+      .eq('id', user.role_id);
+
+    const role = roles && roles.length > 0 ? roles[0].name : 'user';
+
+    // Set authentication in localStorage
+    localStorage.setItem('user-authenticated', 'true');
+    localStorage.setItem('user-id', user.id);
+    localStorage.setItem('user-role', role);
+    localStorage.setItem('user-name', user.name);
+
+    return {
+      authenticated: true,
+      userId: user.id,
+      role,
+      name: user.name,
+      primeiroAcesso: user.first_access || false
+    };
   } catch (error) {
-    console.error('Error during login:', error);
-    toast.error('Ocorreu um erro durante o login.');
+    console.error('Error during sign in:', error);
     return { authenticated: false };
   }
 }
 
-export async function signOut() {
+export async function changePassword(userId: string, newPassword: string): Promise<boolean> {
   try {
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      toast.error('Erro ao fazer logout.');
-      return false;
-    }
+    const hashedPassword = await hashPassword(newPassword);
 
-    // Clear user data from localStorage
-    localStorage.removeItem('user-authenticated');
-    localStorage.removeItem('user-id');
-    localStorage.removeItem('user-name');
-    localStorage.removeItem('user-role');
-    
-    return true;
-  } catch (error) {
-    console.error('Error during logout:', error);
-    toast.error('Ocorreu um erro durante o logout.');
-    return false;
-  }
-}
-
-export async function changePassword(userId: string, newPassword: string) {
-  try {
-    // Update user in auth
-    const { error: authError } = await supabase.auth.updateUser({
-      password: newPassword
-    });
-
-    if (authError) {
-      toast.error('Erro ao alterar a senha na autenticação.');
-      return false;
-    }
-
-    // Update first_access flag in users table
-    const { error: userError } = await supabase
+    const { error } = await supabase
       .from('users')
-      .update({ first_access: false })
+      .update({
+        password_hash: hashedPassword,
+        first_access: false,
+        gdpr_consent_date: new Date().toISOString()
+      })
       .eq('id', userId);
 
-    if (userError) {
-      toast.error('Erro ao atualizar status de primeiro acesso.');
+    if (error) {
+      console.error('Error updating password:', error);
       return false;
     }
 
     return true;
   } catch (error) {
     console.error('Error changing password:', error);
-    toast.error('Ocorreu um erro ao alterar a senha.');
     return false;
   }
 }
 
-export async function requestPasswordReset(email: string) {
+export async function saveGDPRConsent(userId: string): Promise<boolean> {
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    
-    if (error) {
-      toast.error('Erro ao solicitar redefinição de senha.');
-      return { success: false };
-    }
-    
-    return { success: true };
-  } catch (error) {
-    console.error('Error requesting password reset:', error);
-    toast.error('Ocorreu um erro ao solicitar redefinição de senha.');
-    return { success: false };
-  }
-}
+    const { error } = await supabase
+      .from('users')
+      .update({ gdpr_consent_date: new Date().toISOString() })
+      .eq('id', userId);
 
-export async function validateSession() {
-  try {
-    const { data, error } = await supabase.auth.getSession();
-    
-    if (error || !data.session) {
+    if (error) {
+      console.error('Error saving GDPR consent:', error);
       return false;
     }
-    
+
     return true;
   } catch (error) {
-    console.error('Error validating session:', error);
+    console.error('Error saving GDPR consent:', error);
     return false;
   }
 }

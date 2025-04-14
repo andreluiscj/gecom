@@ -13,9 +13,14 @@ const ListaPedidos: React.FC = () => {
   useEffect(() => {
     const fetchPedidos = async () => {
       setLoading(true);
-      const data = await getPedidos();
-      setPedidos(data);
-      setLoading(false);
+      try {
+        const data = await getPedidos();
+        setPedidos(data);
+      } catch (error) {
+        console.error("Error fetching pedidos:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchPedidos();

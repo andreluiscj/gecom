@@ -21,3 +21,7 @@ export function calcularPorcentagem(valor: number, total: number): number {
   if (total === 0) return 0;
   return (valor / total) * 100;
 }
+
+export function formatPercentage(value: number): string {
+  return `${value.toFixed(1)}%`;
+}

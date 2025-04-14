@@ -50,7 +50,7 @@ const Login: React.FC = () => {
   };
 
   const onGDPRConsent = () => {
-    handleGDPRConsent(username, password);
+    handleGDPRConsent();
   };
 
   return (

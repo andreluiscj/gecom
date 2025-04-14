@@ -1,576 +1,308 @@
 
 import { supabase } from '@/lib/supabase';
-import { Item, PedidoCompra, PedidoStatus, Setor, Workflow, WorkflowStep, mapPedidoStatusToRequestStatus, mapRequestStatusToPedidoStatus } from '@/types';
-import { toast } from 'sonner';
+import { PedidoCompra, PedidoStatus, mapRequestStatusToPedidoStatus, mapPedidoStatusToRequestStatus } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
+// Fetch all purchase requests
 export async function getPedidos(): Promise<PedidoCompra[]> {
   try {
-    // Use the view that joins purchase_requests with other tables
-    const { data, error } = await supabase
+    const { data: requests, error } = await supabase
       .from('vw_purchase_requests')
-      .select('*');
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching purchase requests:', error);
-      toast.error('Erro ao carregar pedidos de compra.');
+      console.error('Error fetching requests:', error);
       return [];
     }
 
-    const pedidos: PedidoCompra[] = [];
-    
-    // For each purchase request, fetch its items and workflow
-    for (const request of data) {
-      // Fetch items for this request
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('request_items')
-        .select('*')
-        .eq('purchase_request_id', request.id);
-
-      if (itemsError) {
-        console.error(`Error fetching items for request ${request.id}:`, itemsError);
-        continue;
-      }
-
-      // Fetch workflow steps for this request
-      const { data: workflowData, error: workflowError } = await supabase
-        .from('vw_request_workflow')
-        .select('*')
-        .eq('purchase_request_id', request.id)
-        .order('order_sequence');
-
-      if (workflowError) {
-        console.error(`Error fetching workflow for request ${request.id}:`, workflowError);
-      }
-
-      // Map items to our format
-      const itens: Item[] = itemsData.map(item => ({
-        id: item.id,
-        nome: item.name,
-        quantidade: item.quantity,
-        valorUnitario: item.unit_value,
-        valorTotal: item.total_value
-      }));
-
-      // Map workflow steps to our format
-      let workflow: Workflow | undefined;
-      
-      if (workflowData && workflowData.length > 0) {
-        const steps: WorkflowStep[] = workflowData.map(step => ({
-          id: step.workflow_step_id,
-          title: step.workflow_step_name,
-          status: step.status as WorkflowStep['status'],
-          date: step.start_date ? new Date(step.start_date) : undefined,
-          dataConclusao: step.completion_date ? new Date(step.completion_date) : undefined,
-          responsavel: step.responsible_name || undefined
-        }));
-
-        const completedSteps = steps.filter(s => s.status === 'Concluído').length;
-        const inProgressSteps = steps.filter(s => s.status === 'Em Andamento').length;
-        const percentComplete = Math.round(
-          ((completedSteps + (inProgressSteps * 0.5)) / steps.length) * 100
-        );
-
-        workflow = {
-          currentStep: completedSteps + (inProgressSteps > 0 ? 1 : 0),
-          totalSteps: steps.length,
-          percentComplete,
-          steps
-        };
-      }
-
-      // Create pedido object
-      pedidos.push({
-        id: request.id,
-        descricao: request.description,
-        dataCompra: new Date(request.request_date),
-        setor: request.secretariat_name as Setor,
-        itens,
-        valorTotal: request.total_estimated_value,
-        status: mapRequestStatusToPedidoStatus(request.status_name),
-        fundoMonetario: request.fund_name,
-        createdAt: new Date(request.created_at),
-        justificativa: request.justification,
-        observacoes: request.observations || undefined,
-        localEntrega: request.delivery_location || undefined,
-        workflow
-      });
-    }
-
-    return pedidos;
+    // Map database result to our frontend type
+    return requests.map(req => ({
+      id: req.id,
+      descricao: req.description,
+      dataCompra: new Date(req.request_date),
+      setor: req.secretariat_name,
+      valorTotal: req.total_estimated_value || 0,
+      status: mapRequestStatusToPedidoStatus(req.status_name),
+      fundoMonetario: req.fund_name,
+      createdAt: new Date(req.created_at),
+      justificativa: req.justification,
+      solicitante: req.requester_name,
+      observacoes: req.observations || undefined,
+      localEntrega: req.delivery_location || undefined,
+      // Itens will be fetched separately if needed
+      itens: [],
+      workflow: undefined, // Will be populated separately if needed
+    }));
   } catch (error) {
     console.error('Error in getPedidos:', error);
-    toast.error('Ocorreu um erro ao buscar os pedidos de compra.');
     return [];
   }
 }
 
+// Get details for a specific pedido, including items
 export async function getPedidoById(id: string): Promise<PedidoCompra | null> {
   try {
-    // Get the purchase request
-    const { data: request, error } = await supabase
+    // Get the pedido main data
+    const { data: requests, error } = await supabase
       .from('vw_purchase_requests')
       .select('*')
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error(`Error fetching purchase request ${id}:`, error);
-      toast.error('Erro ao carregar pedido de compra.');
+    if (error || !requests) {
+      console.error('Error fetching request:', error);
       return null;
     }
 
-    // Fetch items for this request
-    const { data: itemsData, error: itemsError } = await supabase
+    // Get the pedido items
+    const { data: items, error: itemsError } = await supabase
       .from('request_items')
       .select('*')
       .eq('purchase_request_id', id);
 
     if (itemsError) {
-      console.error(`Error fetching items for request ${id}:`, itemsError);
-      toast.error('Erro ao carregar itens do pedido.');
+      console.error('Error fetching request items:', itemsError);
       return null;
     }
 
-    // Fetch workflow steps for this request
-    const { data: workflowData, error: workflowError } = await supabase
+    // Get workflow data
+    const { data: workflow, error: workflowError } = await supabase
       .from('vw_request_workflow')
       .select('*')
       .eq('purchase_request_id', id)
-      .order('order_sequence');
+      .order('order_sequence', { ascending: true });
 
     if (workflowError) {
-      console.error(`Error fetching workflow for request ${id}:`, workflowError);
+      console.error('Error fetching workflow:', workflowError);
     }
 
-    // Map items to our format
-    const itens: Item[] = itemsData.map(item => ({
+    // Map items to our frontend type
+    const mappedItems = items.map(item => ({
       id: item.id,
       nome: item.name,
       quantidade: item.quantity,
       valorUnitario: item.unit_value,
-      valorTotal: item.total_value
+      valorTotal: item.total_value,
     }));
 
-    // Map workflow steps to our format
-    let workflow: Workflow | undefined;
-    
-    if (workflowData && workflowData.length > 0) {
-      const steps: WorkflowStep[] = workflowData.map(step => ({
-        id: step.workflow_step_id,
-        title: step.workflow_step_name,
-        status: step.status as WorkflowStep['status'],
-        date: step.start_date ? new Date(step.start_date) : undefined,
-        dataConclusao: step.completion_date ? new Date(step.completion_date) : undefined,
-        responsavel: step.responsible_name || undefined
-      }));
+    // Construct workflow if available
+    let workflowData;
+    if (workflow && workflow.length > 0) {
+      // Find the current step
+      let currentStepIndex = 0;
+      const steps = workflow.map((step, index) => {
+        if (step.status === 'Em Andamento') {
+          currentStepIndex = index;
+        }
+        return {
+          id: step.id,
+          title: step.workflow_step_name,
+          status: step.status as any,
+          date: step.start_date ? new Date(step.start_date) : undefined,
+          dataConclusao: step.completion_date ? new Date(step.completion_date) : undefined,
+          responsavel: step.responsible_name || undefined,
+        };
+      });
 
-      const completedSteps = steps.filter(s => s.status === 'Concluído').length;
-      const inProgressSteps = steps.filter(s => s.status === 'Em Andamento').length;
-      const percentComplete = Math.round(
-        ((completedSteps + (inProgressSteps * 0.5)) / steps.length) * 100
-      );
+      // Calculate progress as percentage
+      const percentComplete = ((currentStepIndex + (steps[currentStepIndex]?.status === 'Concluído' ? 1 : 0.5)) / steps.length) * 100;
 
-      workflow = {
-        currentStep: completedSteps + (inProgressSteps > 0 ? 1 : 0),
+      workflowData = {
+        currentStep: currentStepIndex,
         totalSteps: steps.length,
         percentComplete,
-        steps
+        steps,
       };
     }
 
-    // Create pedido object
+    // Construct the complete pedido
     return {
-      id: request.id,
-      descricao: request.description,
-      dataCompra: new Date(request.request_date),
-      setor: request.secretariat_name as Setor,
-      itens,
-      valorTotal: request.total_estimated_value,
-      status: mapRequestStatusToPedidoStatus(request.status_name),
-      fundoMonetario: request.fund_name,
-      createdAt: new Date(request.created_at),
-      justificativa: request.justification,
-      observacoes: request.observations || undefined,
-      localEntrega: request.delivery_location || undefined,
-      workflow
+      id: requests.id,
+      descricao: requests.description,
+      dataCompra: new Date(requests.request_date),
+      setor: requests.secretariat_name,
+      valorTotal: requests.total_estimated_value,
+      status: mapRequestStatusToPedidoStatus(requests.status_name),
+      fundoMonetario: requests.fund_name,
+      createdAt: new Date(requests.created_at),
+      justificativa: requests.justification,
+      solicitante: requests.requester_name,
+      observacoes: requests.observations || undefined,
+      localEntrega: requests.delivery_location || undefined,
+      itens: mappedItems,
+      workflow: workflowData,
     };
   } catch (error) {
     console.error('Error in getPedidoById:', error);
-    toast.error('Ocorreu um erro ao buscar o pedido de compra.');
     return null;
   }
 }
 
+// Add a new purchase request
 export async function addPedido(pedido: Omit<PedidoCompra, 'id' | 'createdAt'>): Promise<PedidoCompra | null> {
   try {
-    // Get the current user
-    const userId = localStorage.getItem('user-id');
-    if (!userId) {
-      toast.error('Usuário não identificado.');
-      return null;
+    const { data: statusData } = await supabase
+      .from('request_statuses')
+      .select('id')
+      .eq('name', mapPedidoStatusToRequestStatus(pedido.status))
+      .single();
+
+    if (!statusData) {
+      throw new Error('Status not found');
     }
 
-    // Get the secretariat ID based on the setor name
-    const { data: secretariatData, error: secretariatError } = await supabase
+    // Get user info
+    const userId = localStorage.getItem('user-id');
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
+    // Get secretariat id
+    const { data: secretariats } = await supabase
       .from('secretariats')
       .select('id')
       .eq('name', pedido.setor)
       .single();
 
-    if (secretariatError) {
-      console.error('Error getting secretariat ID:', secretariatError);
-      toast.error('Erro ao identificar a secretaria.');
-      return null;
+    if (!secretariats) {
+      throw new Error('Secretariat not found');
     }
 
-    const secretariatId = secretariatData.id;
-
-    // Get the fund ID based on the fund name
-    const { data: fundData, error: fundError } = await supabase
+    // Get fund id
+    const { data: funds } = await supabase
       .from('funds')
       .select('id')
       .eq('name', pedido.fundoMonetario)
+      .eq('secretariat_id', secretariats.id)
       .single();
 
-    if (fundError) {
-      console.error('Error getting fund ID:', fundError);
-      toast.error('Erro ao identificar o fundo monetário.');
-      return null;
+    if (!funds) {
+      throw new Error('Fund not found');
     }
-
-    const fundId = fundData.id;
-
-    // Get the status ID for 'Pendente'
-    const { data: statusData, error: statusError } = await supabase
-      .from('request_statuses')
-      .select('id')
-      .eq('name', 'Pendente')
-      .single();
-
-    if (statusError) {
-      console.error('Error getting status ID:', statusError);
-      toast.error('Erro ao identificar o status.');
-      return null;
-    }
-
-    const statusId = statusData.id;
 
     // Generate a request number
     const requestNumber = `REQ-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
 
-    // Insert the purchase request
-    const { data: requestData, error: requestError } = await supabase
+    // Insert the request
+    const { data: request, error: requestError } = await supabase
       .from('purchase_requests')
       .insert({
         request_number: requestNumber,
-        secretariat_id: secretariatId,
-        fund_id: fundId,
-        requester_id: userId,
-        responsible_id: userId,
         description: pedido.descricao,
-        justification: pedido.justificativa || 'Necessidade do serviço',
-        request_date: pedido.dataCompra.toISOString().split('T')[0],
+        justification: pedido.justificativa || 'Necessidade operacional',
+        request_date: new Date(pedido.dataCompra).toISOString(),
         total_estimated_value: pedido.valorTotal,
-        status_id: statusId,
+        secretariat_id: secretariats.id,
+        fund_id: funds.id,
+        requester_id: userId,
+        status_id: statusData.id,
         delivery_location: pedido.localEntrega,
-        observations: pedido.observacoes
+        observations: pedido.observacoes,
       })
       .select()
       .single();
 
-    if (requestError) {
-      console.error('Error inserting purchase request:', requestError);
-      toast.error('Erro ao criar pedido de compra.');
+    if (requestError || !request) {
+      console.error('Error creating request:', requestError);
       return null;
     }
-
-    const purchaseRequestId = requestData.id;
 
     // Insert the items
-    for (const item of pedido.itens) {
-      const { error: itemError } = await supabase
-        .from('request_items')
-        .insert({
-          purchase_request_id: purchaseRequestId,
-          name: item.nome,
-          quantity: item.quantidade,
-          unit_value: item.valorUnitario,
-        });
+    const itemsToInsert = pedido.itens.map(item => ({
+      purchase_request_id: request.id,
+      name: item.nome,
+      quantity: item.quantidade,
+      unit_value: item.valorUnitario,
+      total_value: item.valorTotal || (item.quantidade * item.valorUnitario),
+    }));
 
-      if (itemError) {
-        console.error('Error inserting item:', itemError);
-        toast.error('Erro ao adicionar itens ao pedido.');
-        // Consider rolling back the purchase request?
-        return null;
-      }
+    const { error: itemsError } = await supabase
+      .from('request_items')
+      .insert(itemsToInsert);
+
+    if (itemsError) {
+      console.error('Error creating items:', itemsError);
+      // Consider rolling back the request here
     }
 
-    // Get all workflow steps
-    const { data: workflowSteps, error: workflowError } = await supabase
+    // Initialize workflow steps
+    const { data: workflowSteps } = await supabase
       .from('workflow_steps')
-      .select('*')
-      .order('order_sequence');
+      .select('id, name, order_sequence')
+      .order('order_sequence', { ascending: true });
 
-    if (workflowError) {
-      console.error('Error getting workflow steps:', workflowError);
-      toast.error('Erro ao configurar fluxo de trabalho do pedido.');
-      return null;
-    }
+    if (workflowSteps && workflowSteps.length > 0) {
+      const workflowToInsert = workflowSteps.map((step, index) => ({
+        purchase_request_id: request.id,
+        workflow_step_id: step.id,
+        status: index === 0 ? 'Pendente' : 'Pendente',
+      }));
 
-    // Initialize workflow for the purchase request
-    for (const step of workflowSteps) {
-      const { error: workflowStepError } = await supabase
+      const { error: workflowError } = await supabase
         .from('request_workflows')
-        .insert({
-          purchase_request_id: purchaseRequestId,
-          workflow_step_id: step.id,
-          status: 'Pendente',
-        });
+        .insert(workflowToInsert);
 
-      if (workflowStepError) {
-        console.error('Error initializing workflow step:', workflowStepError);
-        toast.error('Erro ao configurar etapas do fluxo de trabalho.');
-        return null;
+      if (workflowError) {
+        console.error('Error creating workflow:', workflowError);
       }
     }
 
-    // Get the newly created pedido with all related data
-    return getPedidoById(purchaseRequestId);
+    // Return the created pedido with its id
+    return await getPedidoById(request.id);
   } catch (error) {
     console.error('Error in addPedido:', error);
-    toast.error('Ocorreu um erro ao adicionar o pedido de compra.');
     return null;
   }
 }
 
-export async function updatePedidoStatus(id: string, novoStatus: PedidoStatus): Promise<PedidoCompra | null> {
+export async function removePedido(id: string): Promise<boolean> {
   try {
-    // Get the status ID based on the status name
-    const { data: statusData, error: statusError } = await supabase
-      .from('request_statuses')
-      .select('id')
-      .eq('name', mapPedidoStatusToRequestStatus(novoStatus))
-      .single();
-
-    if (statusError) {
-      console.error('Error getting status ID:', statusError);
-      toast.error('Erro ao identificar o status.');
-      return null;
-    }
-
-    const statusId = statusData.id;
-
-    // Update the purchase request status
-    const { error: updateError } = await supabase
-      .from('purchase_requests')
-      .update({ status_id: statusId })
-      .eq('id', id);
-
-    if (updateError) {
-      console.error('Error updating purchase request status:', updateError);
-      toast.error('Erro ao atualizar o status do pedido.');
-      return null;
-    }
-
-    // Update workflow based on status
-    if (novoStatus === 'Em Andamento') {
-      // Find the first workflow step that is pending and set it to 'Em Andamento'
-      const { data: workflowData, error: workflowError } = await supabase
-        .from('request_workflows')
-        .select('*')
-        .eq('purchase_request_id', id)
-        .eq('status', 'Pendente')
-        .order('id')
-        .limit(1);
-
-      if (!workflowError && workflowData && workflowData.length > 0) {
-        const { error: updateWorkflowError } = await supabase
-          .from('request_workflows')
-          .update({ 
-            status: 'Em Andamento',
-            start_date: new Date().toISOString()
-          })
-          .eq('id', workflowData[0].id);
-
-        if (updateWorkflowError) {
-          console.error('Error updating workflow step:', updateWorkflowError);
-        }
-      }
-    } else if (novoStatus === 'Concluído') {
-      // Find all workflow steps that are not completed and set them to 'Concluído'
-      const { data: workflowData, error: workflowError } = await supabase
-        .from('request_workflows')
-        .select('*')
-        .eq('purchase_request_id', id)
-        .neq('status', 'Concluído');
-
-      if (!workflowError && workflowData && workflowData.length > 0) {
-        for (const step of workflowData) {
-          const { error: updateWorkflowError } = await supabase
-            .from('request_workflows')
-            .update({ 
-              status: 'Concluído',
-              completion_date: new Date().toISOString()
-            })
-            .eq('id', step.id);
-
-          if (updateWorkflowError) {
-            console.error('Error updating workflow step:', updateWorkflowError);
-          }
-        }
-      }
-    }
-
-    // Get the updated pedido
-    return getPedidoById(id);
-  } catch (error) {
-    console.error('Error in updatePedidoStatus:', error);
-    toast.error('Ocorreu um erro ao atualizar o status do pedido.');
-    return null;
-  }
-}
-
-export async function deletePedido(id: string): Promise<boolean> {
-  try {
-    // Delete the purchase request (cascade will delete related items and workflow)
-    const { error } = await supabase
-      .from('purchase_requests')
-      .delete()
-      .eq('id', id);
-
+    // First remove related records (items, workflow)
+    await supabase.from('request_items').delete().eq('purchase_request_id', id);
+    await supabase.from('request_workflows').delete().eq('purchase_request_id', id);
+    
+    // Then remove the main record
+    const { error } = await supabase.from('purchase_requests').delete().eq('id', id);
+    
     if (error) {
-      console.error('Error deleting purchase request:', error);
-      toast.error('Erro ao excluir o pedido de compra.');
+      console.error('Error deleting request:', error);
       return false;
     }
-
+    
     return true;
   } catch (error) {
-    console.error('Error in deletePedido:', error);
-    toast.error('Ocorreu um erro ao excluir o pedido de compra.');
+    console.error('Error in removePedido:', error);
     return false;
   }
 }
 
-export async function getPedidosPorSetor(setor: Setor): Promise<PedidoCompra[]> {
+export async function updatePedidoStatus(id: string, status: PedidoStatus): Promise<boolean> {
   try {
-    // Get all pedidos and filter by setor
-    const pedidos = await getPedidos();
-    return pedidos.filter(p => p.setor === setor);
-  } catch (error) {
-    console.error('Error in getPedidosPorSetor:', error);
-    toast.error('Ocorreu um erro ao buscar os pedidos por setor.');
-    return [];
-  }
-}
-
-export async function updateEtapaWorkflow(
-  pedidoId: string, 
-  etapaIndex: number, 
-  novoStatus: 'Concluído' | 'Em Andamento' | 'Pendente',
-  data?: Date,
-  responsavel?: string,
-  dataConclusao?: Date
-): Promise<PedidoCompra | null> {
-  try {
-    // Get the workflow steps for this purchase request
-    const { data: workflowSteps, error: workflowError } = await supabase
-      .from('vw_request_workflow')
-      .select('*')
-      .eq('purchase_request_id', pedidoId)
-      .order('order_sequence');
-
-    if (workflowError || !workflowSteps || workflowSteps.length === 0) {
-      console.error('Error getting workflow steps:', workflowError);
-      toast.error('Erro ao buscar etapas do fluxo de trabalho.');
-      return null;
-    }
-
-    if (etapaIndex < 0 || etapaIndex >= workflowSteps.length) {
-      toast.error('Índice de etapa inválido.');
-      return null;
-    }
-
-    const stepId = workflowSteps[etapaIndex].id;
-    
-    // Get the user ID for the responsible person
-    let responsibleId = null;
-    if (responsavel) {
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('name', responsavel)
-        .single();
-
-      if (!userError && userData) {
-        responsibleId = userData.id;
-      }
-    }
-
-    // Update the workflow step
-    const { error: updateError } = await supabase
-      .from('request_workflows')
-      .update({ 
-        status: novoStatus,
-        start_date: data ? data.toISOString() : null,
-        responsible_id: responsibleId,
-        completion_date: (novoStatus === 'Concluído' && !dataConclusao) ? new Date().toISOString() : 
-                         dataConclusao ? dataConclusao.toISOString() : null
-      })
-      .eq('id', stepId);
-
-    if (updateError) {
-      console.error('Error updating workflow step:', updateError);
-      toast.error('Erro ao atualizar etapa do fluxo de trabalho.');
-      return null;
-    }
-
-    // Get total steps and completed steps to update the purchase request status
-    const completedSteps = workflowSteps.filter((s, i) => 
-      i === etapaIndex ? novoStatus === 'Concluído' : s.status === 'Concluído'
-    ).length;
-    
-    const inProgressSteps = workflowSteps.filter((s, i) => 
-      i === etapaIndex ? novoStatus === 'Em Andamento' : s.status === 'Em Andamento'
-    ).length;
-    
-    const percentComplete = Math.round(
-      ((completedSteps + (inProgressSteps * 0.5)) / workflowSteps.length) * 100
-    );
-    
-    // Update purchase request status based on workflow progress
-    let newStatus = 'Pendente';
-    if (percentComplete === 100) {
-      newStatus = 'Concluído';
-    } else if (percentComplete > 50) {
-      newStatus = 'Em Andamento';
-    } else if (percentComplete > 0) {
-      newStatus = 'Aprovado';
-    }
-    
-    // Get the status ID
-    const { data: statusData, error: statusError } = await supabase
+    // Get status id
+    const { data: statusData } = await supabase
       .from('request_statuses')
       .select('id')
-      .eq('name', newStatus)
+      .eq('name', mapPedidoStatusToRequestStatus(status))
       .single();
-
-    if (statusError) {
-      console.error('Error getting status ID:', statusError);
-    } else {
-      // Update the purchase request status
-      await supabase
-        .from('purchase_requests')
-        .update({ status_id: statusData.id })
-        .eq('id', pedidoId);
+    
+    if (!statusData) {
+      throw new Error('Status not found');
     }
-
-    // Get the updated pedido
-    return getPedidoById(pedidoId);
+    
+    const { error } = await supabase
+      .from('purchase_requests')
+      .update({ status_id: statusData.id, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating status:', error);
+      return false;
+    }
+    
+    return true;
   } catch (error) {
-    console.error('Error in updateEtapaWorkflow:', error);
-    toast.error('Ocorreu um erro ao atualizar a etapa do fluxo de trabalho.');
-    return null;
+    console.error('Error in updatePedidoStatus:', error);
+    return false;
   }
 }
