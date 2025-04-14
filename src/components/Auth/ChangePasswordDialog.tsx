@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { atualizarSenhaUsuario } from '@/data/funcionarios/mockFuncionarios';
+import { atualizarSenhaUsuario } from '@/services/funcionarioService';
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -26,7 +26,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -63,10 +63,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     }
     
     // Update password
-    const success = atualizarSenhaUsuario(userId, newPassword);
-    
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const success = await atualizarSenhaUsuario(userId, newPassword);
       
       if (success) {
         toast.success('Senha alterada com sucesso');
@@ -75,7 +73,12 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
       } else {
         setError('Erro ao atualizar senha. Tente novamente.');
       }
-    }, 1000);
+    } catch (error) {
+      console.error('Password update error:', error);
+      setError('Erro ao atualizar senha. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetForm = () => {

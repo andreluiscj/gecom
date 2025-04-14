@@ -1,5 +1,4 @@
-
-import { Funcionario, WorkflowStep } from "@/types";
+import { Funcionario, WorkflowStep, PedidoStatus, Workflow, PedidoCompra } from "@/types";
 
 export const DEFAULT_WORKFLOW_STEPS: WorkflowStep[] = [
   {
@@ -57,4 +56,44 @@ export function canEditStep(
   if (isResponsible && stepStatus === "Em Andamento") return true;
 
   return false;
+}
+
+// Initialize workflow with default steps
+export function initializeWorkflow(): Workflow {
+  return {
+    currentStep: 1,
+    totalSteps: DEFAULT_WORKFLOW_STEPS.length,
+    percentComplete: 0,
+    steps: [...DEFAULT_WORKFLOW_STEPS]
+  };
+}
+
+// Update workflow based on pedido status
+export function updateWorkflowFromPedidoStatus(pedido: PedidoCompra): Workflow {
+  const workflow = pedido.workflow || initializeWorkflow();
+  
+  switch (pedido.status) {
+    case 'Aprovado':
+      // Set all steps to completed
+      workflow.steps = workflow.steps.map(step => ({
+        ...step,
+        status: 'Concluído'
+      }));
+      workflow.currentStep = workflow.totalSteps;
+      workflow.percentComplete = 100;
+      break;
+    case 'Rejeitado':
+      // Keep existing steps but mark workflow as stopped
+      workflow.percentComplete = 0;
+      break;
+    default:
+      // Calculate progress based on completed steps
+      const completedSteps = workflow.steps.filter(
+        step => step.status === 'Concluído'
+      ).length;
+      workflow.currentStep = completedSteps + 1;
+      workflow.percentComplete = (completedSteps / workflow.totalSteps) * 100;
+  }
+  
+  return workflow;
 }

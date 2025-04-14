@@ -1,294 +1,282 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, User, CheckCircle2 } from 'lucide-react';
-import { obterTodosPedidos, atualizarEtapaWorkflow } from '@/data/mockData';
-import { getFuncionarios, filtrarFuncionariosPorSetor } from '@/data/funcionarios/mockFuncionarios';
-import { toast } from 'sonner';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { Funcionario, WorkflowStepStatus } from '@/types';
-import { getUserRole } from '@/utils/authHelpers';
-import { DEFAULT_WORKFLOW_STEPS, funcionarioTemPermissao } from '@/utils/workflowHelpers';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
-interface ResponsavelData {
-  stepIndex: number;
-  stepTitle: string;
-  responsavelId: string;
-  dataLimite: Date | undefined;
-}
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { PedidoCompra, Funcionario } from '@/types';
+import { toast } from 'sonner';
+import { getPedidos } from '@/services/pedidoService';
+import { getFuncionarios } from '@/services/funcionarioService';
+import { DEFAULT_WORKFLOW_STEPS, funcionarioTemPermissao } from '@/utils/workflowHelpers';
 
 const AprovacaoDFD: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const [pedido, setPedido] = useState<PedidoCompra | null>(null);
+  const [carregando, setCarregando] = useState<boolean>(true);
+  const [aprovadores, setAprovadores] = useState<Funcionario[]>([]);
   const navigate = useNavigate();
-  const userRole = getUserRole();
-  
-  const allPedidos = obterTodosPedidos();
-  const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos]);
-  
-  const funcionarios = useMemo(() => {
-    if (pedido) {
-      const allFuncionarios = getFuncionarios();
-      console.log("Total funcionários:", allFuncionarios.length);
-      
-      const filtered = allFuncionarios.filter(f => 
-        f.ativo && (
-          f.setor === pedido.setor || 
-          (f.setoresAdicionais && f.setoresAdicionais.includes(pedido.setor)) ||
-          f.cargo.toLowerCase().includes('gerente') ||
-          f.setor === 'Saúde'
-        )
-      );
-      
-      console.log("Filtered funcionários:", filtered.length, "for setor:", pedido.setor);
-      return filtered;
-    }
-    return [];
-  }, [pedido]);
-  
-  const [responsaveis, setResponsaveis] = useState<ResponsavelData[]>([]);
-  const [todosAtribuidos, setTodosAtribuidos] = useState<boolean>(false);
 
   useEffect(() => {
-    if (userRole !== 'admin' && userRole !== 'manager') {
-      toast.error("Você não tem permissão para acessar esta página");
-      navigate(-1);
-    }
-  }, [userRole, navigate]);
+    const carregarPendentes = async () => {
+      try {
+        // Get the current user ID from local storage
+        const funcionarioId = localStorage.getItem('funcionario-id');
+        if (!funcionarioId) {
+          toast.error('Usuário não identificado');
+          navigate('/login');
+          return;
+        }
 
-  useEffect(() => {
-    if (pedido?.workflow?.steps) {
-      const initialResponsaveis = pedido.workflow.steps.map((step, index) => ({
-        stepIndex: index,
-        stepTitle: step.title,
-        responsavelId: '',
-        dataLimite: undefined
-      }));
-      setResponsaveis(initialResponsaveis);
-    }
-  }, [pedido]);
+        // Load pedidos and find one pending approval
+        const pedidos = await getPedidos();
+        const pendente = pedidos.find(p => 
+          p.status === 'Pendente' && 
+          p.workflow?.steps.some(s => s.status === 'Pendente')
+        );
 
-  useEffect(() => {
-    if (responsaveis.length === 0) return;
+        if (pendente) {
+          setPedido(pendente);
+        }
+
+        // Load potential approvers
+        const funcionarios = await getFuncionarios();
+        const aprovadoresPossiveis = funcionarios.length > 0 ? 
+          funcionarios.filter(f => 
+            f.cargo?.toLowerCase().includes('gerente') || 
+            f.cargo?.toLowerCase().includes('diretor')
+          ) : [];
+
+        setAprovadores(aprovadoresPossiveis);
+      } catch (error) {
+        console.error('Erro ao carregar aprovações:', error);
+        toast.error('Erro ao carregar solicitações pendentes');
+      } finally {
+        setCarregando(false);
+      }
+    };
+
+    carregarPendentes();
+  }, [navigate]);
+
+  const aprovarSolicitacao = () => {
+    if (!pedido) return;
     
-    const todosPreenchidos = responsaveis.every(r => r.responsavelId);
+    try {
+      // Update workflow status
+      setPedido(prev => {
+        if (!prev) return null;
+        
+        return {
+          ...prev,
+          status: 'Aprovado',
+          workflow: {
+            ...prev.workflow!,
+            steps: prev.workflow!.steps.map(step => ({
+              ...step,
+              status: 'Concluído'
+            })),
+            percentComplete: 100,
+            currentStep: DEFAULT_WORKFLOW_STEPS.length
+          }
+        };
+      });
+      
+      toast.success('Solicitação aprovada com sucesso');
+      
+      // In production, this would update the database
+      setTimeout(() => {
+        navigate('/pedidos');
+      }, 1500);
+    } catch (error) {
+      console.error('Erro ao aprovar solicitação:', error);
+      toast.error('Erro ao processar aprovação');
+    }
+  };
+  
+  const rejeitarSolicitacao = () => {
+    if (!pedido) return;
     
-    setTodosAtribuidos(todosPreenchidos);
-  }, [responsaveis]);
+    try {
+      // Update workflow status
+      setPedido(prev => {
+        if (!prev) return null;
+        
+        return {
+          ...prev,
+          status: 'Rejeitado',
+          workflow: {
+            ...prev.workflow!,
+            steps: prev.workflow!.steps.map(step => ({
+              ...step,
+              status: step.status === 'Concluído' ? 'Concluído' : 'Pendente'
+            })),
+            percentComplete: 0
+          }
+        };
+      });
+      
+      toast.success('Solicitação rejeitada');
+      
+      // In production, this would update the database
+      setTimeout(() => {
+        navigate('/pedidos');
+      }, 1500);
+    } catch (error) {
+      console.error('Erro ao rejeitar solicitação:', error);
+      toast.error('Erro ao processar rejeição');
+    }
+  };
 
-  if (!pedido) {
+  if (carregando) {
     return (
-      <div className="space-y-4 animate-fade-in">
-        <div className="flex items-center gap-2 mb-4">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">Pedido não encontrado</h1>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <p>Carregando solicitações...</p>
       </div>
     );
   }
 
-  const handleSelectResponsavel = (stepIndex: number, funcionarioId: string) => {
-    setResponsaveis(prev => prev.map(item => 
-      item.stepIndex === stepIndex 
-        ? { ...item, responsavelId: funcionarioId } 
-        : item
-    ));
-  };
-
-  const handleSelectData = (stepIndex: number, data: Date | undefined) => {
-    setResponsaveis(prev => prev.map(item => 
-      item.stepIndex === stepIndex 
-        ? { ...item, dataLimite: data } 
-        : item
-    ));
-  };
-
-  const handleAprovarDFD = () => {
-    if (!pedido || !pedido.workflow) return;
-    
-    atualizarEtapaWorkflow(
-      pedido.id, 
-      0, 
-      'Concluído',
-      new Date(),
-      getUserRole() === 'manager' ? 'Amanda Amarante' : 'Administrador',
-      new Date()
+  if (!pedido) {
+    return (
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Sem solicitações pendentes</AlertTitle>
+        <AlertDescription>
+          Não há documentos de formalização de demanda pendentes de aprovação.
+        </AlertDescription>
+      </Alert>
     );
-
-    atualizarEtapaWorkflow(
-      pedido.id, 
-      1, 
-      'Em Andamento'
-    );
-
-    responsaveis.forEach(resp => {
-      if (resp.responsavelId) {
-        const funcionario = funcionarios.find(f => f.id === resp.responsavelId);
-        if (funcionario) {
-          atualizarEtapaWorkflow(
-            pedido.id,
-            resp.stepIndex,
-            pedido.workflow.steps[resp.stepIndex].status,
-            undefined,
-            funcionario.nome,
-            resp.dataLimite
-          );
-        }
-      }
-    });
-
-    toast.success("DFD aprovada com sucesso! O processo seguirá para as próximas etapas.");
-    navigate(`/pedidos/workflow/${pedido.id}`);
-  };
-
-  const getFuncionariosByStep = (stepTitle: string): Funcionario[] => {
-    console.log(`Getting funcionarios for step: ${stepTitle}, count: ${funcionarios.length}`);
-    return funcionarios;
-  };
+  }
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center gap-2 mb-4">
-        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold">Aprovação da DFD</h1>
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-2xl font-bold mb-2">Aprovação de DFD</h1>
+        <p className="text-muted-foreground">
+          Revise e aprove/rejeite documentos de formalização de demanda
+        </p>
       </div>
-      
-      <Card className="mb-6">
+
+      <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Detalhes do Pedido</CardTitle>
+          <CardTitle>Solicitação #{pedido.id.substring(0, 8)}</CardTitle>
           <CardDescription>
-            {pedido.descricao} • Secretaria: {pedido.setor} • DFD #{pedido.id.substring(0, 8)}
+            Criado em {pedido.createdAt.toLocaleDateString()}
           </CardDescription>
         </CardHeader>
-        
-        <CardContent>
-          <div className="space-y-6">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <h3 className="text-sm font-medium text-blue-800 mb-2">Instruções</h3>
-              <p className="text-sm text-blue-700">
-                Como gestor(a), você precisa aprovar esta DFD e atribuir responsáveis para cada etapa do processo.
-                Todos os responsáveis devem ser atribuídos para prosseguir com a aprovação.
-              </p>
-              <p className="text-sm text-blue-700 mt-2">
-                Apenas funcionários da secretaria "{pedido.setor}" ou que atuam nesta secretaria estão disponíveis para atribuição.
-              </p>
-              <p className="text-sm text-blue-700 mt-2">
-                Funcionários da secretaria de Saúde podem trabalhar em qualquer etapa do processo.
-              </p>
-              <p className="text-sm text-blue-700 mt-2">
-                Data limite é opcional para cada etapa.
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-muted-foreground">Descrição</Label>
+              <p>{pedido.descricao}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Setor</Label>
+              <p>{pedido.setor}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Valor Total</Label>
+              <p className="font-medium">
+                {new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                }).format(pedido.valorTotal)}
               </p>
             </div>
-            
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium border-b pb-2">Atribuição de Responsabilidades</h3>
-              
-              {DEFAULT_WORKFLOW_STEPS.map((step, index) => (
-                <div key={`step-${index}`} className="border rounded-lg p-4">
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <h4 className="font-medium">{step.title}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Etapa {index + 1} de {DEFAULT_WORKFLOW_STEPS.length}</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">
-                          <User className="h-3 w-3 inline mr-1" /> Responsável <span className="text-red-500">*</span>
-                        </label>
-                        <Select
-                          value={responsaveis[index]?.responsavelId || ''}
-                          onValueChange={(value) => handleSelectResponsavel(index, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Selecione um responsável" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {getFuncionariosByStep(step.title).map(funcionario => (
-                              <SelectItem key={funcionario.id} value={funcionario.id}>
-                                {funcionario.nome} - {funcionario.cargo}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">
-                          <Calendar className="h-3 w-3 inline mr-1" /> Data Limite <span className="text-gray-500">(opcional)</span>
-                        </label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start text-left"
-                            >
-                              <Calendar className="mr-2 h-4 w-4" />
-                              {responsaveis[index]?.dataLimite 
-                                ? format(responsaveis[index].dataLimite, 'dd/MM/yyyy') 
-                                : 'Selecionar data (opcional)'}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <CalendarComponent
-                              mode="single"
-                              selected={responsaveis[index]?.dataLimite}
-                              onSelect={(date) => handleSelectData(index, date)}
-                              initialFocus
-                              disabled={(date) => date < new Date()}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </div>
+            <div>
+              <Label className="text-muted-foreground">Justificativa</Label>
+              <p>{pedido.justificativa || 'Não informada'}</p>
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-muted-foreground mb-2 block">Itens</Label>
+            <table className="w-full border-collapse">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="p-2 text-left">Item</th>
+                  <th className="p-2 text-right">Quantidade</th>
+                  <th className="p-2 text-right">Valor Unitário</th>
+                  <th className="p-2 text-right">Valor Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pedido.itens.map((item) => (
+                  <tr key={item.id} className="border-b">
+                    <td className="p-2">{item.nome}</td>
+                    <td className="p-2 text-right">{item.quantidade}</td>
+                    <td className="p-2 text-right">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(item.valorUnitario)}
+                    </td>
+                    <td className="p-2 text-right">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(item.valorTotal || item.quantidade * item.valorUnitario)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <Label className="text-muted-foreground mb-2 block">Possíveis Aprovadores</Label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {aprovadores.length > 0 ? (
+                aprovadores.map((aprovador) => (
+                  <div key={aprovador.id} className="p-2 border rounded">
+                    <p className="font-medium">{aprovador.nome}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {aprovador.cargo} - {aprovador.setor}
+                    </p>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="col-span-full text-muted-foreground">
+                  Nenhum aprovador disponível
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
-        
-        <CardFooter className="flex justify-end">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button 
-                disabled={!todosAtribuidos}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Aprovar DFD
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmar aprovação da DFD</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Você está prestes a aprovar esta DFD e iniciar o processo de compra.
-                  Esta ação não pode ser desfeita e notificará todos os responsáveis atribuídos.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleAprovarDFD}>
-                  Confirmar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+
+        <CardFooter className="flex justify-between">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/pedidos/visualizar/${pedido.id}`)}
+          >
+            Ver Detalhes
+          </Button>
+
+          <div className="space-x-2">
+            <Button
+              variant="destructive"
+              onClick={rejeitarSolicitacao}
+              className="flex items-center gap-1"
+            >
+              <XCircle className="h-4 w-4" />
+              Rejeitar
+            </Button>
+            <Button 
+              onClick={aprovarSolicitacao}
+              className="flex items-center gap-1"
+            >
+              <CheckCircle className="h-4 w-4" />
+              Aprovar
+            </Button>
+          </div>
         </CardFooter>
       </Card>
     </div>

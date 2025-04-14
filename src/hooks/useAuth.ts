@@ -10,6 +10,8 @@ export function useAuth() {
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
   const [showGDPRDialog, setShowGDPRDialog] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleLogin = async (username: string, password: string) => {
     setIsSubmitting(true);
@@ -60,7 +62,7 @@ export function useAuth() {
     }
   };
 
-  const handlePasswordChange = async (newPassword: string, confirmPassword: string) => {
+  const handlePasswordChange = async () => {
     // Validate passwords
     if (!newPassword || newPassword.length < 3) {
       toast.error('A nova senha deve ter pelo menos 3 caracteres.');
@@ -144,6 +146,10 @@ export function useAuth() {
     currentUserId,
     handleLogin,
     handlePasswordChange,
-    handleGDPRConsent
+    handleGDPRConsent,
+    newPassword,
+    setNewPassword,
+    confirmPassword,
+    setConfirmPassword
   };
 }

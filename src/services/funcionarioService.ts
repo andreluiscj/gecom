@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { Funcionario, UserRole } from '@/types';
+import { Funcionario, UserRole, LoginLog } from '@/types';
 import { toast } from 'sonner';
 
 export async function getFuncionarios(): Promise<Funcionario[]> {
@@ -50,6 +50,109 @@ export async function getFuncionarios(): Promise<Funcionario[]> {
   } catch (error) {
     console.error('Error in getFuncionarios:', error);
     toast.error('Ocorreu um erro ao buscar os funcionários.');
+    return [];
+  }
+}
+
+// Get user by ID
+export async function getUserById(id: string): Promise<Funcionario | null> {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        id, name, email, cpf, birth_date, active, hire_date, phone,
+        roles (id, name),
+        user_secretariats (
+          secretariat_id,
+          is_primary,
+          secretariats (id, name)
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error || !data) {
+      console.error('Error getting user:', error);
+      return null;
+    }
+
+    // Find primary secretariat
+    const primarySecretariat = data.user_secretariats?.find(us => us.is_primary);
+    const setorName = primarySecretariat?.secretariats?.name || 'Administrativo';
+    
+    // Map to other secretariats
+    const otherSecretariats = data.user_secretariats
+      ?.filter(us => !us.is_primary)
+      .map(us => us.secretariats?.name);
+
+    return {
+      id: data.id,
+      nome: data.name,
+      cpf: data.cpf || '',
+      dataNascimento: data.birth_date ? new Date(data.birth_date) : new Date(),
+      email: data.email,
+      cargo: data.roles?.name || 'Servidor',
+      setor: setorName as any,
+      setoresAdicionais: otherSecretariats as any[],
+      dataContratacao: data.hire_date ? new Date(data.hire_date) : new Date(),
+      ativo: data.active || false,
+      telefone: data.phone
+    };
+  } catch (error) {
+    console.error('Error in getUserById:', error);
+    return null;
+  }
+}
+
+// Get user login data
+export async function getUsuariosLogin() {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        id, email, name, 
+        roles (name)
+      `);
+
+    if (error) {
+      console.error('Error fetching login users:', error);
+      return [];
+    }
+
+    return data.map(user => ({
+      id: user.id,
+      username: user.email,
+      email: user.email,
+      name: user.name,
+      role: user.roles?.name?.toLowerCase() || 'user'
+    }));
+  } catch (error) {
+    console.error('Error in getUsuariosLogin:', error);
+    return [];
+  }
+}
+
+// Get login logs
+export async function getLoginLogs(): Promise<LoginLog[]> {
+  try {
+    const { data, error } = await supabase
+      .from('login_logs')
+      .select('*')
+      .order('timestamp', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching login logs:', error);
+      return [];
+    }
+
+    return data.map(log => ({
+      userId: log.user_id,
+      timestamp: log.timestamp,
+      success: log.success,
+      ip: log.ip || '0.0.0.0'
+    }));
+  } catch (error) {
+    console.error('Error in getLoginLogs:', error);
     return [];
   }
 }
@@ -132,26 +235,63 @@ export async function addFuncionario(funcionario: Omit<Funcionario, 'id'>): Prom
       }
     }
 
+    const newFuncionario = {
+      id: userData.id,
+      ...funcionario
+    };
+
+    // Now create the login object
+    const loginObj = {
+      id: userData.id,
+      username: generateUsername(funcionario.nome),
+      senha,
+      funcionarioId: userData.id,
+      role: mapRoleName(funcionario.cargo),
+      ativo: funcionario.ativo,
+      primeiroAcesso: true
+    };
+
     // Get the created funcionario
     return {
-      funcionario: {
-        id: userData.id,
-        ...funcionario
-      },
-      login: {
-        id: userData.id,
-        username: generateUsername(funcionario.nome),
-        senha,
-        funcionarioId: userData.id,
-        role: mapRoleName(funcionario.cargo),
-        ativo: funcionario.ativo,
-        primeiroAcesso: true
-      }
+      funcionario: newFuncionario,
+      login: loginObj
     };
   } catch (error) {
     console.error('Error in addFuncionario:', error);
     toast.error('Ocorreu um erro ao adicionar o funcionário.');
     return null;
+  }
+}
+
+// Update user password
+export async function atualizarSenhaUsuario(userId: string, newPassword: string): Promise<boolean> {
+  try {
+    // Update auth password
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      console.error('Error updating password:', error);
+      return false;
+    }
+
+    // Update first_access flag in users table
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        first_access: false
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Error updating first_access:', updateError);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in atualizarSenhaUsuario:', error);
+    return false;
   }
 }
 
@@ -310,48 +450,7 @@ export async function updateFuncionario(id: string, funcionario: Partial<Funcion
     }
 
     // Get the updated funcionario
-    const { data, error } = await supabase
-      .from('users')
-      .select(`
-        id, name, email, cpf, birth_date, active, hire_date, phone,
-        roles (id, name),
-        user_secretariats (
-          secretariat_id,
-          is_primary,
-          secretariats (id, name)
-        )
-      `)
-      .eq('id', id)
-      .single();
-
-    if (error || !data) {
-      console.error('Error fetching updated user:', error);
-      toast.error('Erro ao buscar funcionário atualizado.');
-      return null;
-    }
-
-    // Find primary secretariat
-    const primarySecretariat = data.user_secretariats?.find(us => us.is_primary);
-    const setorName = primarySecretariat?.secretariats?.name || 'Administrativo';
-    
-    // Map to other secretariats
-    const otherSecretariats = data.user_secretariats
-      ?.filter(us => !us.is_primary)
-      .map(us => us.secretariats?.name);
-
-    return {
-      id: data.id,
-      nome: data.name,
-      cpf: data.cpf || '',
-      dataNascimento: data.birth_date ? new Date(data.birth_date) : new Date(),
-      email: data.email,
-      cargo: data.roles?.name || 'Servidor',
-      setor: setorName as any,
-      setoresAdicionais: otherSecretariats as any[],
-      dataContratacao: data.hire_date ? new Date(data.hire_date) : new Date(),
-      ativo: data.active || false,
-      telefone: data.phone
-    };
+    return await getUserById(id);
   } catch (error) {
     console.error('Error in updateFuncionario:', error);
     toast.error('Ocorreu um erro ao atualizar o funcionário.');

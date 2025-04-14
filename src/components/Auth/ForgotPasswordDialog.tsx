@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Mail, Check } from 'lucide-react';
-import { getUserById, getUsuariosLogin } from '@/services/funcionarioService';
+import { getUsuariosLogin } from '@/services/funcionarioService';
 
 interface ForgotPasswordDialogProps {
   open: boolean;
