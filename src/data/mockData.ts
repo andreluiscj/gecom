@@ -1,4 +1,3 @@
-
 import { addDays, addHours, format, subMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { PedidoCompra, Item, Setor } from '@/types';
@@ -45,10 +44,6 @@ const todosPedidos: PedidoCompra[] = [];
 export function initializeMockData() {
   // Reset todosPedidos array to start with a clean slate
   todosPedidos.length = 0;
-  
-  // Load fictional orders when initializing
-  const ficticios = obterPedidosFicticios();
-  todosPedidos.push(...ficticios);
   
   return todosPedidos;
 }
@@ -97,7 +92,7 @@ export function removerPedido(id: string, setor?: Setor) {
 
 // Função para obter todos os pedidos
 export function obterPedidos(): PedidoCompra[] {
-  return todosPedidos.length > 0 ? todosPedidos : obterPedidosFicticios();
+  return todosPedidos;
 }
 
 // Função para obter todos os pedidos (alias para compatibilidade)
