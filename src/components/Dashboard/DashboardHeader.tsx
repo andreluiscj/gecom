@@ -27,7 +27,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ municipio, language =
   return (
     <div className="space-y-4">
       <div className="flex justify-center mb-6">
-        <GecomLogo size={180} className="w-auto" /> {/* Increased size from 120 to 180 */}
+        <GecomLogo size={240} className="w-auto" /> {/* Increased size from 180 to 240 */}
       </div>
       <h1 className="text-2xl font-bold mb-1">{getTranslation('dashboardTitle', language)}</h1>
       <p className="text-muted-foreground text-sm">
