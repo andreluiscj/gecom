@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,9 +8,11 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import { PasswordChangeDialog } from '@/components/Auth/PasswordChangeDialog';
+import { GDPRConsentDialog } from '@/components/Auth/GDPRConsentDialog';
+import { ForgotPasswordDialog } from '@/components/Auth/ForgotPasswordDialog';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
