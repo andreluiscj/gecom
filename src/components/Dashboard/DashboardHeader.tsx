@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Municipio } from '@/types';
-import GecomLogo from '@/assets/GecomLogo';
 
 interface DashboardHeaderProps {
   municipio: Municipio;
@@ -25,10 +24,7 @@ const getTranslation = (key: string, language: string = 'pt') => {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ municipio, language = 'pt' }) => {
   return (
-    <div className="space-y-4">
-      <div className="flex justify-center mb-6">
-        <GecomLogo size={240} className="w-auto" /> {/* Increased size from 180 to 240 */}
-      </div>
+    <div>
       <h1 className="text-2xl font-bold mb-1">{getTranslation('dashboardTitle', language)}</h1>
       <p className="text-muted-foreground text-sm">
         {getTranslation('overview', language)}
