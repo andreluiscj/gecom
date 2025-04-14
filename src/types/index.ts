@@ -1,4 +1,3 @@
-
 export type Role = "admin" | "editor" | null;
 
 export type Tarefa = {
@@ -90,8 +89,8 @@ export interface Municipio {
 
 export interface DadosDashboard {
   resumoFinanceiro: {
-    orcamentoAnual: number;
-    orcamentoUtilizado: number;
+    estimativaDespesa: number;
+    valorContratadoTotal: number;
     percentualUtilizado: number;
     totalPedidos: number;
   };
@@ -104,8 +103,12 @@ export interface DadosDashboard {
   }>;
   orcamentoPrevisto: Record<string, number>;
   gastosPorSetor: Record<string, number>;
-  gastosTotais: number;
+  valorContratadoTotal: number;
   pedidosPorSetor: Record<string, number>;
+  indicadoresDesempenho: {
+    tempoMedioConclusao: number;
+    percentualEconomia: number;
+  };
 }
 
 export type UserRole = 'admin' | 'user' | 'manager';

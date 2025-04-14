@@ -6,7 +6,7 @@ interface GecomLogoProps {
   size?: number;
 }
 
-export const GecomLogo: React.FC<GecomLogoProps> = ({ className = '', size = 48 }) => {
+export const GecomLogo: React.FC<GecomLogoProps> = ({ className = '', size = 64 }) => {
   return (
     <img
       src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png"
