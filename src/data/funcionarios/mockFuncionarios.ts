@@ -187,12 +187,14 @@ export const addFuncionario = (funcionario: Omit<Funcionario, 'id'>) => {
   // Generate username for login
   const username = generateUsername(funcionario.nome);
   
-  // Define role based on position
-  let role = 'user';
+  // Define role based on position with explicit type casting
+  let role: UserRole = 'user';
   if (funcionario.cargo.toLowerCase().includes('gerente') || funcionario.cargo.toLowerCase().includes('secretário')) {
     role = 'manager';
   } else if (funcionario.cargo.toLowerCase().includes('prefeito')) {
     role = 'prefeito';
+  } else if (funcionario.cargo.toLowerCase().includes('admin')) {
+    role = 'admin';
   }
   
   // Create login for the employee
