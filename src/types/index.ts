@@ -1,3 +1,4 @@
+
 export type Role = "admin" | "editor" | null;
 
 export type Tarefa = {
