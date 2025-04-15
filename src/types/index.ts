@@ -30,7 +30,8 @@ export type Setor =
   | "Esportes e Lazer"
   | "Planejamento"
   | "Comunicação"
-  | "Ciência e Tecnologia";
+  | "Ciência e Tecnologia"
+  | "Gabinete"; // Added Gabinete to the valid sectors
 
 export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
 
@@ -113,7 +114,7 @@ export interface DadosDashboard {
   };
 }
 
-export type UserRole = 'admin' | 'user' | 'manager';
+export type UserRole = 'admin' | 'user' | 'manager' | 'prefeito'; // Added 'prefeito' as valid user role
 
 export interface Funcionario {
   id: string;

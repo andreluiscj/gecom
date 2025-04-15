@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, SelectSingleEventHandler } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -14,18 +14,18 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
-  // Correção para o bug da data
-  const onSelectFixed = (day: Date | undefined, selectedDay: Date | undefined, activeModifiers: any, e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!props.onSelect || !day) return;
+  // Use proper typing for the day selection handler
+  const handleDaySelect: SelectSingleEventHandler = (day, selectedDay, activeModifiers, e) => {
+    if (!props.onDaySelect || !day) return;
     
-    // Mantém a data original sem ajustes (isso resolve o problema do dia errado)
-    props.onSelect(day, selectedDay, activeModifiers, e);
+    // Pass the day selection to the proper handler
+    props.onDaySelect(day, selectedDay, activeModifiers, e);
   };
   
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-3 pointer-events-auto", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
@@ -64,7 +64,7 @@ function Calendar({
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
-      onSelect={onSelectFixed}
+      onDaySelect={handleDaySelect}
       {...props}
     />
   );

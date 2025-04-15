@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { adicionarPedido } from '@/data/mockData';
 import { initializeWorkflow } from '@/utils/workflowHelpers';
-import { getUserSetor, getUserName, shouldFilterByUserSetor } from '@/utils/authHelpers';
+import { getUserSetor, getUserName, getUserRole } from '@/utils/authHelpers';
 import ActionButtons from './Form/ActionButtons';
 import ItemsSection from './Form/ItemsSection';
 import TotalSection from './Form/TotalSection';
@@ -56,7 +56,9 @@ const PedidoForm: React.FC = () => {
   
   const userName = getUserName() || '';
   const userSetor = getUserSetor() || '';
-  const shouldRestrictSetor = shouldFilterByUserSetor();
+  const userRole = getUserRole();
+  
+  const shouldRestrictSetor = userRole === 'user' || userRole === 'manager';
   
   const availableSecretarias = shouldRestrictSetor ? [userSetor] : secretarias;
 

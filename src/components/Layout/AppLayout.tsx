@@ -26,15 +26,15 @@ const AppLayout: React.FC = () => {
     setUserRole(role);
     setUserMunicipality(municipality);
 
-    // Restringir acesso à área administrativa
+    // Restrict access to administrative area (only admin can access)
     if (role !== 'admin' && location.pathname.includes('/admin')) {
       toast.error('Você não tem permissão para acessar esta página');
       navigate('/dashboard');
       return;
     }
     
-    // Restringir acesso ao dashboard para funcionários comuns
-    if (!canAccessDashboard() && location.pathname === '/dashboard') {
+    // Restrict dashboard access for regular users (servidores)
+    if (role === 'user' && location.pathname === '/dashboard') {
       toast.error('Você não tem permissão para acessar o dashboard');
       navigate('/pedidos');
       return;

@@ -1,27 +1,40 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
 import { obterTodosPedidos } from '@/data/mockData';
 import { PedidoCompra } from '@/types';
-import { getUserSetor, shouldFilterByUserSetor } from '@/utils/authHelpers';
+import { getUserSetor, getUserRole, shouldFilterByUserSetor } from '@/utils/authHelpers';
+import { toast } from 'sonner';
 
 const ListaPedidos: React.FC = () => {
   const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
+  const navigate = useNavigate();
+  const userRole = getUserRole();
   
-  // Fetch pedidos whenever the component renders to ensure fresh data
+  // Check permissions and fetch pedidos on component mount
   useEffect(() => {
     const todosPedidos = obterTodosPedidos();
+    const userSetor = getUserSetor();
     
-    // Filtrar pedidos pelo setor do usuário se necessário
-    if (shouldFilterByUserSetor()) {
-      const userSetor = getUserSetor();
+    // Filter pedidos based on user role
+    if (userRole === 'admin' || userRole === 'prefeito') {
+      // Admin and prefeito can see all pedidos
+      setPedidos(todosPedidos);
+    } else if (userRole === 'manager') {
+      // Managers (gerentes) can only see pedidos from their sector
+      const pedidosFiltrados = todosPedidos.filter(pedido => pedido.setor === userSetor);
+      setPedidos(pedidosFiltrados);
+    } else if (userRole === 'user') {
+      // Regular users (servidores) can only see pedidos from their sector
       const pedidosFiltrados = todosPedidos.filter(pedido => pedido.setor === userSetor);
       setPedidos(pedidosFiltrados);
     } else {
-      // Usuário é admin ou prefeito, pode ver todos os pedidos
-      setPedidos(todosPedidos);
+      // Unauthorized access attempt
+      toast.error('Você não tem permissão para acessar esta página');
+      navigate('/login');
     }
-  }, []);
+  }, [navigate, userRole]);
 
   return (
     <div className="space-y-6 animate-fade-in">

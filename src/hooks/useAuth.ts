@@ -116,7 +116,7 @@ export function useAuth() {
     localStorage.setItem('user-municipality', municipality);
     localStorage.setItem('user-id', userId);
     localStorage.setItem('funcionario-id', funcionarioId);
-    localStorage.setItem('user-setor', setor); // Adicionando o setor do usuário
+    localStorage.setItem('user-setor', setor);
     
     if (name) {
       localStorage.setItem('user-name', name);
@@ -127,15 +127,16 @@ export function useAuth() {
 
     toast.success('Login realizado com sucesso!');
     
-    // Direcionar usuários conforme o nível de acesso
+    // Direct users according to their access level
     if (role === 'admin') {
       navigate('/admin');
     } else if (role === 'prefeito') {
+      // Prefeito can access dashboard like manager
       navigate('/dashboard');
     } else if (role === 'manager') {
       navigate('/dashboard');
     } else {
-      // Funcionários comuns vão direto para a lista de pedidos
+      // Regular users (servidores) go directly to the order list
       navigate('/pedidos');
     }
   };
