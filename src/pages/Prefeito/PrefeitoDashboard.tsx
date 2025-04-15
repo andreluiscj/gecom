@@ -1,9 +1,12 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Building2, Users, FileText, TrendingUp } from 'lucide-react';
+import { Building2, Users, FileText, TrendingUp, ShieldAlert, Wallet, BriefcaseBusiness, CalendarCheck } from 'lucide-react';
+import { getUserRole } from '@/utils/authHelpers';
 
 const PrefeitoDashboard = () => {
+  const userRole = getUserRole();
+
   return (
     <div className="grid gap-6">
       <Card className="p-6">
@@ -11,7 +14,30 @@ const PrefeitoDashboard = () => {
           <Building2 className="h-8 w-8 text-blue-500" />
           <div>
             <h3 className="font-semibold">Gestão Municipal</h3>
-            <p className="text-sm text-muted-foreground">Visualize dados do seu município</p>
+            <p className="text-sm text-muted-foreground">Visão geral do município</p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Informações exclusivas do prefeito */}
+      <Card className="p-6 border-2 border-blue-200">
+        <div className="flex items-center gap-4 mb-4">
+          <ShieldAlert className="h-8 w-8 text-blue-600" />
+          <div>
+            <h3 className="font-semibold">Informações Confidenciais</h3>
+            <p className="text-sm text-muted-foreground">Dados exclusivos para visualização do prefeito</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <Wallet className="h-6 w-6 text-blue-600 mb-2" />
+            <h4 className="font-medium">Orçamento Secreto</h4>
+            <p className="text-sm text-muted-foreground">Verbas especiais e fundos reservados</p>
+          </div>
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <BriefcaseBusiness className="h-6 w-6 text-blue-600 mb-2" />
+            <h4 className="font-medium">Projetos Estratégicos</h4>
+            <p className="text-sm text-muted-foreground">Iniciativas em desenvolvimento</p>
           </div>
         </div>
       </Card>
@@ -20,28 +46,18 @@ const PrefeitoDashboard = () => {
         <div className="flex items-center gap-4">
           <Users className="h-8 w-8 text-green-500" />
           <div>
-            <h3 className="font-semibold">Gerenciamento de Equipe</h3>
-            <p className="text-sm text-muted-foreground">Acesse informações dos servidores</p>
+            <h3 className="font-semibold">Gabinete</h3>
+            <p className="text-sm text-muted-foreground">Sua equipe de confiança</p>
           </div>
         </div>
       </Card>
 
       <Card className="p-6">
         <div className="flex items-center gap-4">
-          <FileText className="h-8 w-8 text-purple-500" />
+          <CalendarCheck className="h-8 w-8 text-purple-500" />
           <div>
-            <h3 className="font-semibold">Pedidos de Compra</h3>
-            <p className="text-sm text-muted-foreground">Acompanhe as solicitações</p>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <div className="flex items-center gap-4">
-          <TrendingUp className="h-8 w-8 text-orange-500" />
-          <div>
-            <h3 className="font-semibold">Indicadores</h3>
-            <p className="text-sm text-muted-foreground">Analise métricas importantes</p>
+            <h3 className="font-semibold">Agenda Executiva</h3>
+            <p className="text-sm text-muted-foreground">Compromissos e reuniões importantes</p>
           </div>
         </div>
       </Card>
