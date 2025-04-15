@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Funcionario, UsuarioLogin } from '@/types';
+import { Funcionario, UsuarioLogin, UserRole } from '@/types';
 
 // Admin user data
 const adminUserId = "admin-user-id";
