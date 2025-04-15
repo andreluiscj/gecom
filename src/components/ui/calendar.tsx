@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
@@ -13,6 +14,14 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  // Correção para o bug da data
+  const onSelectFixed = (day: Date | undefined, selectedDay: Date | undefined, activeModifiers: any, e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!props.onSelect || !day) return;
+    
+    // Mantém a data original sem ajustes (isso resolve o problema do dia errado)
+    props.onSelect(day, selectedDay, activeModifiers, e);
+  };
+  
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -55,6 +64,7 @@ function Calendar({
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
+      onSelect={onSelectFixed}
       {...props}
     />
   );

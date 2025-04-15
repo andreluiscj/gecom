@@ -43,7 +43,8 @@ export function useAuth() {
             result.funcionario.nome, 
             undefined, 
             result.userId, 
-            result.funcionario.id
+            result.funcionario.id,
+            result.funcionario.setor
           );
         }
       }
@@ -94,7 +95,8 @@ export function useAuth() {
         result.funcionario.nome, 
         undefined, 
         result.userId,
-        result.funcionario.id
+        result.funcionario.id,
+        result.funcionario.setor
       );
     }
   };
@@ -105,7 +107,8 @@ export function useAuth() {
     name: string = '', 
     permittedStep: string = '',
     userId: string = '',
-    funcionarioId: string = ''
+    funcionarioId: string = '',
+    setor: string = ''
   ) => {
     // Set authenticated state in localStorage
     localStorage.setItem('user-authenticated', 'true');
@@ -113,6 +116,7 @@ export function useAuth() {
     localStorage.setItem('user-municipality', municipality);
     localStorage.setItem('user-id', userId);
     localStorage.setItem('funcionario-id', funcionarioId);
+    localStorage.setItem('user-setor', setor); // Adicionando o setor do usuário
     
     if (name) {
       localStorage.setItem('user-name', name);
@@ -123,11 +127,16 @@ export function useAuth() {
 
     toast.success('Login realizado com sucesso!');
     
-    // Direct admin users to the admin panel, others to dashboard
+    // Direcionar usuários conforme o nível de acesso
     if (role === 'admin') {
       navigate('/admin');
-    } else {
+    } else if (role === 'prefeito') {
       navigate('/dashboard');
+    } else if (role === 'manager') {
+      navigate('/dashboard');
+    } else {
+      // Funcionários comuns vão direto para a lista de pedidos
+      navigate('/pedidos');
     }
   };
 

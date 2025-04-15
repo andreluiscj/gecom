@@ -1,3 +1,4 @@
+
 // Function to check if user is authenticated
 export function isAuthenticated(): boolean {
   const isAuthed = localStorage.getItem('user-authenticated') === 'true';
@@ -22,6 +23,11 @@ export function getUserId(): string | null {
 // Function to get the current funcionario ID
 export function getFuncionarioId(): string | null {
   return localStorage.getItem('funcionario-id');
+}
+
+// Function to get the current user's setor
+export function getUserSetor(): string | null {
+  return localStorage.getItem('user-setor');
 }
 
 // Function to get user profile photo
@@ -92,8 +98,8 @@ export function canAccess(requiredRole: string | string[]): boolean {
   
   if (!userRole) return false;
   
-  // Admin can access everything
-  if (userRole === 'admin') return true;
+  // Admin e prefeito podem acessar tudo
+  if (userRole === 'admin' || userRole === 'prefeito') return true;
   
   if (Array.isArray(requiredRole)) {
     return requiredRole.includes(userRole);
@@ -106,8 +112,8 @@ export function canAccess(requiredRole: string | string[]): boolean {
 export function getPermittedWorkflowStep(): string | undefined {
   const userRole = getUserRole();
   
-  // Admin or manager can edit any step
-  if (userRole === 'admin' || userRole === 'manager') {
+  // Admin or prefeito can edit any step
+  if (userRole === 'admin' || userRole === 'prefeito') {
     return undefined; // Undefined means all steps are permitted
   }
   
@@ -129,8 +135,8 @@ export function getPermittedWorkflowStep(): string | undefined {
 export function canEditWorkflowStep(stepTitle: string): boolean {
   const userRole = getUserRole();
   
-  // Admin can edit any step
-  if (userRole === 'admin') {
+  // Admin e prefeito can edit any step
+  if (userRole === 'admin' || userRole === 'prefeito') {
     return true;
   }
   
@@ -155,19 +161,35 @@ export function canEditWorkflowStep(stepTitle: string): boolean {
   return false;
 }
 
-// Function to check if user has permission to access a specific sector
+// Função para verificar se o usuário pode acessar pedidos de um setor específico
 export function canAccessSetor(setor: string): boolean {
   const userRole = getUserRole();
+  const userSetor = getUserSetor();
   
-  if (userRole === 'admin') {
+  // Admin e prefeito podem acessar todos os setores
+  if (userRole === 'admin' || userRole === 'prefeito') {
     return true;
   }
   
-  return true; // Temporarily returning true for all sectors
+  // Gerentes e funcionários só podem acessar seu próprio setor
+  return setor === userSetor;
 }
 
 // Function to check if user can manage users
 export function canAccessUserManagement(): boolean {
   const userRole = getUserRole();
-  return userRole === 'admin' || userRole === 'gerente' || userRole === 'manager';
+  return userRole === 'admin';
+}
+
+// Function to check if user can access dashboard
+export function canAccessDashboard(): boolean {
+  const userRole = getUserRole();
+  return userRole === 'admin' || userRole === 'prefeito' || userRole === 'manager';
+}
+
+// Função para verificar se o usuário deve ver apenas dados do seu setor
+export function shouldFilterByUserSetor(): boolean {
+  const userRole = getUserRole();
+  // Admin e prefeito veem tudo, outros veem apenas seu setor
+  return userRole !== 'admin' && userRole !== 'prefeito';
 }

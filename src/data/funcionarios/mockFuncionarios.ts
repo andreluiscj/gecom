@@ -5,7 +5,11 @@ import { Funcionario, UsuarioLogin } from '@/types';
 const adminUserId = "admin-user-id";
 const adminFuncionarioId = "admin-funcionario-id";
 
-// Empty employees data with admin
+// Prefeito user data
+const prefeitoUserId = "prefeito-user-id";
+const prefeitoFuncionarioId = "prefeito-funcionario-id";
+
+// Empty employees data with admin and prefeito
 export const mockFuncionarios: Funcionario[] = [
   {
     id: adminFuncionarioId,
@@ -19,10 +23,23 @@ export const mockFuncionarios: Funcionario[] = [
     dataNascimento: new Date(),
     ativo: true,
     permissaoEtapa: "all"
+  },
+  {
+    id: prefeitoFuncionarioId,
+    nome: "Prefeito Municipal",
+    cargo: "Prefeito",
+    setor: "Gabinete",
+    email: "prefeito@municipio.gov.br",
+    cpf: "111.111.111-11",
+    telefone: "(00) 1111-1111",
+    dataContratacao: new Date(),
+    dataNascimento: new Date(),
+    ativo: true,
+    permissaoEtapa: "all"
   }
 ];
 
-// Login users data store with admin user
+// Login users data store with admin user and prefeito
 export const mockUsuariosLogin: UsuarioLogin[] = [
   {
     id: adminUserId,
@@ -30,6 +47,15 @@ export const mockUsuariosLogin: UsuarioLogin[] = [
     senha: "admin",
     funcionarioId: adminFuncionarioId,
     role: "admin",
+    ativo: true,
+    primeiroAcesso: false
+  },
+  {
+    id: prefeitoUserId,
+    username: "prefeito",
+    senha: "123",
+    funcionarioId: prefeitoFuncionarioId,
+    role: "prefeito",
     ativo: true,
     primeiroAcesso: false
   }
@@ -41,7 +67,7 @@ export const mockLoginLogs: any[] = [];
 // Password reset tokens storage
 export const mockPasswordResetTokens: Record<string, { token: string, expires: Date, userId: string }> = {};
 
-// Ensure admin account exists
+// Ensure admin and prefeito accounts exist
 const ensureAdminExists = () => {
   const usuarios = getUsuariosLogin();
   const funcionarios = getFuncionarios();
@@ -56,12 +82,24 @@ const ensureAdminExists = () => {
     
     usuarios.push(adminUser);
     funcionarios.push(adminFuncionario);
-    
-    localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
-    localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
-    
-    console.log('Admin account created');
   }
+
+  // Check if prefeito user exists
+  const prefeitoUserExists = usuarios.some(user => user.username === 'prefeito' && user.role === 'prefeito');
+  
+  if (!prefeitoUserExists) {
+    // Add prefeito user if it doesn't exist
+    const prefeitoUser = mockUsuariosLogin[1];
+    const prefeitoFuncionario = mockFuncionarios[1];
+    
+    usuarios.push(prefeitoUser);
+    funcionarios.push(prefeitoFuncionario);
+  }
+  
+  localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
+  localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+  
+  console.log('Admin and prefeito accounts created or verified');
 };
 
 // Get all employees
@@ -149,14 +187,21 @@ export const addFuncionario = (funcionario: Omit<Funcionario, 'id'>) => {
   // Generate username for login
   const username = generateUsername(funcionario.nome);
   
+  // Define role based on position
+  let role = 'user';
+  if (funcionario.cargo.toLowerCase().includes('gerente') || funcionario.cargo.toLowerCase().includes('secretário')) {
+    role = 'manager';
+  } else if (funcionario.cargo.toLowerCase().includes('prefeito')) {
+    role = 'prefeito';
+  }
+  
   // Create login for the employee
   const newLogin: UsuarioLogin = {
     id: uuidv4(),
     username: username,
     senha: "123", // Default password
     funcionarioId: newFuncionario.id,
-    role: funcionario.cargo.toLowerCase().includes('gerente') || 
-          funcionario.cargo.toLowerCase().includes('secretário') ? 'manager' : 'user',
+    role: role,
     ativo: newFuncionario.ativo,
     primeiroAcesso: true // Flag for first-time access
   };
