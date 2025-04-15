@@ -1,4 +1,3 @@
-
 // Function to check if user is authenticated
 export function isAuthenticated(): boolean {
   const isAuthed = localStorage.getItem('user-authenticated') === 'true';
@@ -178,7 +177,7 @@ export function canAccessSetor(setor: string): boolean {
 // Function to check if user can manage users
 export function canAccessUserManagement(): boolean {
   const userRole = getUserRole();
-  return userRole === 'admin';
+  return userRole === 'admin' || userRole === 'prefeito'; // Added prefeito
 }
 
 // Function to check if user can access dashboard

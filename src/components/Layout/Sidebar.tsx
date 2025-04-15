@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -108,15 +109,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       title: 'Cadastro de Gestor',
       path: '/admin/gerentes',
       icon: <UserPlus className="h-5 w-5" />,
-      roles: ['admin'],
-      visible: userRole === 'admin'
+      roles: ['admin', 'prefeito'],
+      visible: userRole === 'admin' || userRole === 'prefeito'
     },
     {
       title: 'Gerenciamento de Servidores',
       path: '/gerenciamento/funcionarios',
       icon: <Users className="h-5 w-5" />,
-      roles: ['admin'],
-      visible: userRole === 'admin'
+      roles: ['admin', 'prefeito'],
+      visible: userRole === 'admin' || userRole === 'prefeito'
     },
     {
       title: 'Área do Prefeito',
