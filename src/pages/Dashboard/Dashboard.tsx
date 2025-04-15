@@ -9,6 +9,7 @@ import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
 import { DadosDashboard, Municipio } from '@/types';
 import { toast } from 'sonner';
 import { exportDashboardAsPDF } from '@/utils/pdfGenerator';
+import { getUserRole, getUserSetor, shouldFilterByUserSetor } from '@/utils/authHelpers';
 
 // Default municipality object
 const defaultMunicipio: Municipio = {
@@ -107,6 +108,14 @@ const Dashboard: React.FC = () => {
     month: 'Junho',
     department: 'Todos'
   });
+  
+  // Get user information for filtering
+  const userRole = getUserRole();
+  const userSetor = getUserSetor();
+  const shouldFilter = shouldFilterByUserSetor();
+  
+  // Filtered dashboard data based on user's secretaria
+  const [filteredDashboardData, setFilteredDashboardData] = useState(dadosDashboard);
 
   // Effect to load selected municipality
   useEffect(() => {
@@ -127,7 +136,49 @@ const Dashboard: React.FC = () => {
   // Effect to apply filters
   useEffect(() => {
     applyFilters();
-  }, [period, filters]);
+  }, [period, filters, userSetor, shouldFilter]);
+  
+  // Effect to filter dashboard data by user's department
+  useEffect(() => {
+    if (shouldFilter && userSetor) {
+      // If user should only see their department data
+      const filteredData = filterDashboardDataBySetor(dadosDashboard, userSetor);
+      setFilteredDashboardData(filteredData);
+      
+      // Force department filter to user's department
+      setFilters(prev => ({...prev, department: userSetor}));
+    } else {
+      // Admin and prefeito see all data
+      setFilteredDashboardData(dadosDashboard);
+    }
+  }, [userSetor, shouldFilter]);
+
+  // Function to filter dashboard data by secretaria/department
+  const filterDashboardDataBySetor = (data: DadosDashboard, setor: string): DadosDashboard => {
+    // Create a copy to not modify the original
+    const filtered = {...data};
+    
+    // Filter gastosPorSetor to only include user's department
+    const filteredGastos: Record<string, number> = {};
+    if (data.gastosPorSetor[setor]) {
+      filteredGastos[setor] = data.gastosPorSetor[setor];
+    }
+    
+    // Filter pedidosPorSetor to only include user's department
+    const filteredPedidos: Record<string, number> = {};
+    if (data.pedidosPorSetor[setor]) {
+      filteredPedidos[setor] = data.pedidosPorSetor[setor];
+    }
+    
+    // Update the data
+    filtered.gastosPorSetor = filteredGastos;
+    filtered.pedidosPorSetor = filteredPedidos;
+    
+    // Also update total contracted value to reflect only this department
+    filtered.valorContratadoTotal = filteredGastos[setor] || 0;
+    
+    return filtered;
+  };
 
   const applyFilters = () => {
     // Apply period filter
@@ -165,21 +216,38 @@ const Dashboard: React.FC = () => {
       periodFilteredData = monthlyData.filter(data => quarterMonths.includes(data.name));
     }
     
-    // Apply department filter
+    // Apply department filter (if regular user, force to their department)
     let deptFilteredData = [...departmentData];
-    if (filters.department !== 'Todos') {
-      deptFilteredData = departmentData.filter(dept => dept.name === filters.department);
+    const selectedDepartment = shouldFilter && userSetor ? userSetor : filters.department;
+    
+    if (selectedDepartment !== 'Todos') {
+      deptFilteredData = departmentData.filter(dept => dept.name === selectedDepartment);
     }
     
     setFilteredData(periodFilteredData);
     setFilteredDeptData(deptFilteredData);
   };
 
-  // Valores para os cards de estatísticas
-  const totalPedidos = 587;
-  const orcamentoExecutado = municipio.id === 'janauba' ? 12000000 : 2400000;
-  const pedidosAprovados = 432;
-  const secretarias = 15;
+  // Calculate values for the stats cards based on filtered data if needed
+  const calculateTotalPedidos = () => {
+    if (shouldFilter && userSetor) {
+      return filteredDashboardData.pedidosPorSetor[userSetor] || 0;
+    }
+    return 587; // Default total
+  };
+
+  const calculateOrcamentoExecutado = () => {
+    if (shouldFilter && userSetor) {
+      return filteredDashboardData.gastosPorSetor[userSetor] || 0;
+    }
+    return municipio.id === 'janauba' ? 12000000 : 2400000;
+  };
+
+  // Values for the stats cards
+  const totalPedidos = calculateTotalPedidos();
+  const orcamentoExecutado = calculateOrcamentoExecutado();
+  const pedidosAprovados = shouldFilter && userSetor ? Math.floor(totalPedidos * 0.75) : 432; // approx 75% of total
+  const secretarias = shouldFilter ? 1 : 15;
 
   // Handle data export from dashboard
   const handleExportDashboard = () => {
@@ -219,7 +287,7 @@ const Dashboard: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         handleExportDashboard={handleExportDashboard}
-        dadosDashboard={dadosDashboard}
+        dadosDashboard={filteredDashboardData}
         municipio={municipio}
         language={language}
         filteredData={filteredData}
@@ -228,6 +296,8 @@ const Dashboard: React.FC = () => {
         setPeriod={setPeriod}
         filters={filters}
         setFilters={setFilters}
+        shouldFilter={shouldFilter}
+        userSetor={userSetor}
       />
     </div>
   );
@@ -293,6 +363,8 @@ interface DashboardTabsProps {
   setPeriod: (period: string) => void;
   filters: any;
   setFilters: (filters: any) => void;
+  shouldFilter?: boolean;
+  userSetor?: string | null;
 }
 
 function DashboardTabs({
@@ -307,7 +379,9 @@ function DashboardTabs({
   period,
   setPeriod,
   filters,
-  setFilters
+  setFilters,
+  shouldFilter,
+  userSetor
 }: DashboardTabsProps) {
   return (
     <Tabs 

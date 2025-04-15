@@ -193,3 +193,35 @@ export function shouldFilterByUserSetor(): boolean {
   // Admin e prefeito veem tudo, outros veem apenas seu setor
   return userRole !== 'admin' && userRole !== 'prefeito';
 }
+
+// Get user's secondary sectors if they have access to multiple
+export function getUserSetoresAdicionais(): string[] {
+  const setoresString = localStorage.getItem('user-setores-adicionais');
+  if (setoresString) {
+    try {
+      return JSON.parse(setoresString);
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+}
+
+// Check if user has access to a specific setor (primary or additional)
+export function hasSetorAccess(setor: string): boolean {
+  const userRole = getUserRole();
+  
+  // Admin and prefeito have access to all sectors
+  if (userRole === 'admin' || userRole === 'prefeito') {
+    return true;
+  }
+  
+  const primarySetor = getUserSetor();
+  if (primarySetor === setor) {
+    return true;
+  }
+  
+  // Check additional sectors
+  const additionalSectors = getUserSetoresAdicionais();
+  return additionalSectors.includes(setor);
+}

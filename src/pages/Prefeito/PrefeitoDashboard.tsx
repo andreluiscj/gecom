@@ -6,6 +6,7 @@ import { getUserRole } from '@/utils/authHelpers';
 
 const PrefeitoDashboard = () => {
   const userRole = getUserRole();
+  const isPrefeito = userRole === 'prefeito';
 
   return (
     <div className="grid gap-6">
@@ -13,34 +14,36 @@ const PrefeitoDashboard = () => {
         <div className="flex items-center gap-4">
           <Building2 className="h-8 w-8 text-blue-500" />
           <div>
-            <h3 className="font-semibold">Gestão Municipal</h3>
-            <p className="text-sm text-muted-foreground">Visão geral do município</p>
+            <h3 className="font-semibold">Dados do Prefeito</h3>
+            <p className="text-sm text-muted-foreground">Informações e acesso rápido</p>
           </div>
         </div>
       </Card>
 
       {/* Informações exclusivas do prefeito */}
-      <Card className="p-6 border-2 border-blue-200">
-        <div className="flex items-center gap-4 mb-4">
-          <ShieldAlert className="h-8 w-8 text-blue-600" />
-          <div>
-            <h3 className="font-semibold">Informações Confidenciais</h3>
-            <p className="text-sm text-muted-foreground">Dados exclusivos para visualização do prefeito</p>
+      {isPrefeito && (
+        <Card className="p-6 border-2 border-blue-200">
+          <div className="flex items-center gap-4 mb-4">
+            <ShieldAlert className="h-8 w-8 text-blue-600" />
+            <div>
+              <h3 className="font-semibold">Informações Confidenciais</h3>
+              <p className="text-sm text-muted-foreground">Dados exclusivos para visualização do prefeito</p>
+            </div>
           </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <Wallet className="h-6 w-6 text-blue-600 mb-2" />
-            <h4 className="font-medium">Orçamento Secreto</h4>
-            <p className="text-sm text-muted-foreground">Verbas especiais e fundos reservados</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <Wallet className="h-6 w-6 text-blue-600 mb-2" />
+              <h4 className="font-medium">Orçamento Secreto</h4>
+              <p className="text-sm text-muted-foreground">Verbas especiais e fundos reservados</p>
+            </div>
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <BriefcaseBusiness className="h-6 w-6 text-blue-600 mb-2" />
+              <h4 className="font-medium">Projetos Estratégicos</h4>
+              <p className="text-sm text-muted-foreground">Iniciativas em desenvolvimento</p>
+            </div>
           </div>
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <BriefcaseBusiness className="h-6 w-6 text-blue-600 mb-2" />
-            <h4 className="font-medium">Projetos Estratégicos</h4>
-            <p className="text-sm text-muted-foreground">Iniciativas em desenvolvimento</p>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       <Card className="p-6">
         <div className="flex items-center gap-4">
