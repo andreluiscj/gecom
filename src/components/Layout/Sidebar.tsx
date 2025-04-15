@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -118,6 +117,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       icon: <Users className="h-5 w-5" />,
       roles: ['admin'],
       visible: userRole === 'admin'
+    },
+    {
+      title: 'Área do Prefeito',
+      path: '/prefeito',
+      icon: <Building2 />,
+      roles: ['admin', 'prefeito'],
+      visible: userRole === 'admin' || userRole === 'prefeito'
     }
   ];
 
@@ -214,12 +220,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
     },
   ];
 
-  // Filtra secretarias se necessário
   const filteredSecretarias = showOnlyUserSetor 
     ? secretariasItems.filter(item => item.title === userSetor)
     : secretariasItems;
 
-  // Filtra os itens de menu de acordo com o papel do usuário
   const filteredMenuItems = menuItems.filter(
     (item) => item.visible && ((item.roles && userRole && item.roles.includes(userRole)))
   );

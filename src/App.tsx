@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { getFuncionarios, getUsuariosLogin } from "./data/funcionarios/mockFuncionarios";
@@ -22,6 +21,7 @@ const WorkflowPedido = lazy(() => import("./pages/Pedidos/WorkflowPedido"));
 const AprovacaoDFD = lazy(() => import("./pages/Pedidos/AprovacaoDFD"));
 const Funcionarios = lazy(() => import("./pages/Gerenciamento/Funcionarios"));
 const CadastroGerente = lazy(() => import("./pages/Admin/CadastroGerente"));
+const PrefeitoPage = lazy(() => import("./pages/Prefeito/PrefeitoPage"));
 
 // Loading component
 const LoadingFallback = () => (
@@ -77,6 +77,7 @@ function App() {
           <Route path="pedidos/novo" element={<NovoPedido />} />
           <Route path="admin/gerentes" element={<CadastroGerente />} />
           <Route path="gerenciamento/funcionarios" element={<Funcionarios />} />
+          <Route path="prefeito" element={<PrefeitoPage />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
