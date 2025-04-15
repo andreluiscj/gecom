@@ -32,6 +32,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Lock, UserPlus, Edit, Trash2 } from 'lucide-react';
 import { generateUsername, addFuncionario, getFuncionarios, updateFuncionario, deleteFuncionario, getUsuariosLogin } from '@/data/funcionarios/mockFuncionarios';
+import { Setor } from '@/types';
 
 interface Prefeito {
   id: string;
@@ -130,7 +131,7 @@ const PrefeitoPage = () => {
         telefone: formData.telefone,
         cpf: formData.cpf,
         cargo: 'Prefeito',
-        setor: 'Gabinete',
+        setor: 'Gabinete' as Setor,
         ativo: true,
         dataContratacao: new Date(formData.mandatoInicio),
         dataNascimento: new Date(), // Placeholder
@@ -151,7 +152,7 @@ const PrefeitoPage = () => {
         telefone: formData.telefone,
         cpf: formData.cpf,
         cargo: 'Prefeito',
-        setor: 'Gabinete',
+        setor: 'Gabinete' as Setor,
         ativo: true,
         dataContratacao: new Date(formData.mandatoInicio),
         dataNascimento: new Date(), // Placeholder
