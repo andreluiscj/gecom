@@ -31,6 +31,7 @@ import { getUserRole, getUserId } from '@/utils/authHelpers';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Lock, UserPlus, Edit, Trash2 } from 'lucide-react';
+import { generateUsername, addFuncionario, getFuncionarios, updateFuncionario, deleteFuncionario, getUsuariosLogin } from '@/data/funcionarios/mockFuncionarios';
 
 interface Prefeito {
   id: string;
@@ -70,20 +71,30 @@ const PrefeitoPage = () => {
       return;
     }
 
-    // Load mock data
-    setPrefeitos([
-      {
-        id: '1',
-        nome: 'João Silva',
-        email: 'joao.silva@prefeitura.gov.br',
-        telefone: '(38) 99999-9999',
-        cpf: '123.456.789-00',
-        mandatoInicio: new Date('2024-01-01'),
-        mandatoFim: new Date('2028-12-31'),
-        municipio: 'pai-pedro'
-      }
-    ]);
+    // Load prefeitos from storage
+    loadPrefeitos();
   }, [navigate, userRole]);
+
+  const loadPrefeitos = () => {
+    // Get all funcionarios
+    const allFuncionarios = getFuncionarios();
+    
+    // Filter for prefeitos - those with cargo containing "prefeito"
+    const prefeitosList = allFuncionarios.filter(
+      (f: any) => f.cargo.toLowerCase().includes('prefeito') && f.municipio === municipioSelecionado
+    ).map((f: any) => ({
+      id: f.id,
+      nome: f.nome,
+      email: f.email,
+      telefone: f.telefone || '',
+      cpf: f.cpf,
+      mandatoInicio: new Date(f.mandatoInicio || f.dataContratacao),
+      mandatoFim: new Date(f.mandatoFim || new Date().setFullYear(new Date().getFullYear() + 4)),
+      municipio: f.municipio || municipioSelecionado
+    }));
+    
+    setPrefeitos(prefeitosList);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -112,28 +123,54 @@ const PrefeitoPage = () => {
 
     if (selectedPrefeito) {
       // Update existing prefeito
-      setPrefeitos(prev => prev.map(p => 
-        p.id === selectedPrefeito.id 
-          ? { 
-              ...p, 
-              ...formData, 
-              mandatoInicio: new Date(formData.mandatoInicio),
-              mandatoFim: new Date(formData.mandatoFim)
-            } 
-          : p
-      ));
-      toast.success('Prefeito atualizado com sucesso');
-    } else {
-      // Add new prefeito
-      const newPrefeito = {
-        id: Math.random().toString(36).substr(2, 9),
-        ...formData,
+      const updatedPrefeito = {
+        id: selectedPrefeito.id,
+        nome: formData.nome,
+        email: formData.email,
+        telefone: formData.telefone,
+        cpf: formData.cpf,
+        cargo: 'Prefeito',
+        setor: 'Gabinete',
+        ativo: true,
+        dataContratacao: new Date(formData.mandatoInicio),
+        dataNascimento: new Date(), // Placeholder
         mandatoInicio: new Date(formData.mandatoInicio),
         mandatoFim: new Date(formData.mandatoFim),
         municipio: municipioSelecionado
       };
-      setPrefeitos(prev => [...prev, newPrefeito]);
-      toast.success('Prefeito cadastrado com sucesso');
+      
+      // Update in funcionarios collection
+      updateFuncionario(selectedPrefeito.id, updatedPrefeito);
+      toast.success('Prefeito atualizado com sucesso');
+      loadPrefeitos();
+    } else {
+      // Add new prefeito as funcionario
+      const novoPrefeito = {
+        nome: formData.nome,
+        email: formData.email,
+        telefone: formData.telefone,
+        cpf: formData.cpf,
+        cargo: 'Prefeito',
+        setor: 'Gabinete',
+        ativo: true,
+        dataContratacao: new Date(formData.mandatoInicio),
+        dataNascimento: new Date(), // Placeholder
+        mandatoInicio: new Date(formData.mandatoInicio),
+        mandatoFim: new Date(formData.mandatoFim),
+        municipio: municipioSelecionado
+      };
+      
+      // This will also create the login for the prefeito
+      const result = addFuncionario(novoPrefeito);
+      
+      if (result) {
+        // Show login credentials to admin
+        const username = generateUsername(formData.nome);
+        toast.success(`Prefeito cadastrado com sucesso. Login: ${username}, Senha inicial: 123`);
+        loadPrefeitos();
+      } else {
+        toast.error('Erro ao cadastrar prefeito');
+      }
     }
 
     setIsDialogOpen(false);
@@ -142,10 +179,11 @@ const PrefeitoPage = () => {
 
   const handleDelete = () => {
     if (selectedPrefeito) {
-      setPrefeitos(prev => prev.filter(p => p.id !== selectedPrefeito.id));
+      deleteFuncionario(selectedPrefeito.id);
       toast.success('Prefeito removido com sucesso');
       setIsDeleteDialogOpen(false);
       setSelectedPrefeito(null);
+      loadPrefeitos();
     }
   };
 

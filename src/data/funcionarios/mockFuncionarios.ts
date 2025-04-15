@@ -1,106 +1,20 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Funcionario, UsuarioLogin, UserRole } from '@/types';
 
-// Admin user data
-const adminUserId = "admin-user-id";
-const adminFuncionarioId = "admin-funcionario-id";
+// Removing original admin and prefeito mock data
+// Only keeping empty arrays for initialization
 
-// Prefeito user data
-const prefeitoUserId = "prefeito-user-id";
-const prefeitoFuncionarioId = "prefeito-funcionario-id";
+// Empty employees data
+export const mockFuncionarios: Funcionario[] = [];
 
-// Empty employees data with admin and prefeito
-export const mockFuncionarios: Funcionario[] = [
-  {
-    id: adminFuncionarioId,
-    nome: "Administrador",
-    cargo: "Administrador do Sistema",
-    setor: "Administrativo",
-    email: "admin@sistema.gov.br",
-    cpf: "000.000.000-00",
-    telefone: "(00) 0000-0000",
-    dataContratacao: new Date(),
-    dataNascimento: new Date(),
-    ativo: true,
-    permissaoEtapa: "all"
-  },
-  {
-    id: prefeitoFuncionarioId,
-    nome: "Prefeito Municipal",
-    cargo: "Prefeito",
-    setor: "Gabinete",
-    email: "prefeito@municipio.gov.br",
-    cpf: "111.111.111-11",
-    telefone: "(00) 1111-1111",
-    dataContratacao: new Date(),
-    dataNascimento: new Date(),
-    ativo: true,
-    permissaoEtapa: "all"
-  }
-];
-
-// Login users data store with admin user and prefeito
-export const mockUsuariosLogin: UsuarioLogin[] = [
-  {
-    id: adminUserId,
-    username: "admin",
-    senha: "admin",
-    funcionarioId: adminFuncionarioId,
-    role: "admin",
-    ativo: true,
-    primeiroAcesso: false
-  },
-  {
-    id: prefeitoUserId,
-    username: "prefeito",
-    senha: "123",
-    funcionarioId: prefeitoFuncionarioId,
-    role: "prefeito",
-    ativo: true,
-    primeiroAcesso: false
-  }
-];
+// Login users data store - empty 
+export const mockUsuariosLogin: UsuarioLogin[] = [];
 
 // Login logs storage
 export const mockLoginLogs: any[] = [];
 
 // Password reset tokens storage
 export const mockPasswordResetTokens: Record<string, { token: string, expires: Date, userId: string }> = {};
-
-// Ensure admin and prefeito accounts exist
-const ensureAdminExists = () => {
-  const usuarios = getUsuariosLogin();
-  const funcionarios = getFuncionarios();
-  
-  // Check if admin user exists
-  const adminUserExists = usuarios.some(user => user.username === 'admin' && user.role === 'admin');
-  
-  if (!adminUserExists) {
-    // Add admin user if it doesn't exist
-    const adminUser = mockUsuariosLogin[0];
-    const adminFuncionario = mockFuncionarios[0];
-    
-    usuarios.push(adminUser);
-    funcionarios.push(adminFuncionario);
-  }
-
-  // Check if prefeito user exists
-  const prefeitoUserExists = usuarios.some(user => user.username === 'prefeito' && user.role === 'prefeito');
-  
-  if (!prefeitoUserExists) {
-    // Add prefeito user if it doesn't exist
-    const prefeitoUser = mockUsuariosLogin[1];
-    const prefeitoFuncionario = mockFuncionarios[1];
-    
-    usuarios.push(prefeitoUser);
-    funcionarios.push(prefeitoFuncionario);
-  }
-  
-  localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
-  localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
-  
-  console.log('Admin and prefeito accounts created or verified');
-};
 
 // Get all employees
 export const getFuncionarios = () => {
@@ -116,7 +30,7 @@ export const getFuncionarios = () => {
     }));
   }
   
-  // Initialize localStorage with mock data if it doesn't exist
+  // Initialize localStorage with empty array if it doesn't exist
   localStorage.setItem('funcionarios', JSON.stringify(mockFuncionarios));
   return mockFuncionarios;
 };
@@ -131,9 +45,6 @@ export const getUsuariosLogin = () => {
   localStorage.setItem('usuarios-login', JSON.stringify(mockUsuariosLogin));
   return mockUsuariosLogin;
 };
-
-// Call ensureAdminExists when the module is imported
-ensureAdminExists();
 
 // Get login logs
 export const getLoginLogs = () => {
@@ -161,15 +72,25 @@ export const addLoginLog = (userId: string, success: boolean, ip: string = "127.
   return newLog;
 };
 
-// Generate username from name (firstName.lastName)
+// Generate username from name according to the requirements:
+// Nome: André Luis Caldeira => andre.luis
+// Nome: André Caldeira => andre.caldeira
 export const generateUsername = (nome: string): string => {
-  const nameParts = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(' ');
+  // Remove accents and special characters
+  const normalizedName = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const nameParts = normalizedName.split(' ');
   
-  if (nameParts.length >= 2) {
-    return `${nameParts[0]}.${nameParts[nameParts.length - 1]}`;
+  if (nameParts.length >= 3) {
+    // For names with 3 or more parts, use first name + second name
+    return `${nameParts[0]}.${nameParts[1]}`;
+  } else if (nameParts.length === 2) {
+    // For names with 2 parts, use first name + last name
+    return `${nameParts[0]}.${nameParts[1]}`;
   } else if (nameParts.length === 1) {
+    // For single-word names
     return nameParts[0];
   } else {
+    // Fallback for empty names
     return `user_${Date.now()}`;
   }
 };
@@ -184,7 +105,7 @@ export const addFuncionario = (funcionario: Omit<Funcionario, 'id'>) => {
     id: uuidv4(),
   };
   
-  // Generate username for login
+  // Generate username based on new pattern
   const username = generateUsername(funcionario.nome);
   
   // Define role based on position with explicit type casting
@@ -197,15 +118,15 @@ export const addFuncionario = (funcionario: Omit<Funcionario, 'id'>) => {
     role = 'admin';
   }
   
-  // Create login for the employee
+  // Create login for the employee with default password '123'
   const newLogin: UsuarioLogin = {
     id: uuidv4(),
     username: username,
-    senha: "123", // Default password
+    senha: "123", // Default password for everyone
     funcionarioId: newFuncionario.id,
     role: role,
     ativo: newFuncionario.ativo,
-    primeiroAcesso: true // Flag for first-time access
+    primeiroAcesso: true // Flag for first-time access for all new users
   };
   
   // Add new employee and login
