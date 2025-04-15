@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Mail, Check } from 'lucide-react';
-import { getUsuariosLogin } from '@/services/funcionarioService';
+import { getUserById, getUsuariosLogin } from '@/data/funcionarios/mockFuncionarios';
 
 interface ForgotPasswordDialogProps {
   open: boolean;
@@ -26,7 +26,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   
-  const handlePasswordRecovery = async (e: React.FormEvent) => {
+  const handlePasswordRecovery = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!username && !email) {
@@ -36,35 +36,34 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
     
     setIsSubmitting(true);
     
-    try {
-      // Find user by username or email
-      const usuarios = await getUsuariosLogin();
-      const foundUser = usuarios.find(u => 
-        u.username === username || 
-        (email && u.email === email)
-      );
+    // Find user by username or email
+    const usuarios = getUsuariosLogin();
+    const foundUser = usuarios.find(u => 
+      u.username === username || 
+      (email && getUserById(u.id)?.funcionario?.email === email)
+    );
+    
+    // Simulate email sending with a delay
+    setTimeout(() => {
+      setIsSubmitting(false);
       
-      // Simulate email sending with a delay
-      setTimeout(() => {
-        setIsSubmitting(false);
-        
-        if (foundUser) {
+      if (foundUser) {
+        const userData = getUserById(foundUser.id);
+        if (userData && userData.funcionario) {
           // In a real app, this would send an email
           setSubmitted(true);
           
           // Show detailed toast with email preview
-          showSuccessEmail(foundUser.email || email, foundUser.name || "usuário");
+          showSuccessEmail(userData.funcionario.email, userData.funcionario.nome);
         } else {
-          // For security reasons, we still show success even if user doesn't exist
-          setSubmitted(true);
-          toast.success('Se o usuário existir, as instruções foram enviadas para o email associado');
+          toast.error('Ocorreu um erro ao recuperar os dados do usuário');
         }
-      }, 1500);
-    } catch (error) {
-      console.error('Error recovering password:', error);
-      setIsSubmitting(false);
-      toast.error('Ocorreu um erro ao processar sua solicitação');
-    }
+      } else {
+        // For security reasons, we still show success even if user doesn't exist
+        setSubmitted(true);
+        toast.success('Se o usuário existir, as instruções foram enviadas para o email associado');
+      }
+    }, 1500);
   };
   
   const showSuccessEmail = (userEmail: string, userName: string) => {

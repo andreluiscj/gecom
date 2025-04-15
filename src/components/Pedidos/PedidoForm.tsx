@@ -1,26 +1,34 @@
 
-import { useState, useEffect } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
-import { Setor, Item, PedidoCompra } from '@/types';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { PedidoCompra } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
+
+import { adicionarPedido } from '@/data/mockData';
+import { initializeWorkflow } from '@/utils/workflowHelpers';
+import ActionButtons from './Form/ActionButtons';
 import ItemsSection from './Form/ItemsSection';
 import TotalSection from './Form/TotalSection';
-import { initializeWorkflow } from '@/utils/workflowHelpers';
-import { addPedido } from '@/services/pedidoService';
 
-const setores: Setor[] = [
+const fundosMonetarios = [
+  'Fundo Municipal de Saúde',
+  'Fundo Municipal de Educação',
+  'Fundo Municipal de Assistência Social',
+  'Fundo Municipal de Meio Ambiente',
+  'Recursos Próprios',
+  'Recursos Federais',
+  'Recursos Estaduais'
+];
+
+const secretarias = [
   'Saúde',
   'Educação',
   'Administrativo',
@@ -38,283 +46,361 @@ const setores: Setor[] = [
   'Ciência e Tecnologia'
 ];
 
-// Form schema
-const formSchema = z.object({
-  descricao: z.string().min(5, 'A descrição deve ter pelo menos 5 caracteres'),
-  dataCompra: z.string().nonempty('Data da compra é obrigatória'),
-  setor: z.string().nonempty('Setor é obrigatório'),
-  fundoMonetario: z.string().nonempty('Fundo monetário é obrigatório'),
-  justificativa: z.string().optional(),
-  observacoes: z.string().optional(),
-  localEntrega: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-const PedidoForm = () => {
-  const [items, setItems] = useState<Item[]>([
+const PedidoForm: React.FC = () => {
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [formData, setFormData] = useState<any>({});
+  const [itens, setItens] = useState([
     { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 }
   ]);
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
-  
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+
+  const form = useForm({
     defaultValues: {
-      descricao: '',
-      dataCompra: format(new Date(), 'yyyy-MM-dd'),
+      dataCompra: new Date().toISOString().split('T')[0],
       setor: '',
       fundoMonetario: '',
+      responsavel: '',
       justificativa: '',
-      observacoes: '',
-      localEntrega: ''
+      descricao: '',
+      localEntrega: '',
+      valorEstimado: ''
     },
+    resolver: zodResolver(
+      currentStep === 1
+        ? firstStepSchema
+        : secondStepSchema
+    ),
   });
 
-  const addItem = () => {
-    setItems([
-      ...items,
-      { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 }
+  const adicionarItem = () => {
+    setItens([
+      ...itens,
+      { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
     ]);
   };
 
-  const removeItem = (index: number) => {
-    if (items.length > 1) {
-      const newItems = [...items];
-      newItems.splice(index, 1);
-      setItems(newItems);
+  const removerItem = (index: number) => {
+    if (itens.length > 1) {
+      const novosItens = [...itens];
+      novosItens.splice(index, 1);
+      setItens(novosItens);
     }
   };
 
-  const updateItem = (index: number, field: keyof Item, value: string | number) => {
-    const newItems = [...items];
-    const item = { ...newItems[index], [field]: value };
-    
-    // Calculate total value if quantity or unit price changes
-    if (field === 'quantidade' || field === 'valorUnitario') {
-      item.valorTotal = Number(item.quantidade) * Number(item.valorUnitario);
+  const atualizarItem = (index: number, campo: string, valor: string | number) => {
+    const novosItens = [...itens];
+    novosItens[index] = {
+      ...novosItens[index],
+      [campo]: valor,
+    };
+
+    if (campo === 'quantidade' || campo === 'valorUnitario') {
+      novosItens[index].valorTotal =
+        Number(novosItens[index].quantidade) * Number(novosItens[index].valorUnitario);
     }
+
+    setItens(novosItens);
+  };
+
+  const calcularValorTotal = () => {
+    return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
+  };
+
+  const total = calcularValorTotal();
+
+  const handleNextStep = async () => {
+    const isValid = await form.trigger([
+      'setor',
+      'fundoMonetario', 
+      'responsavel', 
+      'justificativa', 
+      'dataCompra', 
+      'descricao'
+    ]);
     
-    newItems[index] = item;
-    setItems(newItems);
-  };
-
-  const calculateTotal = (): number => {
-    return items.reduce((total, item) => total + (item.valorTotal || 0), 0);
-  };
-
-  const onSubmit = async (values: FormValues) => {
-    // Validate items
-    const validItems = items.filter(item => item.nome.trim() !== '' && item.quantidade > 0);
-    if (validItems.length === 0) {
-      toast.error('Adicione pelo menos um item válido ao pedido.');
+    if (!isValid) return;
+    
+    const hasEmptyItems = itens.some(item => !item.nome);
+    if (hasEmptyItems) {
+      toast.error('Preencha todos os itens antes de continuar.');
       return;
     }
     
-    setIsSubmitting(true);
-    
+    const step1Data = form.getValues();
+    setFormData({ ...step1Data, itens });
+    setCurrentStep(2);
+  };
+
+  const handlePreviousStep = () => {
+    setCurrentStep(1);
+  };
+
+  const handleSubmit = async (data: any) => {
     try {
-      // Prepare workflow
-      const workflow = initializeWorkflow();
-      
-      // Create pedido object
-      const newPedido: Omit<PedidoCompra, 'id'> = {
-        descricao: values.descricao,
-        dataCompra: new Date(values.dataCompra),
-        setor: values.setor as Setor,
-        itens: validItems,
-        valorTotal: calculateTotal(),
-        status: 'Pendente',
-        fundoMonetario: values.fundoMonetario,
-        createdAt: new Date(),
-        justificativa: values.justificativa,
-        observacoes: values.observacoes,
-        localEntrega: values.localEntrega,
-        workflow
+      const combinedData = {
+        ...formData,
+        localEntrega: data.localEntrega,
+        valorEstimado: parseFloat(data.valorEstimado) || total,
       };
-      
-      // Submit to API
-      const savedPedido = await addPedido(newPedido);
-      
-      toast.success('Pedido criado com sucesso!');
-      navigate(`/pedidos/visualizar/${savedPedido.id}`);
+
+      const novoPedido: PedidoCompra = {
+        id: uuidv4(),
+        descricao: combinedData.descricao,
+        justificativa: combinedData.justificativa,
+        dataCompra: new Date(combinedData.dataCompra),
+        setor: combinedData.setor,
+        solicitante: combinedData.responsavel,
+        valorTotal: combinedData.valorEstimado || total,
+        itens: itens.map(item => ({
+          ...item,
+          valorTotal: item.quantidade * item.valorUnitario
+        })),
+        status: 'Pendente',
+        fundoMonetario: combinedData.fundoMonetario,
+        createdAt: new Date(),
+        observacoes: '',
+        workflow: initializeWorkflow(),
+        localEntrega: combinedData.localEntrega
+      };
+
+      const pedidoAdicionado = adicionarPedido(novoPedido);
+      toast.success('DFD cadastrada com sucesso! A DFD já está disponível na página da secretaria e nos relatórios do sistema.');
+      navigate(`/pedidos/${pedidoAdicionado.id}`);
     } catch (error) {
-      console.error('Error submitting form:', error);
-      toast.error('Erro ao salvar o pedido. Por favor, tente novamente.');
-    } finally {
-      setIsSubmitting(false);
+      console.error('Erro ao submeter o formulário:', error);
+      toast.error('Erro ao cadastrar DFD. Tente novamente.');
     }
   };
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Form {...form}>
-                    <FormField
-                      control={form.control}
-                      name="descricao"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Descrição</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Descrição do pedido" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </Form>
-                  
-                  <Form {...form}>
-                    <FormField
-                      control={form.control}
-                      name="dataCompra"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Data do Pedido</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </Form>
-                </div>
+    <Card className="p-6">
+      <Form {...form}>
+        <form onSubmit={
+          currentStep === 1 
+            ? (e) => { e.preventDefault(); handleNextStep(); }
+            : form.handleSubmit(handleSubmit)
+        } className="space-y-6">
+          {currentStep === 1 ? (
+            <>
+              <h2 className="text-lg font-semibold">Informações Básicas</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="setor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Identificação do Requisitante (Secretaria)</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a secretaria" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {secretarias.map(secretaria => (
+                            <SelectItem key={secretaria} value={secretaria}>
+                              {secretaria}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Form {...form}>
-                    <FormField
-                      control={form.control}
-                      name="setor"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Setor</FormLabel>
-                          <FormControl>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione um setor" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {setores.map((setor) => (
-                                  <SelectItem key={setor} value={setor}>
-                                    {setor}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </Form>
-                  
-                  <Form {...form}>
-                    <FormField
-                      control={form.control}
-                      name="fundoMonetario"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Fundo Monetário</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ex: Fundo Municipal de Saúde" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </Form>
-                </div>
+                <FormField
+                  control={form.control}
+                  name="fundoMonetario"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unidade Administrativa Requisitante (Fundo)</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o fundo monetário" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {fundosMonetarios.map((fundo) => (
+                            <SelectItem key={fundo} value={fundo}>
+                              {fundo}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <ItemsSection
-                items={items}
-                onAddItem={addItem}
-                onRemoveItem={removeItem}
-                onUpdateItem={updateItem}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="responsavel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Responsável</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome do responsável pela solicitação" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dataCompra"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data do Pedido</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="justificativa"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Justificativa da Necessidade</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Justifique a necessidade deste pedido..."
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <Separator className="my-4" />
-              <TotalSection total={calculateTotal()} />
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <Form {...form}>
-                  <FormField
-                    control={form.control}
-                    name="justificativa"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Justificativa</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Justificativa para a solicitação" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </Form>
-                
-                <Form {...form}>
-                  <FormField
-                    control={form.control}
-                    name="localEntrega"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Local de Entrega</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Local onde os itens devem ser entregues" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </Form>
-                
-                <Form {...form}>
-                  <FormField
-                    control={form.control}
-                    name="observacoes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Observações</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Observações adicionais" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </Form>
+              <FormField
+                control={form.control}
+                name="descricao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição do Pedido</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Descreva o pedido de compra..."
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <ItemsSection
+                items={itens}
+                onAddItem={adicionarItem}
+                onRemoveItem={removerItem}
+                onUpdateItem={atualizarItem}
+              />
+
+              <div className="flex justify-end space-x-4">
+                <button 
+                  type="submit"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md"
+                >
+                  Próxima Etapa
+                </button>
               </div>
-            </CardContent>
-          </Card>
+            </>
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold">Informações Complementares</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="valorEstimado"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estimativa de Valor</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder={`Valor sugerido: ${total.toFixed(2)}`}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <div className="flex justify-end space-x-4">
-            <Button type="button" variant="outline" onClick={() => navigate('/pedidos')}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Salvando...' : 'Salvar Pedido'}
-            </Button>
-          </div>
-        </div>
-      </form>
-    </FormProvider>
+                <FormField
+                  control={form.control}
+                  name="localEntrega"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Local de Entrega</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Endereço completo para entrega" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <TotalSection total={total} />
+
+              <div className="flex justify-between">
+                <button
+                  type="button"
+                  className="border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md"
+                  onClick={handlePreviousStep}
+                >
+                  Voltar
+                </button>
+                <button 
+                  type="submit"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md"
+                >
+                  Finalizar Cadastro
+                </button>
+              </div>
+            </>
+          )}
+        </form>
+      </Form>
+    </Card>
   );
 };
+
+import * as z from 'zod';
+
+const firstStepSchema = z.object({
+  dataCompra: z.string().nonempty('Data do pedido é obrigatória'),
+  setor: z.string().nonempty('Secretaria solicitante é obrigatória'),
+  fundoMonetario: z.string().nonempty('Fundo monetário é obrigatório'),
+  responsavel: z.string().nonempty('Nome do responsável é obrigatório'),
+  descricao: z.string().min(5, 'Descrição deve ter pelo menos 5 caracteres'),
+  justificativa: z.string().min(5, 'Justificativa deve ter pelo menos 5 caracteres'),
+});
+
+const secondStepSchema = z.object({
+  valorEstimado: z.string().optional(),
+  localEntrega: z.string().nonempty('Local de entrega é obrigatório'),
+});
 
 export default PedidoForm;

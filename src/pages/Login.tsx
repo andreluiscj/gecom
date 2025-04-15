@@ -18,6 +18,8 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   
   const { 
@@ -41,6 +43,14 @@ const Login: React.FC = () => {
   const onSubmitLogin = (e: React.FormEvent) => {
     e.preventDefault();
     handleLogin(username, password);
+  };
+
+  const onSubmitPasswordChange = () => {
+    handlePasswordChange(newPassword, confirmPassword);
+  };
+
+  const onGDPRConsent = () => {
+    handleGDPRConsent(username, password);
   };
 
   return (
@@ -108,11 +118,17 @@ const Login: React.FC = () => {
       <PasswordChangeDialog
         open={showChangePasswordDialog}
         onOpenChange={setShowChangePasswordDialog}
+        newPassword={newPassword}
+        confirmPassword={confirmPassword}
+        setNewPassword={setNewPassword}
+        setConfirmPassword={setConfirmPassword}
+        onSubmit={onSubmitPasswordChange}
+        isSubmitting={isSubmitting}
       />
 
       <GDPRConsentDialog
         open={showGDPRDialog}
-        onAccept={handleGDPRConsent}
+        onAccept={onGDPRConsent}
         onOpenChange={setShowGDPRDialog}
       />
 

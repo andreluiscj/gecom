@@ -148,28 +148,3 @@ export interface UsuarioLogin {
   ativo: boolean;
   primeiroAcesso?: boolean;
 }
-
-// Add mappings to bridge between our frontend types and Supabase table types
-export const mapPedidoStatusToRequestStatus = (status: PedidoStatus): string => {
-  switch (status) {
-    case 'Pendente': return 'Pendente';
-    case 'Em Análise': return 'Em Análise';
-    case 'Aprovado': return 'Aprovado';
-    case 'Em Andamento': return 'Em Andamento';
-    case 'Concluído': return 'Concluído';
-    case 'Rejeitado': return 'Rejeitado';
-    default: return 'Pendente';
-  }
-};
-
-export const mapRequestStatusToPedidoStatus = (status: string): PedidoStatus => {
-  switch (status) {
-    case 'Pendente': return 'Pendente';
-    case 'Em Análise': return 'Em Análise';
-    case 'Aprovado': return 'Aprovado';
-    case 'Em Andamento': return 'Em Andamento';
-    case 'Concluído': return 'Concluído';
-    case 'Rejeitado': return 'Rejeitado';
-    default: return 'Pendente';
-  }
-};

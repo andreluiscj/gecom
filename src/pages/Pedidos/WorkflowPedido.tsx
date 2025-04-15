@@ -1,433 +1,382 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, Check, Circle, Clock, AlertCircle, Calendar, User, AlertTriangle, Lock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { format } from 'date-fns';
+import { obterTodosPedidos, atualizarEtapaWorkflow } from '@/data/mockData';
 import { toast } from 'sonner';
-import { PedidoCompra, Funcionario, WorkflowStep } from '@/types';
+import { WorkflowStepStatus } from '@/types';
 import { canEditStep } from '@/utils/workflowHelpers';
-import { updateEtapaWorkflow, getPedidos } from '@/services/pedidoService';
-import { getFuncionarios } from '@/services/funcionarioService';
-import { getUserRole, getUserId } from '@/utils/authHelpers';
-import { CheckCircle, XCircle, Clock, ArrowLeft } from 'lucide-react';
+import { canEditWorkflowStep, getPermittedWorkflowStep, getUserRole } from '@/utils/authHelpers';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const WorkflowPedido: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [refreshKey, setRefreshKey] = useState(0);
   
-  const [pedido, setPedido] = useState<PedidoCompra | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
-
-  // Get current user info
+  const allPedidos = obterTodosPedidos();
+  const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos, refreshKey]);
+  const permittedStep = getPermittedWorkflowStep();
   const userRole = getUserRole();
-  const userId = getUserId();
-
-  useEffect(() => {
-    const loadData = async () => {
-      if (!id) return;
-      
-      try {
-        // Load pedido and funcionarios in parallel
-        const [pedidosData, funcionariosData] = await Promise.all([
-          getPedidos(),
-          getFuncionarios()
-        ]);
-        
-        const pedidoEncontrado = pedidosData.find(p => p.id === id);
-        
-        if (pedidoEncontrado) {
-          setPedido(pedidoEncontrado);
-          setFuncionarios(funcionariosData);
-        } else {
-          toast.error('Pedido não encontrado');
-          navigate('/pedidos');
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        toast.error('Erro ao carregar informações do pedido');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadData();
-  }, [id, navigate]);
-
-  const handleApproveStep = async (stepId: string) => {
-    if (!pedido) return;
-    setIsUpdating(true);
-    
-    try {
-      // Update step status locally first
-      const updatedSteps = pedido.workflow?.steps.map(step => {
-        if (step.id === stepId) {
-          return {
-            ...step,
-            status: 'Concluído',
-            dataConclusao: new Date(),
-            responsavel: userId
-          };
-        }
-        return step;
-      }) || [];
-      
-      // Calculate completion percentage
-      const totalSteps = updatedSteps.length;
-      const completedSteps = updatedSteps.filter(s => s.status === 'Concluído').length;
-      const percentComplete = (completedSteps / totalSteps) * 100;
-      
-      // Update workflow locally
-      setPedido({
-        ...pedido,
-        workflow: {
-          ...pedido.workflow!,
-          steps: updatedSteps,
-          percentComplete,
-          currentStep: completedSteps + 1 > totalSteps ? totalSteps : completedSteps + 1
-        }
-      });
-      
-      // Update in database
-      await updateEtapaWorkflow(pedido.id, stepId, 'Concluído', userId || undefined);
-      
-      toast.success('Etapa aprovada com sucesso');
-    } catch (error) {
-      console.error('Erro ao aprovar etapa:', error);
-      toast.error('Erro ao atualizar workflow');
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleRejectStep = async (stepId: string) => {
-    if (!pedido) return;
-    setIsUpdating(true);
-    
-    try {
-      // Update step status locally first
-      const updatedSteps = pedido.workflow?.steps.map(step => {
-        if (step.id === stepId) {
-          return {
-            ...step,
-            status: 'Pendente',
-            responsavel: userId
-          };
-        }
-        return step;
-      }) || [];
-      
-      // Update workflow locally
-      setPedido({
-        ...pedido,
-        status: 'Rejeitado',
-        workflow: {
-          ...pedido.workflow!,
-          steps: updatedSteps,
-          percentComplete: 0
-        }
-      });
-      
-      // Update in database
-      await updateEtapaWorkflow(pedido.id, stepId, 'Pendente', userId || undefined);
-      
-      toast.warning('Etapa rejeitada');
-    } catch (error) {
-      console.error('Erro ao rejeitar etapa:', error);
-      toast.error('Erro ao atualizar workflow');
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleStartStep = async (stepId: string) => {
-    if (!pedido) return;
-    setIsUpdating(true);
-    
-    try {
-      // Update step status locally first
-      const updatedSteps = pedido.workflow?.steps.map(step => {
-        if (step.id === stepId) {
-          return {
-            ...step,
-            status: 'Em Andamento',
-            responsavel: userId
-          };
-        }
-        return step;
-      }) || [];
-      
-      // Update workflow locally
-      setPedido({
-        ...pedido,
-        status: 'Em Andamento',
-        workflow: {
-          ...pedido.workflow!,
-          steps: updatedSteps
-        }
-      });
-      
-      // Update in database
-      await updateEtapaWorkflow(pedido.id, stepId, 'Em Andamento', userId || undefined);
-      
-      toast.success('Etapa iniciada');
-    } catch (error) {
-      console.error('Erro ao iniciar etapa:', error);
-      toast.error('Erro ao atualizar workflow');
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const getStepColor = (status: string) => {
-    switch (status) {
-      case 'Concluído':
-        return 'bg-green-500 text-white';
-      case 'Em Andamento':
-        return 'bg-blue-500 text-white';
-      case 'Pendente':
-      default:
-        return 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
-    }
-  };
-
-  const getStepIcon = (status: string) => {
-    switch (status) {
-      case 'Concluído':
-        return <CheckCircle className="h-5 w-5" />;
-      case 'Em Andamento':
-        return <Clock className="h-5 w-5" />;
-      case 'Pendente':
-      default:
-        return null;
-    }
-  };
-
-  const getResponsavel = (responsavelId: string | undefined) => {
-    if (!responsavelId) return 'Não designado';
-    
-    const funcionario = funcionarios.find(f => f.id === responsavelId);
-    return funcionario ? funcionario.nome : 'Usuário desconhecido';
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <p>Carregando workflow...</p>
-      </div>
-    );
-  }
 
   if (!pedido) {
     return (
-      <div className="text-center my-8">
-        <h2 className="text-xl font-bold">Pedido não encontrado</h2>
-        <p className="text-muted-foreground mt-2">
-          O pedido que você está procurando não existe.
-        </p>
-        <Button 
-          onClick={() => navigate('/pedidos')} 
-          variant="outline"
-          className="mt-4"
-        >
-          Voltar para lista de pedidos
-        </Button>
+      <div className="space-y-4 animate-fade-in">
+        <div className="flex items-center gap-2 mb-4">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-2xl font-bold">Pedido não encontrado</h1>
+        </div>
+        
+        <Card>
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
+            <p className="mt-4 text-muted-foreground">
+              O pedido que você está procurando não existe ou foi removido.
+            </p>
+            <Button className="mt-4" onClick={() => navigate('/pedidos')}>
+              Ver todos os pedidos
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // Check if workflow is complete or rejected
-  const isWorkflowComplete = pedido.workflow?.percentComplete === 100;
-  const isRejected = pedido.status === 'Rejeitado';
+  const handleUpdateStepStatus = (stepIndex: number, status: WorkflowStepStatus) => {
+    if (pedido && pedido.workflow) {
+      const currentStep = pedido.workflow.steps[stepIndex];
+      
+      // Check if user has permission to edit this specific step
+      if (!canEditWorkflowStep(currentStep.title)) {
+        toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
+        return;
+      }
+      
+      // Verificar se a etapa pode ser editada na sequência correta
+      if (!canEditStep(pedido.workflow, stepIndex)) {
+        toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
+        return;
+      }
+      
+      // Verificar se a alteração segue a ordem lógica
+      if (status === 'Concluído' && stepIndex < pedido.workflow.steps.length - 1) {
+        // Se estamos concluindo uma etapa, precisamos verificar se a próxima etapa existe
+        // e atualizá-la para "Em Andamento" se estiver "Pendente"
+        if (pedido.workflow.steps[stepIndex + 1].status === 'Pendente') {
+          atualizarEtapaWorkflow(
+            pedido.id, 
+            stepIndex + 1, 
+            'Em Andamento'
+          );
+        }
+      }
+      
+      atualizarEtapaWorkflow(pedido.id, stepIndex, status);
+      toast.success(`Status da etapa atualizado para ${status}`);
+      setRefreshKey(prev => prev + 1); // Force refresh
+    }
+  };
+
+  const handleUpdateResponsavel = (stepIndex: number, responsavel: string) => {
+    if (pedido && pedido.workflow) {
+      const currentStep = pedido.workflow.steps[stepIndex];
+      
+      // Check if user has permission to edit this specific step
+      if (!canEditWorkflowStep(currentStep.title)) {
+        toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
+        return;
+      }
+      
+      if (!canEditStep(pedido.workflow, stepIndex)) {
+        toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
+        return;
+      }
+      
+      atualizarEtapaWorkflow(
+        pedido.id, 
+        stepIndex, 
+        pedido.workflow.steps[stepIndex].status,
+        undefined,
+        responsavel
+      );
+      toast.success('Responsável atualizado com sucesso');
+      setRefreshKey(prev => prev + 1);
+    }
+  };
+
+  const handleUpdateDataConclusao = (stepIndex: number, data: Date | undefined) => {
+    if (pedido && pedido.workflow) {
+      const currentStep = pedido.workflow.steps[stepIndex];
+      
+      // Check if user has permission to edit this specific step
+      if (!canEditWorkflowStep(currentStep.title)) {
+        toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
+        return;
+      }
+      
+      if (!canEditStep(pedido.workflow, stepIndex)) {
+        toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
+        return;
+      }
+      
+      atualizarEtapaWorkflow(
+        pedido.id, 
+        stepIndex, 
+        pedido.workflow.steps[stepIndex].status,
+        pedido.workflow.steps[stepIndex].date,
+        pedido.workflow.steps[stepIndex].responsavel,
+        data
+      );
+      toast.success('Data de conclusão atualizada com sucesso');
+      setRefreshKey(prev => prev + 1);
+    }
+  };
   
-  const renderStepActions = (step: WorkflowStep) => {
-    // Check if current user can edit this step
-    const isResponsible = step.responsavel === userId;
-    const canEdit = canEditStep(userRole, step.status, isResponsible);
-    
-    if (!canEdit) return null;
-    
-    // Different actions based on step status
-    if (step.status === 'Pendente') {
-      return (
-        <div className="flex items-center space-x-2 mt-2">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            disabled={isUpdating}
-            onClick={() => handleStartStep(step.id)}
-          >
-            Iniciar
-          </Button>
-        </div>
-      );
-    } else if (step.status === 'Em Andamento') {
-      return (
-        <div className="flex items-center space-x-2 mt-2">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            disabled={isUpdating}
-            onClick={() => handleRejectStep(step.id)}
-          >
-            <XCircle className="h-4 w-4 mr-1" />
-            Rejeitar
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-            disabled={isUpdating}
-            onClick={() => handleApproveStep(step.id)}
-          >
-            <CheckCircle className="h-4 w-4 mr-1" />
-            Aprovar
-          </Button>
-        </div>
-      );
+  const getStatusIcon = (status: WorkflowStepStatus) => {
+    switch (status) {
+      case 'Concluído':
+        return <Check className="h-5 w-5 text-green-500" />;
+      case 'Em Andamento':
+        return <Clock className="h-5 w-5 text-blue-500" />;
+      case 'Pendente':
+      default:
+        return <Circle className="h-5 w-5 text-gray-300" />;
+    }
+  };
+
+  const getStatusClass = (status: WorkflowStepStatus, isEditable: boolean, hasPermission: boolean) => {
+    if (!isEditable || !hasPermission) {
+      return 'text-gray-400 border-gray-100 bg-gray-50 opacity-70';
     }
     
-    return null;
+    switch (status) {
+      case 'Concluído':
+        return 'text-green-600 border-green-200 bg-green-50';
+      case 'Em Andamento':
+        return 'text-blue-600 border-blue-200 bg-blue-50';
+      case 'Pendente':
+      default:
+        return 'text-gray-600 border-gray-200 bg-gray-50';
+    }
+  };
+  
+  const getProgressColor = (percent: number) => {
+    if (percent < 30) return 'bg-red-500';
+    if (percent < 70) return 'bg-yellow-500';
+    return 'bg-green-500';
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">
-          Workflow do Pedido #{pedido.id.substring(0, 8)}
-        </h1>
-        <Button 
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1"
-          onClick={() => navigate(`/pedidos/visualizar/${pedido.id}`)}
-        >
+    <div className="space-y-4 animate-fade-in">
+      <div className="flex items-center gap-2 mb-4">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4" />
-          Voltar
         </Button>
+        <h1 className="text-2xl font-bold">Fluxo do Processo de Compra</h1>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Status do Workflow</CardTitle>
-          <CardDescription>
-            {pedido.descricao} - {pedido.setor}
-          </CardDescription>
+      
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg">{pedido.descricao}</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Secretaria: {pedido.setor} • DFD #{pedido.id.substring(0, 8)}
+            </p>
+          </div>
+          {pedido.status && (
+            <Badge className={
+              pedido.status === 'Concluído' ? 'bg-green-100 text-green-800' : 
+              pedido.status === 'Em Andamento' ? 'bg-blue-100 text-blue-800' : 
+              'bg-orange-100 text-orange-800'
+            }>
+              {pedido.status}
+            </Badge>
+          )}
         </CardHeader>
         
-        <CardContent className="space-y-4">
-          {/* Workflow status overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <p className="text-sm font-medium text-muted-foreground">Status</p>
-              <p className="text-2xl font-bold">{pedido.status}</p>
+        <CardContent>
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">
+                Progresso do Processo: {pedido.workflow?.percentComplete || 0}%
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {pedido.workflow?.currentStep || 0} de {pedido.workflow?.totalSteps || 8} etapas
+              </span>
             </div>
-            
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <p className="text-sm font-medium text-muted-foreground">Progresso</p>
-              <p className="text-2xl font-bold">
-                {pedido.workflow?.percentComplete.toFixed(0)}%
-              </p>
-            </div>
-            
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <p className="text-sm font-medium text-muted-foreground">Etapa Atual</p>
-              <p className="text-2xl font-bold">
-                {pedido.workflow?.currentStep}/{pedido.workflow?.totalSteps}
-              </p>
-            </div>
+            <Progress 
+              value={pedido.workflow?.percentComplete || 0} 
+              className="h-2" 
+              color={getProgressColor(pedido.workflow?.percentComplete || 0)}
+            />
           </div>
           
-          <Separator />
-          
-          {/* Progress indicator */}
-          <div className="relative">
-            <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 dark:bg-gray-700"></div>
-            <div className="flex justify-between">
-              {pedido.workflow?.steps.map((step, index) => (
-                <div key={step.id} className="relative z-10 text-center">
-                  <div 
-                    className={`h-8 w-8 rounded-full flex items-center justify-center mb-1 mx-auto ${getStepColor(step.status)}`}
-                  >
-                    {getStepIcon(step.status) || index + 1}
-                  </div>
-                  <p className="text-xs font-medium truncate max-w-[80px] mx-auto">{step.title}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <Separator />
-          
-          {/* Workflow steps in detail */}
-          <div className="space-y-4 mt-8">
-            <h3 className="font-medium">Detalhe das Etapas</h3>
-            
-            {(isWorkflowComplete || isRejected) && (
-              <div className={`p-3 rounded-md ${isRejected ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'}`}>
-                <p className="text-sm font-medium flex items-center gap-2">
-                  {isRejected ? (
-                    <>
-                      <XCircle className="h-5 w-5" />
-                      Pedido rejeitado
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="h-5 w-5" />
-                      Workflow concluído
-                    </>
-                  )}
-                </p>
-              </div>
-            )}
-            
-            <div className="divide-y">
-              {pedido.workflow?.steps.map((step) => (
-                <div key={step.id} className="py-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <div className={`h-3 w-3 rounded-full ${getStepColor(step.status)}`}></div>
-                        <h4 className="font-medium">{step.title}</h4>
+          <div className="space-y-6 mt-8">
+            {pedido.workflow?.steps.map((step, index) => {
+              // Verificando se a etapa pode ser editada com base na função canEditStep
+              const isEditable = canEditStep(pedido.workflow!, index);
+              // Verificando se o usuário tem permissão para editar esta etapa específica
+              const hasPermission = canEditWorkflowStep(step.title);
+              
+              return (
+                <div 
+                  key={step.id} 
+                  className={`border rounded-lg p-4 ${getStatusClass(step.status, isEditable, hasPermission)}`}
+                >
+                  <div className="flex flex-col gap-4">
+                    {/* Title and Status Section */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          {getStatusIcon(step.status)}
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{step.title}</h3>
+                          {step.title === 'Sessão Licitação' && step.date && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                              <Calendar className="h-3 w-3" /> 
+                              Data marcada: {format(new Date(step.date), 'dd/MM/yyyy')}
+                            </div>
+                          )}
+                        </div>
+                        {!isEditable && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="ml-2">
+                                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Etapas anteriores precisam ser concluídas primeiro</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {!hasPermission && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="ml-2">
+                                  <Lock className="h-4 w-4 text-red-500" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Você não tem permissão para editar esta etapa</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Status: {step.status}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Responsável: {getResponsavel(step.responsavel)}
-                      </p>
-                      {step.dataConclusao && (
-                        <p className="text-sm text-muted-foreground">
-                          Concluído em: {new Date(step.dataConclusao).toLocaleDateString()}
-                        </p>
+                      
+                      {/* Replace dropdown with approval button for the first step, keep dropdown for others */}
+                      {step.title === 'Aprovação da DFD' ? (
+                        <div>
+                          {userRole === 'admin' || userRole === 'manager' ? (
+                            <Button 
+                              variant="default" 
+                              className="bg-blue-600 hover:bg-blue-700"
+                              onClick={() => navigate(`/pedidos/aprovacao/${pedido.id}`)}
+                              disabled={!isEditable || !hasPermission}
+                            >
+                              Aprovar
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="default" 
+                              className="bg-blue-600 hover:bg-blue-700"
+                              disabled={true}
+                            >
+                              Aprovar
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <Select
+                          value={step.status}
+                          onValueChange={(value) => handleUpdateStepStatus(index, value as WorkflowStepStatus)}
+                          disabled={!isEditable || !hasPermission}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pendente">Pendente</SelectItem>
+                            <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                            <SelectItem value="Concluído">Concluído</SelectItem>
+                          </SelectContent>
+                        </Select>
                       )}
                     </div>
-                    {renderStepActions(step)}
+
+                    {/* Additional Fields Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
+                      {/* Responsible Person */}
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          <User className="h-3 w-3 inline mr-1" /> Responsável
+                        </label>
+                        <Input 
+                          placeholder="Nome do responsável" 
+                          value={step.responsavel || ''} 
+                          onChange={(e) => handleUpdateResponsavel(index, e.target.value)}
+                          className="h-8 text-sm"
+                          disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}
+                        />
+                      </div>
+
+                      {/* Completion Date */}
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          <Calendar className="h-3 w-3 inline mr-1" /> Data de Conclusão <span className="text-gray-500">(opcional)</span>
+                        </label>
+                        <Popover>
+                          <PopoverTrigger asChild disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={`w-full justify-start text-left font-normal h-8 text-sm ${!step.dataConclusao ? 'text-muted-foreground' : ''} ${!isEditable || !hasPermission || step.title === 'Aprovação da DFD' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}
+                            >
+                              <Calendar className="mr-2 h-3 w-3" />
+                              {step.dataConclusao ? format(new Date(step.dataConclusao), 'dd/MM/yyyy') : 'Selecionar data (opcional)'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={step.dataConclusao}
+                              onSelect={(isEditable && hasPermission && step.title !== 'Aprovação da DFD') ? handleUpdateDataConclusao.bind(null, index) : undefined}
+                              initialFocus
+                              disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </CardContent>
-        
-        <CardFooter>
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/pedidos/visualizar/${pedido.id}`)}
-          >
-            Voltar para Detalhes
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );

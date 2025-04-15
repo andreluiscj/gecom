@@ -1,4 +1,5 @@
 
+import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,10 +9,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { useState } from 'react';
-import { Separator } from '@/components/ui/separator';
+import { Shield, ShieldCheck } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface GDPRConsentDialogProps {
   open: boolean;
@@ -19,104 +18,82 @@ interface GDPRConsentDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function GDPRConsentDialog({
-  open,
-  onAccept,
-  onOpenChange,
-}: GDPRConsentDialogProps) {
-  const [accepted, setAccepted] = useState(false);
-
-  const handleAccept = () => {
-    if (accepted) {
-      onAccept();
-    }
-  };
-
+export function GDPRConsentDialog({ open, onAccept, onOpenChange }: GDPRConsentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Termos de Uso e Política de Privacidade</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            Política de Privacidade e Termos de Uso
+          </DialogTitle>
           <DialogDescription>
-            Para continuar utilizando o GECOM, é necessário aceitar os termos de uso e política de privacidade.
+            Por favor, leia e aceite os termos para continuar.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          <h3 className="font-medium text-lg">Termos de Uso</h3>
-          <div className="text-sm text-muted-foreground space-y-2 bg-muted/20 p-4 rounded-md max-h-[200px] overflow-y-auto">
-            <p>
-              Ao utilizar o GECOM - Sistema de Gerenciamento de Compras Públicas, você concorda
-              com os seguintes termos e condições:
-            </p>
-            <p>
-              1. O sistema deve ser utilizado apenas para fins de gerenciamento de compras
-              públicas municipais, de acordo com a legislação vigente.
-            </p>
-            <p>
-              2. Todas as ações realizadas no sistema são registradas e monitoradas para
-              fins de auditoria e transparência.
-            </p>
-            <p>
-              3. O usuário é responsável por manter suas credenciais de acesso em sigilo
-              e não compartilhá-las com terceiros.
-            </p>
-            <p>
-              4. O uso indevido do sistema pode resultar em responsabilização administrativa,
-              civil e criminal, conforme aplicável.
-            </p>
-            <p>
-              5. O sistema é propriedade do município e deve ser utilizado apenas por
-              funcionários autorizados.
-            </p>
+        
+        <ScrollArea className="h-[300px] rounded-md border p-4">
+          <div className="space-y-4">
+            <h3 className="font-semibold">Política de Privacidade</h3>
+            
+            <p>A presente Política de Privacidade tem por finalidade demonstrar o nosso compromisso com a privacidade e a proteção dos seus dados pessoais, em conformidade com a Lei Geral de Proteção de Dados (LGPD).</p>
+            
+            <h4 className="font-medium mt-4">1. Dados Coletados</h4>
+            <p>Coletamos os seguintes dados pessoais:</p>
+            <ul className="list-disc pl-5">
+              <li>Nome completo</li>
+              <li>E-mail profissional</li>
+              <li>Cargo</li>
+              <li>Setor</li>
+              <li>Data de acesso</li>
+              <li>Ações realizadas no sistema</li>
+            </ul>
+            
+            <h4 className="font-medium mt-4">2. Finalidade do Tratamento</h4>
+            <p>Os dados pessoais coletados serão utilizados para:</p>
+            <ul className="list-disc pl-5">
+              <li>Autenticação e controle de acesso ao sistema</li>
+              <li>Auditoria de ações realizadas</li>
+              <li>Registro de histórico de aprovações em processos</li>
+              <li>Comunicações relacionadas ao uso do sistema</li>
+              <li>Melhoria contínua da plataforma</li>
+            </ul>
+            
+            <h4 className="font-medium mt-4">3. Direitos do Titular</h4>
+            <p>Conforme a LGPD, você possui os seguintes direitos:</p>
+            <ul className="list-disc pl-5">
+              <li>Acesso aos seus dados pessoais</li>
+              <li>Correção de dados incompletos ou desatualizados</li>
+              <li>Portabilidade dos dados</li>
+              <li>Informações sobre compartilhamento dos dados</li>
+              <li>Revogação do consentimento</li>
+            </ul>
+            
+            <h4 className="font-medium mt-4">4. Compartilhamento de Dados</h4>
+            <p>Os dados poderão ser compartilhados com:</p>
+            <ul className="list-disc pl-5">
+              <li>Órgãos públicos com finalidade de auditoria</li>
+              <li>Fornecedores de tecnologia para manutenção do sistema</li>
+            </ul>
+            
+            <h4 className="font-medium mt-4">5. Segurança dos Dados</h4>
+            <p>Implementamos medidas técnicas e organizacionais para proteger seus dados pessoais contra acessos não autorizados, destruição ou perda acidental.</p>
+            
+            <h4 className="font-medium mt-4">6. Período de Retenção</h4>
+            <p>Seus dados serão mantidos pelo período necessário para atender às finalidades apresentadas, observando os prazos legais aplicáveis.</p>
+            
+            <h4 className="font-medium mt-4">7. Contato</h4>
+            <p>Para exercer seus direitos ou esclarecer dúvidas, entre em contato com nosso Encarregado de Proteção de Dados pelo email: dpo@gecom.gov.br</p>
           </div>
-
-          <Separator />
-
-          <h3 className="font-medium text-lg">Política de Privacidade</h3>
-          <div className="text-sm text-muted-foreground space-y-2 bg-muted/20 p-4 rounded-md max-h-[200px] overflow-y-auto">
-            <p>
-              A sua privacidade é importante para nós. Esta política de privacidade
-              descreve como coletamos, usamos e compartilhamos suas informações:
-            </p>
-            <p>
-              1. Dados Coletados: Coletamos informações pessoais como nome, cargo,
-              setor, email institucional e informações de login.
-            </p>
-            <p>
-              2. Uso dos Dados: Utilizamos seus dados para autenticação, auditoria de
-              ações no sistema, notificações relacionadas a processos de compras e relatórios
-              administrativos.
-            </p>
-            <p>
-              3. Compartilhamento: Seus dados podem ser compartilhados com outros setores
-              da administração municipal envolvidos nos processos de compras.
-            </p>
-            <p>
-              4. Segurança: Implementamos medidas técnicas e organizacionais para proteger
-              suas informações contra acesso não autorizado ou alteração.
-            </p>
-            <p>
-              5. Direitos: Você tem o direito de acessar, corrigir e atualizar seus dados
-              pessoais conforme necessário.
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-2 mt-6">
-            <Checkbox
-              id="terms"
-              checked={accepted}
-              onCheckedChange={(checked) => setAccepted(checked as boolean)}
-            />
-            <Label htmlFor="terms" className="text-sm">
-              Eu li e concordo com os Termos de Uso e Política de Privacidade
-            </Label>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button onClick={handleAccept} disabled={!accepted}>
-            Aceitar e Continuar
+        </ScrollArea>
+        
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            Recusar
+          </Button>
+          <Button onClick={onAccept} className="gap-2">
+            <Shield className="h-4 w-4" />
+            Aceitar termos e continuar
           </Button>
         </DialogFooter>
       </DialogContent>

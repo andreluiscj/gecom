@@ -1,21 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import PedidoForm from '@/components/Pedidos/PedidoForm';
 import { Card } from '@/components/ui/card';
-import { supabase } from '@/lib/supabase';
 
 const NovoPedido: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
-    };
-    
-    checkAuth();
-  }, []);
-  
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -26,15 +14,7 @@ const NovoPedido: React.FC = () => {
         </p>
       </div>
 
-      {isAuthenticated ? (
-        <PedidoForm />
-      ) : (
-        <Card className="p-6">
-          <p className="text-center text-muted-foreground">
-            Você precisa estar autenticado para criar um novo pedido.
-          </p>
-        </Card>
-      )}
+      <PedidoForm />
     </div>
   );
 };

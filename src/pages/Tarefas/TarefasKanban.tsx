@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
-import { getPedidos } from '@/services/pedidoService';
+import { obterPedidos } from '@/data/mockData';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { PedidoCompra, Setor } from '@/types';
 import { Button } from '@/components/ui/button';
 import { getSetorIcon, getSetorColor } from '@/utils/iconHelpers';
 import { Progress } from '@/components/ui/progress';
-import { Eye, Loader2 } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 interface TaskProps {
   pedido: PedidoCompra;
@@ -78,17 +78,10 @@ const TarefasKanban = () => {
   const [tab, setTab] = useState('todos');
   const [secretariaSelecionada, setSecretariaSelecionada] = useState<string | null>(null);
   const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
-  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    const fetchPedidos = async () => {
-      setLoading(true);
-      const data = await getPedidos();
-      setPedidos(data);
-      setLoading(false);
-    };
-    
-    fetchPedidos();
+    const todosPedidos = obterPedidos();
+    setPedidos(todosPedidos);
   }, []);
 
   const pedidosFiltrados = pedidos.filter(p => {
@@ -132,14 +125,6 @@ const TarefasKanban = () => {
       setSecretariaSelecionada(value as Setor);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4 animate-fade-in">

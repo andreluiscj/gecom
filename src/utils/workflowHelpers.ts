@@ -1,99 +1,148 @@
-import { Funcionario, WorkflowStep, PedidoStatus, Workflow, PedidoCompra } from "@/types";
 
-export const DEFAULT_WORKFLOW_STEPS: WorkflowStep[] = [
-  {
-    id: "1",
-    title: "Análise Inicial",
-    status: "Pendente",
-  },
-  {
-    id: "2",
-    title: "Aprovação Financeira",
-    status: "Pendente",
-  },
-  {
-    id: "3",
-    title: "Cotações",
-    status: "Pendente",
-  },
-  {
-    id: "4",
-    title: "Análise de Cotações",
-    status: "Pendente",
-  },
-  {
-    id: "5",
-    title: "Empenho",
-    status: "Pendente",
-  },
-  {
-    id: "6",
-    title: "Aprovação Final",
-    status: "Pendente",
-  },
+import { v4 as uuidv4 } from 'uuid';
+import { PedidoCompra, WorkflowStep, WorkflowStepStatus } from '@/types';
+
+// Define the default workflow steps for a purchase process
+export const DEFAULT_WORKFLOW_STEPS = [
+  { title: 'Aprovação da DFD', status: 'Pendente' as WorkflowStepStatus },
+  { title: 'Criação da ETP', status: 'Pendente' as WorkflowStepStatus },
+  { title: 'Criação do TR', status: 'Pendente' as WorkflowStepStatus },
+  { title: 'Pesquisa de Preços', status: 'Pendente' as WorkflowStepStatus },
+  { title: 'Parecer Jurídico', status: 'Pendente' as WorkflowStepStatus },
+  { title: 'Edital', status: 'Pendente' as WorkflowStepStatus },
+  { title: 'Sessão Licitação', status: 'Pendente' as WorkflowStepStatus },
+  { title: 'Recursos', status: 'Pendente' as WorkflowStepStatus },
+  { title: 'Homologação', status: 'Pendente' as WorkflowStepStatus },
 ];
 
-export function funcionarioTemPermissao(
-  funcionario: Funcionario,
-  etapa: string
-): boolean {
-  if (funcionario.permissaoEtapa === "all") return true;
-  return funcionario.permissaoEtapa === etapa;
-}
+// Initialize a new workflow for a pedido
+export function initializeWorkflow(): PedidoCompra['workflow'] {
+  const steps = DEFAULT_WORKFLOW_STEPS.map(step => ({
+    ...step,
+    id: uuidv4(),
+    status: 'Pendente' as WorkflowStepStatus,
+  }));
 
-export function canEditStep(
-  userRole: string | null,
-  stepStatus: string,
-  isResponsible: boolean
-): boolean {
-  // Admin can edit any step
-  if (userRole === "admin") return true;
-
-  // Managers can edit pending steps
-  if (userRole === "manager" && stepStatus === "Pendente") return true;
-
-  // Responsible users can edit their in-progress steps
-  if (isResponsible && stepStatus === "Em Andamento") return true;
-
-  return false;
-}
-
-// Initialize workflow with default steps
-export function initializeWorkflow(): Workflow {
   return {
-    currentStep: 1,
-    totalSteps: DEFAULT_WORKFLOW_STEPS.length,
+    currentStep: 0,
+    totalSteps: steps.length,
     percentComplete: 0,
-    steps: [...DEFAULT_WORKFLOW_STEPS]
+    steps,
   };
 }
 
-// Update workflow based on pedido status
-export function updateWorkflowFromPedidoStatus(pedido: PedidoCompra): Workflow {
-  const workflow = pedido.workflow || initializeWorkflow();
+// Update the status of a specific workflow step
+export function updateWorkflowStep(
+  workflow: PedidoCompra['workflow'], 
+  stepIndex: number, 
+  status: WorkflowStepStatus,
+  date?: Date,
+  responsavel?: string,
+  dataConclusao?: Date
+): PedidoCompra['workflow'] {
+  if (!workflow) return initializeWorkflow();
   
-  switch (pedido.status) {
-    case 'Aprovado':
-      // Set all steps to completed
-      workflow.steps = workflow.steps.map(step => ({
-        ...step,
-        status: 'Concluído'
-      }));
-      workflow.currentStep = workflow.totalSteps;
-      workflow.percentComplete = 100;
-      break;
-    case 'Rejeitado':
-      // Keep existing steps but mark workflow as stopped
-      workflow.percentComplete = 0;
-      break;
-    default:
-      // Calculate progress based on completed steps
-      const completedSteps = workflow.steps.filter(
-        step => step.status === 'Concluído'
-      ).length;
-      workflow.currentStep = completedSteps + 1;
-      workflow.percentComplete = (completedSteps / workflow.totalSteps) * 100;
+  const updatedSteps = [...workflow.steps];
+  
+  if (updatedSteps[stepIndex]) {
+    updatedSteps[stepIndex] = {
+      ...updatedSteps[stepIndex],
+      status,
+      date: date || (status === 'Concluído' ? new Date() : undefined),
+      responsavel: responsavel || updatedSteps[stepIndex].responsavel,
+      dataConclusao: dataConclusao || (status === 'Concluído' ? new Date() : updatedSteps[stepIndex].dataConclusao),
+    };
+  }
+
+  // Calculate the current step and progress percentage
+  const completedSteps = updatedSteps.filter(step => step.status === 'Concluído').length;
+  const inProgressSteps = updatedSteps.filter(step => step.status === 'Em Andamento').length;
+  
+  // Current step is the number of completed steps + 1 (if there are steps in progress)
+  const currentStep = inProgressSteps > 0 ? completedSteps + 1 : completedSteps;
+  
+  // Calculate percentage with weighted value for in-progress steps
+  const percentComplete = Math.round((completedSteps + (inProgressSteps * 0.5)) / updatedSteps.length * 100);
+  
+  return {
+    currentStep,
+    totalSteps: workflow.totalSteps,
+    percentComplete,
+    steps: updatedSteps,
+  };
+}
+
+// Automatically update workflow based on pedido status
+export function updateWorkflowFromPedidoStatus(pedido: PedidoCompra): PedidoCompra {
+  let workflow = pedido.workflow || initializeWorkflow();
+  
+  // Reset all steps to "Pendente" state to ensure DFD approval isn't completed
+  workflow.steps = workflow.steps.map((step) => ({
+    ...step,
+    status: 'Pendente' as WorkflowStepStatus
+  }));
+  
+  // Set the percentComplete to 0 and currentStep to 0
+  workflow.currentStep = 0;
+  workflow.percentComplete = 0;
+  
+  return { ...pedido, workflow };
+}
+
+/**
+ * Check if a given workflow step can be edited based on the status of previous steps
+ * @param workflow The workflow object
+ * @param stepIndex The index of the step being checked
+ * @returns boolean indicating if the step can be edited
+ */
+export function canEditStep(workflow: PedidoCompra['workflow'], stepIndex: number): boolean {
+  if (!workflow || stepIndex < 0 || stepIndex >= workflow.steps.length) {
+    return false;
   }
   
-  return workflow;
+  // First step can always be edited
+  if (stepIndex === 0) {
+    return true;
+  }
+  
+  // For other steps, the previous step must be "Concluído"
+  const previousStep = workflow.steps[stepIndex - 1];
+  return previousStep.status === 'Concluído';
 }
+
+/**
+ * Check if an employee has permission to work on a specific workflow step
+ * @param stepTitle The title of the workflow step
+ * @param funcionarioPermissao The employee's permission
+ * @param funcionarioSetor The employee's sector/department
+ * @returns boolean indicating if the employee has permission
+ */
+export function funcionarioTemPermissao(
+  stepTitle: string, 
+  funcionarioPermissao?: string,
+  funcionarioSetor?: string
+): boolean {
+  // Special case: Health sector employees can work on any step
+  if (funcionarioSetor === 'Saúde') {
+    return true;
+  }
+  
+  // Allow employees with manager/admin roles to work on any step
+  if (funcionarioPermissao === 'admin' || funcionarioPermissao?.toLowerCase().includes('gerente')) {
+    return true;
+  }
+  
+  // Check if the employee is assigned to this specific step
+  if (funcionarioPermissao === stepTitle) {
+    return true;
+  }
+  
+  // Check if the employee has "all" permissions
+  if (funcionarioPermissao === "all") {
+    return true;
+  }
+  
+  // Check if the step title matches the employee's permission (for direct step assignments)
+  return false;
+}
+
