@@ -104,7 +104,7 @@ export function useAuth() {
       const { error: updateError } = await supabase
         .from('usuarios')
         .update({ primeiro_acesso: false })
-        .eq('id', supabase.auth.getUser().data.user?.id);
+        .eq('id', (await supabase.auth.getUser()).data.user?.id);
 
       if (updateError) {
         toast.error(updateError.message);
@@ -123,11 +123,21 @@ export function useAuth() {
     }
   };
 
+  // Adicionar função para lidar com o consentimento GDPR
+  const handleGDPRConsent = () => {
+    setShowGDPRDialog(false);
+    // Aqui você pode adicionar lógica para salvar o consentimento no banco de dados
+    toast.success('Termos aceitos com sucesso!');
+  };
+
   return {
     isSubmitting,
     showChangePasswordDialog,
     setShowChangePasswordDialog,
+    showGDPRDialog,
+    setShowGDPRDialog,
     handleLogin,
     handlePasswordChange,
+    handleGDPRConsent
   };
 }

@@ -46,7 +46,7 @@ const Login: React.FC = () => {
   };
 
   const onSubmitPasswordChange = () => {
-    handlePasswordChange(newPassword, confirmPassword);
+    handlePasswordChange(newPassword);
   };
 
   const onGDPRConsent = () => {
