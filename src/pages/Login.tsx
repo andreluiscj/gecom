@@ -36,7 +36,19 @@ const Login: React.FC = () => {
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
     if (isAuthenticated) {
-      navigate('/dashboard');
+      const role = localStorage.getItem('user-role');
+      
+      // Redirecionar baseado na role
+      switch (role) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'prefeito':
+          navigate('/dashboard');
+          break;
+        default:
+          navigate('/dashboard');
+      }
     }
   }, [navigate]);
 
@@ -46,6 +58,9 @@ const Login: React.FC = () => {
   };
 
   const onSubmitPasswordChange = () => {
+    if (newPassword !== confirmPassword) {
+      return;
+    }
     handlePasswordChange(newPassword);
   };
 

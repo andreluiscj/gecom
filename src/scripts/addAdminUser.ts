@@ -4,146 +4,142 @@ import { toast } from 'sonner';
 
 export async function addAdminUser() {
   try {
-    console.log('Iniciando criação do usuário administrador...');
+    console.log("Verificando se já existem usuários administradores...");
     
-    // Verificar se o usuário já existe
-    const { data: existingUser, error: existingUserError } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('email', 'andreluiscj2207@gmail.com')
-      .single();
-
-    if (existingUserError && existingUserError.code !== 'PGRST116') {
-      console.error('Erro ao verificar usuário existente:', existingUserError);
-      return false;
-    }
-
-    if (existingUser) {
-      console.log('Usuário admin já existe no sistema');
-      return true;
-    }
-
-    // Criar usuário no Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: 'andreluiscj2207@gmail.com',
-      password: 'consultoriamosaico'
-    });
-
-    if (authError) {
-      console.error('Erro ao criar usuário no Auth:', authError);
-      throw authError;
-    }
-
-    if (!authData.user) {
-      console.error('Usuário não foi criado no Auth');
-      return false;
-    }
-
-    console.log('Usuário criado no Auth com sucesso:', authData.user?.id);
-
-    // Obter o ID do município (assumindo que já existe pelo menos um)
-    const { data: municipioData, error: municipioError } = await supabase
+    // Verificar se já existe um município para associar
+    const { data: municipio, error: municipioError } = await supabase
       .from('municipios')
       .select('id')
       .limit(1)
       .single();
-
+      
     if (municipioError) {
-      console.error('Erro ao obter município:', municipioError);
-      throw municipioError;
+      console.error("Erro ao verificar municípios:", municipioError);
+      toast.error("É necessário ter pelo menos um município cadastrado");
+      return false;
     }
-
-    console.log('Município obtido:', municipioData.id);
-
-    // Criar usuário na tabela usuarios
-    const { error: usuarioError } = await supabase
-      .from('usuarios')
-      .insert({
-        id: authData.user.id,
-        nome: 'Administrador Principal',
-        email: 'andreluiscj2207@gmail.com',
-        role: 'admin',
-        municipio_id: municipioData.id,
-        primeiro_acesso: false // Já configura como não sendo primeiro acesso
-      });
-
-    if (usuarioError) {
-      console.error('Erro ao criar usuário na tabela usuarios:', usuarioError);
-      throw usuarioError;
-    }
-
-    // Obter a primeira secretaria disponível para vincular o usuário
-    const { data: secretariaData, error: secretariaError } = await supabase
+    
+    // Verificar se já existe secretaria para associar
+    const { data: secretaria, error: secretariaError } = await supabase
       .from('secretarias')
       .select('id')
+      .eq('municipio_id', municipio.id)
       .limit(1)
       .single();
-
+      
     if (secretariaError) {
-      console.error('Erro ao obter secretaria:', secretariaError);
-      throw secretariaError;
+      console.error("Erro ao verificar secretarias:", secretariaError);
+      toast.error("É necessário ter pelo menos uma secretaria cadastrada");
+      return false;
     }
 
-    console.log('Secretaria obtida:', secretariaData.id);
-
-    // Criar associação entre usuário e secretaria
-    const { error: userSecretariaError } = await supabase
-      .from('usuario_secretarias')
-      .insert({
-        usuario_id: authData.user.id,
-        secretaria_id: secretariaData.id
-      });
-
-    if (userSecretariaError) {
-      console.error('Erro ao criar associação entre usuário e secretaria:', userSecretariaError);
-      throw userSecretariaError;
+    // Credenciais específicas para o usuário administrador de consultoria
+    const adminEmail = 'andreluiscj2207@gmail.com';
+    const adminPassword = 'consultoriamosaico';
+    
+    console.log("Criando usuário administrador de consultoria...");
+    
+    // Verificar se o usuário já existe
+    const { data: existingUser } = await supabase.auth.signInWithPassword({
+      email: adminEmail,
+      password: adminPassword,
+    });
+    
+    if (existingUser.user) {
+      console.log("Usuário administrador de consultoria já existe");
+      return true;
     }
 
-    // Criar usuário adicional solicitado
-    const { data: additionalUserData, error: additionalUserError } = await supabase.auth.signUp({
-      email: 'usuario@exemplo.com',
-      password: 'senha123'
+    // Criar o usuário no Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: adminEmail,
+      password: adminPassword,
+      email_confirm: true
     });
 
-    if (additionalUserError) {
-      console.error('Erro ao criar usuário adicional:', additionalUserError);
-      throw additionalUserError;
-    }
-
-    // Criar registro do usuário adicional na tabela usuarios
-    const { error: additionalUsuarioError } = await supabase
-      .from('usuarios')
-      .insert({
-        id: additionalUserData.user?.id,
-        nome: 'Nome do Usuário',
-        email: 'usuario@exemplo.com',
-        role: 'servidor',
-        municipio_id: municipioData.id,
-        primeiro_acesso: true
+    if (authError) {
+      console.error("Erro ao criar usuário administrador de consultoria:", authError);
+      
+      // Tentar método alternativo
+      const { data: authData2, error: authError2 } = await supabase.auth.signUp({
+        email: adminEmail,
+        password: adminPassword
       });
+      
+      if (authError2) {
+        console.error("Erro ao criar usuário usando método alternativo:", authError2);
+        throw authError2;
+      }
+      
+      console.log("Usuário administrador criado com método alternativo");
+      
+      // Criar registro na tabela usuarios
+      const { error: usuarioError } = await supabase
+        .from('usuarios')
+        .insert({
+          id: authData2.user?.id,
+          nome: 'Consultoria Mosaico',
+          email: adminEmail,
+          role: 'admin',
+          municipio_id: municipio.id,
+          primeiro_acesso: false
+        });
 
-    if (additionalUsuarioError) {
-      console.error('Erro ao criar registro do usuário adicional:', additionalUsuarioError);
-      throw additionalUsuarioError;
+      if (usuarioError) {
+        console.error("Erro ao criar registro do usuário administrador:", usuarioError);
+        throw usuarioError;
+      }
+
+      // Associar à secretaria
+      const { error: userSecretariaError } = await supabase
+        .from('usuario_secretarias')
+        .insert({
+          usuario_id: authData2.user?.id,
+          secretaria_id: secretaria.id
+        });
+
+      if (userSecretariaError) {
+        console.error("Erro ao associar usuário à secretaria:", userSecretariaError);
+        throw userSecretariaError;
+      }
+    } else {
+      // Criar registro na tabela usuarios
+      const { error: usuarioError } = await supabase
+        .from('usuarios')
+        .insert({
+          id: authData.user?.id,
+          nome: 'Consultoria Mosaico',
+          email: adminEmail,
+          role: 'admin',
+          municipio_id: municipio.id,
+          primeiro_acesso: false
+        });
+
+      if (usuarioError) {
+        console.error("Erro ao criar registro do usuário administrador:", usuarioError);
+        throw usuarioError;
+      }
+
+      // Associar à secretaria
+      const { error: userSecretariaError } = await supabase
+        .from('usuario_secretarias')
+        .insert({
+          usuario_id: authData.user?.id,
+          secretaria_id: secretaria.id
+        });
+
+      if (userSecretariaError) {
+        console.error("Erro ao associar usuário à secretaria:", userSecretariaError);
+        throw userSecretariaError;
+      }
     }
 
-    // Criar associação entre usuário adicional e secretaria
-    const { error: additionalUserSecretariaError } = await supabase
-      .from('usuario_secretarias')
-      .insert({
-        usuario_id: additionalUserData.user?.id,
-        secretaria_id: secretariaData.id
-      });
-
-    if (additionalUserSecretariaError) {
-      console.error('Erro ao criar associação do usuário adicional:', additionalUserSecretariaError);
-      throw additionalUserSecretariaError;
-    }
-
-    console.log('Usuário administrador e usuário adicional criados com sucesso');
+    console.log("Usuário administrador de consultoria criado com sucesso");
+    toast.success("Usuário administrador criado com sucesso");
     return true;
   } catch (error) {
-    console.error('Erro ao criar usuário administrador:', error);
+    console.error('Erro ao adicionar usuário administrador:', error);
+    toast.error('Erro ao adicionar usuário administrador');
     return false;
   }
 }

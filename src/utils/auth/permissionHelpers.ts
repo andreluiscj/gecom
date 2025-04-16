@@ -122,8 +122,6 @@ export function canAccessUserManagement(): boolean {
   return userRole === 'admin' || userRole === 'prefeito'; 
 }
 
-// Removed duplicate canAccessDashboard function since it's already in authCore.ts
-
 // Function to check if user should only see data from their own sector
 export function shouldFilterByUserSetor(): boolean {
   const userRole = getUserRole();
@@ -165,5 +163,5 @@ export function hasSetorAccess(setor: string): boolean {
 
 // Helper for getting funcionario ID
 function getFuncionarioId(): string | null {
-  return localStorage.getItem('funcionario-id');
+  return localStorage.getItem('user-id');
 }

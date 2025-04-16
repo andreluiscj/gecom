@@ -1,10 +1,27 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 
 export async function initializeSystem() {
   try {
+    console.log("Iniciando inicialização do sistema...");
+    
+    // Verificar se já existe um município cadastrado
+    const { data: existingMunicipios, error: municipiosCheckError } = await supabase
+      .from('municipios')
+      .select('*')
+      .limit(1);
+      
+    if (municipiosCheckError) {
+      console.error("Erro ao verificar municípios existentes:", municipiosCheckError);
+      throw municipiosCheckError;
+    }
+    
+    if (existingMunicipios && existingMunicipios.length > 0) {
+      console.log("Sistema já inicializado anteriormente, pulando inicialização");
+      return true;
+    }
+    
     // Create a default municipality
     const { data: municipioData, error: municipioError } = await supabase
       .from('municipios')
@@ -18,7 +35,12 @@ export async function initializeSystem() {
       .select()
       .single();
 
-    if (municipioError) throw municipioError;
+    if (municipioError) {
+      console.error("Erro ao criar município:", municipioError);
+      throw municipioError;
+    }
+
+    console.log("Município criado com sucesso:", municipioData);
 
     // Create a default secretaria
     const { data: secretariaData, error: secretariaError } = await supabase
@@ -31,15 +53,30 @@ export async function initializeSystem() {
       .select()
       .single();
 
-    if (secretariaError) throw secretariaError;
+    if (secretariaError) {
+      console.error("Erro ao criar secretaria:", secretariaError);
+      throw secretariaError;
+    }
 
-    // Create admin user in Supabase Auth
+    console.log("Secretaria criada com sucesso:", secretariaData);
+
+    // Create admin user in Supabase Auth with a more secure password
+    const adminEmail = 'admin@gecom.com';
+    const adminPassword = 'Admin@Gecom2024!';
+    
+    console.log("Criando usuário administrador...");
+    
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: 'admin@gecom.com',
-      password: 'AdminGecom2024!'
+      email: adminEmail,
+      password: adminPassword
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      console.error("Erro ao criar usuário admin no Auth:", authError);
+      throw authError;
+    }
+
+    console.log("Usuário admin criado com sucesso no Auth:", authData.user?.id);
 
     // Create corresponding user in usuarios table
     const { error: usuarioError } = await supabase
@@ -47,13 +84,18 @@ export async function initializeSystem() {
       .insert({
         id: authData.user?.id,
         nome: 'Administrador',
-        email: 'admin@gecom.com',
+        email: adminEmail,
         role: 'admin',
         municipio_id: municipioData.id,
         primeiro_acesso: true
       });
 
-    if (usuarioError) throw usuarioError;
+    if (usuarioError) {
+      console.error("Erro ao criar registro do usuário admin:", usuarioError);
+      throw usuarioError;
+    }
+
+    console.log("Registro do usuário admin criado com sucesso");
 
     // Create user-secretaria association
     const { error: userSecretariaError } = await supabase
@@ -63,29 +105,44 @@ export async function initializeSystem() {
         secretaria_id: secretariaData.id
       });
 
-    if (userSecretariaError) throw userSecretariaError;
+    if (userSecretariaError) {
+      console.error("Erro ao associar usuário admin à secretaria:", userSecretariaError);
+      throw userSecretariaError;
+    }
 
-    // Create additional user (usuário solicitado)
+    console.log("Associação do usuário admin com secretaria criada com sucesso");
+
+    // Create additional user (usuário servidor)
     const { data: additionalUserData, error: additionalUserError } = await supabase.auth.signUp({
-      email: 'usuario@exemplo.com',
-      password: 'senha123'
+      email: 'servidor@exemplo.com',
+      password: 'Servidor@2024!'
     });
 
-    if (additionalUserError) throw additionalUserError;
+    if (additionalUserError) {
+      console.error("Erro ao criar usuário servidor no Auth:", additionalUserError);
+      throw additionalUserError;
+    }
+    
+    console.log("Usuário servidor criado com sucesso no Auth:", additionalUserData.user?.id);
 
     // Create corresponding record in usuarios table
     const { error: additionalUsuarioError } = await supabase
       .from('usuarios')
       .insert({
         id: additionalUserData.user?.id,
-        nome: 'Nome do Usuário',
-        email: 'usuario@exemplo.com',
+        nome: 'Servidor Municipal',
+        email: 'servidor@exemplo.com',
         role: 'servidor',
         municipio_id: municipioData.id,
         primeiro_acesso: true
       });
 
-    if (additionalUsuarioError) throw additionalUsuarioError;
+    if (additionalUsuarioError) {
+      console.error("Erro ao criar registro do usuário servidor:", additionalUsuarioError);
+      throw additionalUsuarioError;
+    }
+
+    console.log("Registro do usuário servidor criado com sucesso");
 
     // Associate additional user with secretaria
     const { error: additionalUserSecretariaError } = await supabase
@@ -95,7 +152,13 @@ export async function initializeSystem() {
         secretaria_id: secretariaData.id
       });
 
-    if (additionalUserSecretariaError) throw additionalUserSecretariaError;
+    if (additionalUserSecretariaError) {
+      console.error("Erro ao associar usuário servidor à secretaria:", additionalUserSecretariaError);
+      throw additionalUserSecretariaError;
+    }
+
+    console.log("Associação do usuário servidor com secretaria criada com sucesso");
+    console.log("Sistema inicializado com sucesso!");
 
     toast.success('Sistema inicializado com sucesso!');
     return true;

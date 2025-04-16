@@ -41,6 +41,7 @@ export const ForgotPasswordDialog: React.FC<ForgotPasswordDialogProps> = ({
       });
 
       if (error) {
+        console.error('Erro ao solicitar redefinição de senha:', error);
         toast.error(error.message);
       } else {
         toast.success('Link de redefinição de senha enviado para seu e-mail');

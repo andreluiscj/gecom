@@ -11,6 +11,11 @@ export function useAuth() {
   const [showGDPRDialog, setShowGDPRDialog] = useState(false);
 
   const handleLogin = async (email: string, password: string) => {
+    if (!email || !password) {
+      toast.error('Por favor, preencha todos os campos');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -56,6 +61,7 @@ export function useAuth() {
 
       // Verificar primeiro acesso
       if (usuarioData.primeiro_acesso) {
+        localStorage.setItem('user-id', data.user.id);
         setShowChangePasswordDialog(true);
         setIsSubmitting(false);
         return;
@@ -67,6 +73,7 @@ export function useAuth() {
       localStorage.setItem('user-municipality', usuarioData.municipio_id);
       localStorage.setItem('user-name', usuarioData.nome);
       localStorage.setItem('user-id', data.user.id);
+      localStorage.setItem('user-email', usuarioData.email);
       
       // Manter funcionario-id para compatibilidade com código existente
       localStorage.setItem('funcionario-id', data.user.id);
@@ -107,6 +114,28 @@ export function useAuth() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      
+      // Limpar dados do localStorage
+      localStorage.removeItem('user-authenticated');
+      localStorage.removeItem('user-role');
+      localStorage.removeItem('user-municipality');
+      localStorage.removeItem('user-name');
+      localStorage.removeItem('user-id');
+      localStorage.removeItem('user-email');
+      localStorage.removeItem('funcionario-id');
+      localStorage.removeItem('user-secretarias');
+      
+      toast.success('Logout realizado com sucesso');
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast.error('Erro ao fazer logout');
+    }
+  };
+
   const handlePasswordChange = async (newPassword: string) => {
     setIsSubmitting(true);
     try {
@@ -118,10 +147,11 @@ export function useAuth() {
       }
 
       // Atualizar flag de primeiro acesso
+      const userId = localStorage.getItem('user-id');
       const { error: updateError } = await supabase
         .from('usuarios')
         .update({ primeiro_acesso: false })
-        .eq('id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('id', userId);
 
       if (updateError) {
         toast.error(updateError.message);
@@ -131,8 +161,16 @@ export function useAuth() {
       toast.success('Senha alterada com sucesso!');
       setShowChangePasswordDialog(false);
       
-      // Redirecionar para o dashboard
-      navigate('/dashboard');
+      // Verificar se foi autenticado anteriormente
+      const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
+      
+      if (!isAuthenticated) {
+        // Redirecionar para login para autenticar com a nova senha
+        navigate('/login');
+      } else {
+        // Já autenticado, redirecionar para o dashboard
+        navigate('/dashboard');
+      }
     } catch (error) {
       toast.error('Erro ao alterar senha');
     } finally {
@@ -140,10 +178,15 @@ export function useAuth() {
     }
   };
 
-  // Adicionar função para lidar com o consentimento GDPR
+  // Função para lidar com o consentimento GDPR
   const handleGDPRConsent = () => {
     setShowGDPRDialog(false);
-    // Aqui você pode adicionar lógica para salvar o consentimento no banco de dados
+    const userId = localStorage.getItem('user-id');
+    
+    if (userId) {
+      localStorage.setItem(`gdpr-accepted-${userId}`, 'true');
+    }
+    
     toast.success('Termos aceitos com sucesso!');
   };
 
@@ -154,6 +197,7 @@ export function useAuth() {
     showGDPRDialog,
     setShowGDPRDialog,
     handleLogin,
+    handleLogout,
     handlePasswordChange,
     handleGDPRConsent
   };

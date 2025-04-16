@@ -7,4 +7,3 @@ import * as profileHelpers from './auth/profileHelpers';
 
 // Re-export everything from the core modules
 export * from './auth/index';
-
