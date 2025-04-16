@@ -16,7 +16,7 @@ import { ForgotPasswordDialog } from '@/components/Auth/ForgotPasswordDialog';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -42,7 +42,7 @@ const Login: React.FC = () => {
 
   const onSubmitLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    handleLogin(username, password);
+    handleLogin(email, password);
   };
 
   const onSubmitPasswordChange = () => {
@@ -70,14 +70,14 @@ const Login: React.FC = () => {
             <div className="space-y-2">
               <div className="relative">
                 <Input
-                  id="username"
+                  id="email"
                   placeholder="E-mail"
-                  type="text"
+                  type="email"
                   autoCapitalize="none"
                   autoComplete="email"
                   autoCorrect="off"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   disabled={isSubmitting}
                 />
               </div>
