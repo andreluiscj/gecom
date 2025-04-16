@@ -6,7 +6,7 @@ export async function initializeSystem() {
   try {
     console.log("Iniciando inicialização do sistema...");
     
-    // Verificar se já existe um município cadastrado
+    // Check if a municipality already exists
     const { data: existingMunicipios, error: municipiosCheckError } = await supabase
       .from('municipios')
       .select('*')
@@ -87,7 +87,7 @@ export async function initializeSystem() {
         email: adminEmail,
         role: 'admin',
         municipio_id: municipioData.id,
-        primeiro_acesso: true
+        primeiro_acesso: false
       });
 
     if (usuarioError) {
@@ -111,53 +111,6 @@ export async function initializeSystem() {
     }
 
     console.log("Associação do usuário admin com secretaria criada com sucesso");
-
-    // Create additional user (usuário servidor)
-    const { data: additionalUserData, error: additionalUserError } = await supabase.auth.signUp({
-      email: 'servidor@exemplo.com',
-      password: 'Servidor@2024!'
-    });
-
-    if (additionalUserError) {
-      console.error("Erro ao criar usuário servidor no Auth:", additionalUserError);
-      throw additionalUserError;
-    }
-    
-    console.log("Usuário servidor criado com sucesso no Auth:", additionalUserData.user?.id);
-
-    // Create corresponding record in usuarios table
-    const { error: additionalUsuarioError } = await supabase
-      .from('usuarios')
-      .insert({
-        id: additionalUserData.user?.id,
-        nome: 'Servidor Municipal',
-        email: 'servidor@exemplo.com',
-        role: 'servidor',
-        municipio_id: municipioData.id,
-        primeiro_acesso: true
-      });
-
-    if (additionalUsuarioError) {
-      console.error("Erro ao criar registro do usuário servidor:", additionalUsuarioError);
-      throw additionalUsuarioError;
-    }
-
-    console.log("Registro do usuário servidor criado com sucesso");
-
-    // Associate additional user with secretaria
-    const { error: additionalUserSecretariaError } = await supabase
-      .from('usuario_secretarias')
-      .insert({
-        usuario_id: additionalUserData.user?.id,
-        secretaria_id: secretariaData.id
-      });
-
-    if (additionalUserSecretariaError) {
-      console.error("Erro ao associar usuário servidor à secretaria:", additionalUserSecretariaError);
-      throw additionalUserSecretariaError;
-    }
-
-    console.log("Associação do usuário servidor com secretaria criada com sucesso");
     console.log("Sistema inicializado com sucesso!");
 
     toast.success('Sistema inicializado com sucesso!');

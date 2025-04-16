@@ -42,14 +42,14 @@ export const ForgotPasswordDialog: React.FC<ForgotPasswordDialogProps> = ({
 
       if (error) {
         console.error('Erro ao solicitar redefinição de senha:', error);
-        toast.error(error.message);
+        toast.error(error.message || 'Erro ao solicitar redefinição de senha');
       } else {
         toast.success('Link de redefinição de senha enviado para seu e-mail');
         onOpenChange(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao solicitar redefinição de senha:', error);
-      toast.error('Ocorreu um erro ao solicitar a redefinição de senha');
+      toast.error(error.message || 'Ocorreu um erro ao solicitar a redefinição de senha');
     } finally {
       setIsSubmitting(false);
     }

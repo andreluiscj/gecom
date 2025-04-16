@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { atualizarSenhaUsuario } from '@/data/funcionarios/mockFuncionarios';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -26,7 +26,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -41,8 +41,8 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
       return;
     }
 
-    if (newPassword.length < 3) {
-      setError('A nova senha deve ter pelo menos 3 caracteres');
+    if (newPassword.length < 6) {
+      setError('A nova senha deve ter pelo menos 6 caracteres');
       return;
     }
 
@@ -53,29 +53,34 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
 
     setIsLoading(true);
     
-    // Get current user id
-    const userId = localStorage.getItem('user-id');
-    
-    if (!userId) {
-      toast.error('Usuário não identificado');
-      setIsLoading(false);
-      return;
-    }
-    
-    // Update password
-    const success = atualizarSenhaUsuario(userId, newPassword);
-    
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Update password with Supabase
+      const { error } = await supabase.auth.updateUser({ 
+        password: newPassword 
+      });
       
-      if (success) {
-        toast.success('Senha alterada com sucesso');
-        resetForm();
-        onOpenChange(false);
-      } else {
-        setError('Erro ao atualizar senha. Tente novamente.');
+      if (error) {
+        setError(error.message);
+        return;
       }
-    }, 1000);
+      
+      // Update primeiro_acesso flag if needed
+      const userId = localStorage.getItem('user-id');
+      if (userId) {
+        await supabase
+          .from('usuarios')
+          .update({ primeiro_acesso: false })
+          .eq('id', userId);
+      }
+      
+      toast.success('Senha alterada com sucesso');
+      resetForm();
+      onOpenChange(false);
+    } catch (error: any) {
+      setError(error.message || 'Erro ao atualizar senha. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetForm = () => {

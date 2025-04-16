@@ -21,7 +21,7 @@ export function useAuth() {
     try {
       console.log(`Tentando login com email: ${email}`);
       
-      // Autenticar no Supabase
+      // Authenticate with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -42,8 +42,9 @@ export function useAuth() {
       }
 
       console.log('Usuário autenticado:', data.user.id);
+      console.log('Dados da sessão:', data.session);
 
-      // Buscar informações do usuário na tabela usuarios
+      // Fetch user information from the usuarios table
       const { data: usuarioData, error: usuarioError } = await supabase
         .from('usuarios')
         .select('*, usuario_secretarias(secretaria_id)')
@@ -59,7 +60,7 @@ export function useAuth() {
 
       console.log('Dados do usuário obtidos:', usuarioData);
 
-      // Verificar primeiro acesso
+      // Check for first login
       if (usuarioData.primeiro_acesso) {
         localStorage.setItem('user-id', data.user.id);
         setShowChangePasswordDialog(true);
@@ -67,7 +68,7 @@ export function useAuth() {
         return;
       }
 
-      // Salvar informações no localStorage
+      // Save information to localStorage
       localStorage.setItem('user-authenticated', 'true');
       localStorage.setItem('user-role', usuarioData.role);
       localStorage.setItem('user-municipality', usuarioData.municipio_id);
@@ -78,16 +79,20 @@ export function useAuth() {
       // Manter funcionario-id para compatibilidade com código existente
       localStorage.setItem('funcionario-id', data.user.id);
 
-      // Preparar lista de secretarias
-      const secretarias = usuarioData.usuario_secretarias.map(
-        (us: { secretaria_id: string }) => us.secretaria_id
-      );
-      
-      localStorage.setItem('user-secretarias', JSON.stringify(secretarias));
+      // Prepare list of secretarias
+      if (usuarioData.usuario_secretarias) {
+        const secretarias = usuarioData.usuario_secretarias.map(
+          (us: { secretaria_id: string }) => us.secretaria_id
+        );
+        
+        localStorage.setItem('user-secretarias', JSON.stringify(secretarias));
+      } else {
+        localStorage.setItem('user-secretarias', JSON.stringify([]));
+      }
 
       console.log('Login bem-sucedido, redirecionando com base na role:', usuarioData.role);
 
-      // Redirecionar baseado na role
+      // Redirect based on role
       switch (usuarioData.role) {
         case 'admin':
           navigate('/admin');
@@ -96,10 +101,18 @@ export function useAuth() {
           navigate('/dashboard');
           break;
         case 'gestor':
-          navigate(`/setores/${secretarias[0]}`);
+          if (usuarioData.usuario_secretarias && usuarioData.usuario_secretarias.length > 0) {
+            navigate(`/setores/${usuarioData.usuario_secretarias[0].secretaria_id}`);
+          } else {
+            navigate('/dashboard');
+          }
           break;
         case 'servidor':
-          navigate(`/setores/${secretarias[0]}`);
+          if (usuarioData.usuario_secretarias && usuarioData.usuario_secretarias.length > 0) {
+            navigate(`/setores/${usuarioData.usuario_secretarias[0].secretaria_id}`);
+          } else {
+            navigate('/pedidos');
+          }
           break;
         default:
           navigate('/dashboard');
@@ -118,7 +131,7 @@ export function useAuth() {
     try {
       await supabase.auth.signOut();
       
-      // Limpar dados do localStorage
+      // Clear localStorage data
       localStorage.removeItem('user-authenticated');
       localStorage.removeItem('user-role');
       localStorage.removeItem('user-municipality');
@@ -143,10 +156,11 @@ export function useAuth() {
 
       if (error) {
         toast.error(error.message);
+        setIsSubmitting(false);
         return;
       }
 
-      // Atualizar flag de primeiro acesso
+      // Update first access flag
       const userId = localStorage.getItem('user-id');
       const { error: updateError } = await supabase
         .from('usuarios')
@@ -155,30 +169,32 @@ export function useAuth() {
 
       if (updateError) {
         toast.error(updateError.message);
+        setIsSubmitting(false);
         return;
       }
 
       toast.success('Senha alterada com sucesso!');
       setShowChangePasswordDialog(false);
       
-      // Verificar se foi autenticado anteriormente
+      // Check if already authenticated
       const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
       
       if (!isAuthenticated) {
-        // Redirecionar para login para autenticar com a nova senha
+        // Redirect to login to authenticate with new password
         navigate('/login');
       } else {
-        // Já autenticado, redirecionar para o dashboard
+        // Already authenticated, redirect to dashboard
         navigate('/dashboard');
       }
     } catch (error) {
+      console.error('Erro ao alterar senha:', error);
       toast.error('Erro ao alterar senha');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Função para lidar com o consentimento GDPR
+  // Function to handle GDPR consent
   const handleGDPRConsent = () => {
     setShowGDPRDialog(false);
     const userId = localStorage.getItem('user-id');

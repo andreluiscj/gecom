@@ -3,8 +3,9 @@
 
 // Function to check if user is authenticated
 export function isAuthenticated(): boolean {
+  const session = localStorage.getItem('supabase.auth.token');
   const isAuthed = localStorage.getItem('user-authenticated') === 'true';
-  return isAuthed;
+  return isAuthed && !!session;
 }
 
 // Function to get current user's role
@@ -40,7 +41,7 @@ export function getUserMunicipality(): string | null {
 // Function to check if the current user can access the dashboard
 export function canAccessDashboard(): boolean {
   const role = getUserRole();
-  return ['admin', 'prefeito', 'gestor'].includes(role || '');
+  return role === 'admin' || role === 'prefeito' || role === 'gestor';
 }
 
 // Function to get user's secretarias (departments)

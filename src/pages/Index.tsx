@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { initializeSystem } from '@/scripts/initializeSystem';
-import { addAdminUser } from '@/scripts/addAdminUser';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +16,7 @@ const Index: React.FC = () => {
       try {
         setIsInitializing(true);
         
-        // Verificar conexão com o Supabase
+        // Check Supabase connection
         const { data: connectionTest, error: connectionError } = await supabase.from('municipios').select('count').limit(1);
         
         if (connectionError) {
@@ -28,7 +27,7 @@ const Index: React.FC = () => {
         
         console.log("Conexão com o Supabase estabelecida com sucesso");
         
-        // Verificar usuário autenticado
+        // Check if user is already authenticated
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           console.log("Usuário já autenticado, redirecionando...");
@@ -36,30 +35,16 @@ const Index: React.FC = () => {
           return;
         }
 
-        // Check if system is already initialized
-        const { data: municipios } = await supabase
-          .from('municipios')
-          .select('count')
-          .limit(1);
-        
-        const systemInitialized = municipios && municipios.length > 0;
+        // Initialize system if needed
+        const systemInitialized = connectionTest && connectionTest.length > 0;
         
         if (!systemInitialized) {
           console.log("Inicializando o sistema...");
           const result = await initializeSystem();
           if (result) {
             localStorage.setItem('system-initialized', 'true');
-            console.log("Sistema inicializado com sucesso, criando usuário administrador...");
-            
-            // After system initialization, add the admin user
-            const adminResult = await addAdminUser();
-            if (adminResult) {
-              toast.success("Usuário administrador criado com sucesso");
-              console.log("Usuário administrador criado com sucesso");
-            } else {
-              toast.error("Erro ao criar usuário administrador");
-              console.error("Erro ao criar usuário administrador");
-            }
+            console.log("Sistema inicializado com sucesso");
+            toast.success("Sistema inicializado com sucesso");
           } else {
             console.error("Falha na inicialização do sistema");
             toast.error("Falha na inicialização do sistema");
@@ -68,9 +53,6 @@ const Index: React.FC = () => {
           }
         } else {
           console.log("Sistema já inicializado anteriormente");
-          
-          // Always try to add admin user
-          await addAdminUser();
         }
 
         // Always redirect to login page

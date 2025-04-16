@@ -15,7 +15,7 @@ import { useState } from "react"
 import { ChangePasswordDialog } from "../Auth/ChangePasswordDialog"
 import { DeleteAccountDialog } from "./DeleteAccountDialog"
 import { useAuth } from "@/hooks/useAuth"
-import { getUserName } from "@/utils/authHelpers"
+import { getUserName } from "@/utils/auth"
 
 interface UserMenuProps {
   userRole?: string | null;

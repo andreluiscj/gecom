@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
 import { toast } from 'sonner';
-import { getUserRole, getUserSetor, canAccessDashboard, getUserSecretarias } from '@/utils/auth';
+import { isAuthenticated, getUserRole, getUserSecretarias } from '@/utils/auth';
+import { supabase } from '@/integrations/supabase/client';
 
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -14,67 +16,56 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
-    const role = getUserRole();
-    const municipality = localStorage.getItem('user-municipality');
-    const secretarias = getUserSecretarias();
-    const setor = getUserSetor();
-    
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-    
-    setUserRole(role);
-    setUserMunicipality(municipality);
-    setUserSetor(setor);
-
-    // Restrict access to administrative area (only admin can access)
-    if (role !== 'admin' && location.pathname.includes('/admin') && role !== 'prefeito') {
-      toast.error('Você não tem permissão para acessar esta página');
-      navigate('/dashboard');
-      return;
-    }
-    
-    // Restrict dashboard access for regular users (servidores)
-    if (!canAccessDashboard() && location.pathname === '/dashboard') {
-      toast.error('Você não tem permissão para acessar o dashboard');
+    const checkAuth = async () => {
+      // Check current session from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
       
-      // Redirect to their department page if possible
-      if (secretarias.length > 0) {
-        navigate(`/setores/${secretarias[0]}`);
-      } else {
-        navigate('/pedidos');
+      if (!session) {
+        // If no Supabase session, redirect to login
+        localStorage.removeItem('user-authenticated');
+        navigate('/login');
+        return;
       }
-      return;
-    }
+      
+      const authenticated = isAuthenticated();
+      
+      if (!authenticated) {
+        navigate('/login');
+        return;
+      }
+      
+      const role = getUserRole();
+      const municipality = localStorage.getItem('user-municipality');
+      const secretarias = getUserSecretarias();
+      const setor = localStorage.getItem('user-setor');
+      
+      setUserRole(role);
+      setUserMunicipality(municipality);
+      setUserSetor(setor);
 
-  }, [navigate, location.pathname]);
-
-  // Helper function to convert setor name to URL format
-  const convertSetorToUrl = (setor: string | null): string => {
-    if (!setor) return '';
-    
-    const setorMap: {[key: string]: string} = {
-      'Saúde': 'saude',
-      'Educação': 'educacao',
-      'Administrativo': 'administrativo',
-      'Transporte': 'transporte',
-      'Obras': 'obras',
-      'Segurança Pública': 'seguranca',
-      'Assistência Social': 'social',
-      'Meio Ambiente': 'ambiente',
-      'Fazenda': 'fazenda',
-      'Turismo': 'turismo',
-      'Cultura': 'cultura',
-      'Esportes e Lazer': 'esportes',
-      'Planejamento': 'planejamento',
-      'Comunicação': 'comunicacao',
-      'Ciência e Tecnologia': 'ciencia',
+      // Restrict access to administrative area (only admin can access)
+      if (role !== 'admin' && location.pathname.includes('/admin')) {
+        toast.error('Você não tem permissão para acessar esta página');
+        navigate('/dashboard');
+        return;
+      }
+      
+      // Restrict dashboard access for regular users (servidores)
+      if (role === 'servidor' && location.pathname === '/dashboard') {
+        toast.error('Você não tem permissão para acessar o dashboard');
+        
+        // Redirect to their department page if possible
+        if (secretarias.length > 0) {
+          navigate(`/setores/${secretarias[0]}`);
+        } else {
+          navigate('/pedidos');
+        }
+        return;
+      }
     };
-    
-    return setorMap[setor] || setor.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
-  };
+
+    checkAuth();
+  }, [navigate, location.pathname]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
