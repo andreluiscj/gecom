@@ -4,7 +4,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from './ThemeToggle';
 import NotificationMenu from './NotificationMenu';
-import UserMenu from './UserMenu';
+import { UserMenu } from './UserMenu';
 import HelpButton from './HelpButton';
 
 interface NavBarProps {

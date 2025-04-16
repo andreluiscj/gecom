@@ -15,12 +15,27 @@ import { useState } from "react"
 import { ChangePasswordDialog } from "../Auth/ChangePasswordDialog"
 import { DeleteAccountDialog } from "./DeleteAccountDialog"
 import { useAuth } from "@/hooks/useAuth"
+import { getUserName } from "@/utils/authHelpers"
 
-export function UserMenu({ userName }: { userName: string | null }) {
+interface UserMenuProps {
+  userRole?: string | null;
+}
+
+export function UserMenu({ userRole }: UserMenuProps) {
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const { handleLogout } = useAuth()
+  
+  // Get the current user name
+  const userName = getUserName()
+  // Create user info object for the profile dialog
+  const userInfo = {
+    name: userName || 'Usuário',
+    role: userRole || '',
+    initials: userName ? userName.substring(0, 2).toUpperCase() : 'US',
+    email: localStorage.getItem('user-email') || '',
+  }
   
   return (
     <>
@@ -64,7 +79,11 @@ export function UserMenu({ userName }: { userName: string | null }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ProfileDialog open={showProfileDialog} onOpenChange={setShowProfileDialog} />
+      <ProfileDialog 
+        open={showProfileDialog} 
+        onOpenChange={setShowProfileDialog}
+        userInfo={userInfo}
+      />
       <ChangePasswordDialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog} />
       <DeleteAccountDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog} />
     </>
