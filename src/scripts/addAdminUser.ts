@@ -4,12 +4,19 @@ import { toast } from 'sonner';
 
 export async function addAdminUser() {
   try {
+    console.log('Iniciando criação do usuário administrador...');
+    
     // Verificar se o usuário já existe
-    const { data: existingUser } = await supabase
+    const { data: existingUser, error: existingUserError } = await supabase
       .from('usuarios')
       .select('*')
       .eq('email', 'andreluiscj2207@gmail.com')
       .single();
+
+    if (existingUserError && existingUserError.code !== 'PGRST116') {
+      console.error('Erro ao verificar usuário existente:', existingUserError);
+      return false;
+    }
 
     if (existingUser) {
       console.log('Usuário admin já existe no sistema');
@@ -22,7 +29,12 @@ export async function addAdminUser() {
       password: 'consultoriamosaico'
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      console.error('Erro ao criar usuário no Auth:', authError);
+      throw authError;
+    }
+
+    console.log('Usuário criado no Auth com sucesso:', authData.user?.id);
 
     // Obter o ID do município (assumindo que já existe pelo menos um)
     const { data: municipioData, error: municipioError } = await supabase
@@ -31,7 +43,12 @@ export async function addAdminUser() {
       .limit(1)
       .single();
 
-    if (municipioError) throw municipioError;
+    if (municipioError) {
+      console.error('Erro ao obter município:', municipioError);
+      throw municipioError;
+    }
+
+    console.log('Município obtido:', municipioData.id);
 
     // Criar usuário na tabela usuarios
     const { error: usuarioError } = await supabase
@@ -45,7 +62,10 @@ export async function addAdminUser() {
         primeiro_acesso: false // Já configura como não sendo primeiro acesso
       });
 
-    if (usuarioError) throw usuarioError;
+    if (usuarioError) {
+      console.error('Erro ao criar usuário na tabela usuarios:', usuarioError);
+      throw usuarioError;
+    }
 
     // Obter a primeira secretaria disponível para vincular o usuário
     const { data: secretariaData, error: secretariaError } = await supabase
@@ -54,7 +74,12 @@ export async function addAdminUser() {
       .limit(1)
       .single();
 
-    if (secretariaError) throw secretariaError;
+    if (secretariaError) {
+      console.error('Erro ao obter secretaria:', secretariaError);
+      throw secretariaError;
+    }
+
+    console.log('Secretaria obtida:', secretariaData.id);
 
     // Criar associação entre usuário e secretaria
     const { error: userSecretariaError } = await supabase
@@ -64,7 +89,10 @@ export async function addAdminUser() {
         secretaria_id: secretariaData.id
       });
 
-    if (userSecretariaError) throw userSecretariaError;
+    if (userSecretariaError) {
+      console.error('Erro ao criar associação entre usuário e secretaria:', userSecretariaError);
+      throw userSecretariaError;
+    }
 
     console.log('Usuário administrador criado com sucesso');
     return true;

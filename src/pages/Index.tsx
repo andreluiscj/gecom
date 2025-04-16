@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { initializeSystem } from '@/scripts/initializeSystem';
+import { addAdminUser } from '@/scripts/addAdminUser';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -17,6 +18,13 @@ const Index: React.FC = () => {
         const result = await initializeSystem();
         if (result) {
           localStorage.setItem('system-initialized', 'true');
+          // After system initialization, add the admin user
+          const adminResult = await addAdminUser();
+          if (adminResult) {
+            toast.success("Usuário administrador criado com sucesso");
+          } else {
+            toast.error("Erro ao criar usuário administrador");
+          }
         }
       }
 
