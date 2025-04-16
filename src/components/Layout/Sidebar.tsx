@@ -35,11 +35,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { 
-  canAccessUserManagement, 
-  canAccessDashboard, 
-  getUserSetor, 
-  shouldFilterByUserSetor,
-  hasSetorAccess 
+  canAccessUserManagementSync, 
+  canAccessDashboardSync, 
+  getUserSetorSync, 
+  shouldFilterByUserSetorSync,
+  hasSetorAccessSync 
 } from '@/utils/auth';
 
 interface SidebarProps {
@@ -53,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
   const location = useLocation();
   const navigate = useNavigate();
   const [secretariasOpen, setSecretariasOpen] = useState(false);
-  const showOnlyUserSetor = shouldFilterByUserSetor();
+  const showOnlyUserSetor = shouldFilterByUserSetorSync();
 
   useEffect(() => {
     if (location.pathname.includes('/setores/')) {
@@ -81,8 +81,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
     navigate('/login');
   };
 
-  const hasUserManagementAccess = canAccessUserManagement();
-  const hasDashboardAccess = canAccessDashboard();
+  const hasUserManagementAccess = canAccessUserManagementSync();
+  const hasDashboardAccess = canAccessDashboardSync();
 
   const menuItems = [
     {
@@ -253,7 +253,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
 
   const filteredSecretarias = secretariasItems.filter(item => {
     if (showOnlyUserSetor && userSetor) {
-      return hasSetorAccess(item.id);
+      return hasSetorAccessSync(item.id);
     }
     return true;
   });

@@ -4,18 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
 import { obterTodosPedidos } from '@/data/mockData';
 import { PedidoCompra } from '@/types';
-import { getUserSetor, getUserRole, shouldFilterByUserSetor } from '@/utils/authHelpers';
+import { getUserSetorSync, getUserRoleSync } from '@/utils/authHelpers';
 import { toast } from 'sonner';
 
 const ListaPedidos: React.FC = () => {
   const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
   const navigate = useNavigate();
-  const userRole = getUserRole();
+  const userRole = getUserRoleSync();
   
   // Check permissions and fetch pedidos on component mount
   useEffect(() => {
     const todosPedidos = obterTodosPedidos();
-    const userSetor = getUserSetor();
+    const userSetor = getUserSetorSync();
     
     // Filter pedidos based on user role
     if (userRole === 'admin' || userRole === 'prefeito') {

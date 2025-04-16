@@ -7,3 +7,6 @@ import * as profileHelpers from './auth/profileHelpers';
 
 // Re-export everything from the core modules
 export * from './auth/index';
+
+// Adding the getPermittedWorkflowStep function if it doesn't exist in the exports
+export const getPermittedWorkflowStep = permissionHelpers.getPermittedWorkflowStep;

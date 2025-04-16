@@ -9,7 +9,7 @@ import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
 import { DadosDashboard, Municipio } from '@/types';
 import { toast } from 'sonner';
 import { exportDashboardAsPDF } from '@/utils/pdfGenerator';
-import { getUserRole, getUserSetor, shouldFilterByUserSetor } from '@/utils/authHelpers';
+import { getUserRoleSync, getUserSetorSync, shouldFilterByUserSetorSync } from '@/utils/authHelpers';
 
 const defaultMunicipio: Municipio = {
   id: 'pai-pedro',
@@ -105,9 +105,9 @@ const Dashboard: React.FC = () => {
     department: 'Todos'
   });
 
-  const userRole = getUserRole();
-  const userSetor = getUserSetor();
-  const shouldFilter = shouldFilterByUserSetor();
+  const userRole = getUserRoleSync();
+  const userSetor = getUserSetorSync();
+  const shouldFilter = shouldFilterByUserSetorSync();
 
   const [filteredDashboardData, setFilteredDashboardData] = useState(dadosDashboard);
 

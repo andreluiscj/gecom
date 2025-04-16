@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { adicionarPedido } from '@/data/mockData';
 import { initializeWorkflow } from '@/utils/workflowHelpers';
-import { getUserSetor, getUserName, getUserRole } from '@/utils/authHelpers';
+import { getUserSetorSync, getUserNameSync, getUserRoleSync } from '@/utils/authHelpers';
 import ActionButtons from './Form/ActionButtons';
 import ItemsSection from './Form/ItemsSection';
 import TotalSection from './Form/TotalSection';
@@ -54,9 +54,9 @@ const PedidoForm: React.FC = () => {
     { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 }
   ]);
   
-  const userName = getUserName() || '';
-  const userSetor = getUserSetor() || '';
-  const userRole = getUserRole();
+  const userName = getUserNameSync() || '';
+  const userSetor = getUserSetorSync() || '';
+  const userRole = getUserRoleSync();
   
   const shouldRestrictSetor = userRole === 'user' || userRole === 'manager';
   

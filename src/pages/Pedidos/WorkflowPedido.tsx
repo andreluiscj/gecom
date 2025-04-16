@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +10,7 @@ import { obterTodosPedidos, atualizarEtapaWorkflow } from '@/data/mockData';
 import { toast } from 'sonner';
 import { WorkflowStepStatus } from '@/types';
 import { canEditStep } from '@/utils/workflowHelpers';
-import { canEditWorkflowStep, getPermittedWorkflowStep, getUserRole } from '@/utils/authHelpers';
+import { canEditWorkflowStepSync, getPermittedWorkflowStep, getUserRoleSync, getUserIdSync } from '@/utils/auth';
 import {
   Select,
   SelectContent,
@@ -32,7 +31,8 @@ const WorkflowPedido: React.FC = () => {
   const allPedidos = obterTodosPedidos();
   const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos, refreshKey]);
   const permittedStep = getPermittedWorkflowStep();
-  const userRole = getUserRole();
+  const userRole = getUserRoleSync();
+  const userId = getUserIdSync();
 
   if (!pedido) {
     return (
@@ -60,93 +60,93 @@ const WorkflowPedido: React.FC = () => {
   }
 
   const handleUpdateStepStatus = (stepIndex: number, status: WorkflowStepStatus) => {
-    if (pedido && pedido.workflow) {
-      const currentStep = pedido.workflow.steps[stepIndex];
-      
-      // Check if user has permission to edit this specific step
-      if (!canEditWorkflowStep(currentStep.title)) {
-        toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
-        return;
-      }
-      
-      // Verificar se a etapa pode ser editada na sequência correta
-      if (!canEditStep(pedido.workflow, stepIndex)) {
-        toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
-        return;
-      }
-      
-      // Verificar se a alteração segue a ordem lógica
-      if (status === 'Concluído' && stepIndex < pedido.workflow.steps.length - 1) {
-        // Se estamos concluindo uma etapa, precisamos verificar se a próxima etapa existe
-        // e atualizá-la para "Em Andamento" se estiver "Pendente"
-        if (pedido.workflow.steps[stepIndex + 1].status === 'Pendente') {
-          atualizarEtapaWorkflow(
-            pedido.id, 
-            stepIndex + 1, 
-            'Em Andamento'
-          );
-        }
-      }
-      
-      atualizarEtapaWorkflow(pedido.id, stepIndex, status);
-      toast.success(`Status da etapa atualizado para ${status}`);
-      setRefreshKey(prev => prev + 1); // Force refresh
+    if (!userId || !pedido || !pedido.workflow) return;
+    
+    const currentStep = pedido.workflow.steps[stepIndex];
+    
+    // Check if user has permission to edit this specific step
+    if (!canEditWorkflowStepSync(currentStep.title)) {
+      toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
+      return;
     }
+    
+    // Verificar se a etapa pode ser editada na sequência correta
+    if (!canEditStep(pedido.workflow, stepIndex)) {
+      toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
+      return;
+    }
+    
+    // Verificar se a alteração segue a ordem lógica
+    if (status === 'Concluído' && stepIndex < pedido.workflow.steps.length - 1) {
+      // Se estamos concluindo uma etapa, precisamos verificar se a próxima etapa existe
+      // e atualizá-la para "Em Andamento" se estiver "Pendente"
+      if (pedido.workflow.steps[stepIndex + 1].status === 'Pendente') {
+        atualizarEtapaWorkflow(
+          pedido.id, 
+          stepIndex + 1, 
+          'Em Andamento'
+        );
+      }
+    }
+    
+    atualizarEtapaWorkflow(pedido.id, stepIndex, status);
+    toast.success(`Status da etapa atualizado para ${status}`);
+    setRefreshKey(prev => prev + 1); // Force refresh
   };
 
   const handleUpdateResponsavel = (stepIndex: number, responsavel: string) => {
-    if (pedido && pedido.workflow) {
-      const currentStep = pedido.workflow.steps[stepIndex];
-      
-      // Check if user has permission to edit this specific step
-      if (!canEditWorkflowStep(currentStep.title)) {
-        toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
-        return;
-      }
-      
-      if (!canEditStep(pedido.workflow, stepIndex)) {
-        toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
-        return;
-      }
-      
-      atualizarEtapaWorkflow(
-        pedido.id, 
-        stepIndex, 
-        pedido.workflow.steps[stepIndex].status,
-        undefined,
-        responsavel
-      );
-      toast.success('Responsável atualizado com sucesso');
-      setRefreshKey(prev => prev + 1);
+    if (!userId || !pedido || !pedido.workflow) return;
+    
+    const currentStep = pedido.workflow.steps[stepIndex];
+    
+    // Check if user has permission to edit this specific step
+    if (!canEditWorkflowStepSync(currentStep.title)) {
+      toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
+      return;
     }
+    
+    if (!canEditStep(pedido.workflow, stepIndex)) {
+      toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
+      return;
+    }
+    
+    atualizarEtapaWorkflow(
+      pedido.id, 
+      stepIndex, 
+      pedido.workflow.steps[stepIndex].status,
+      undefined,
+      responsavel
+    );
+    toast.success('Responsável atualizado com sucesso');
+    setRefreshKey(prev => prev + 1);
   };
 
   const handleUpdateDataConclusao = (stepIndex: number, data: Date | undefined) => {
-    if (pedido && pedido.workflow) {
-      const currentStep = pedido.workflow.steps[stepIndex];
-      
-      // Check if user has permission to edit this specific step
-      if (!canEditWorkflowStep(currentStep.title)) {
-        toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
-        return;
-      }
-      
-      if (!canEditStep(pedido.workflow, stepIndex)) {
-        toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
-        return;
-      }
-      
-      atualizarEtapaWorkflow(
-        pedido.id, 
-        stepIndex, 
-        pedido.workflow.steps[stepIndex].status,
-        pedido.workflow.steps[stepIndex].date,
-        pedido.workflow.steps[stepIndex].responsavel,
-        data
-      );
-      toast.success('Data de conclusão atualizada com sucesso');
-      setRefreshKey(prev => prev + 1);
+    if (!userId || !pedido || !pedido.workflow) return;
+    
+    const currentStep = pedido.workflow.steps[stepIndex];
+    
+    // Check if user has permission to edit this specific step
+    if (!canEditWorkflowStepSync(currentStep.title)) {
+      toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
+      return;
     }
+    
+    if (!canEditStep(pedido.workflow, stepIndex)) {
+      toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
+      return;
+    }
+    
+    atualizarEtapaWorkflow(
+      pedido.id, 
+      stepIndex, 
+      pedido.workflow.steps[stepIndex].status,
+      pedido.workflow.steps[stepIndex].date,
+      pedido.workflow.steps[stepIndex].responsavel,
+      data
+    );
+    toast.success('Data de conclusão atualizada com sucesso');
+    setRefreshKey(prev => prev + 1);
   };
   
   const getStatusIcon = (status: WorkflowStepStatus) => {
@@ -229,15 +229,15 @@ const WorkflowPedido: React.FC = () => {
           </div>
           
           <div className="space-y-6 mt-8">
-            {pedido.workflow?.steps.map((step, index) => {
+            {pedido && pedido.workflow?.steps.map((step, index) => {
               // Verificando se a etapa pode ser editada com base na função canEditStep
               const isEditable = canEditStep(pedido.workflow!, index);
               // Verificando se o usuário tem permissão para editar esta etapa específica
-              const hasPermission = canEditWorkflowStep(step.title);
+              const hasPermission = canEditWorkflowStepSync(step.title);
               
               return (
                 <div 
-                  key={step.id} 
+                  key={index} 
                   className={`border rounded-lg p-4 ${getStatusClass(step.status, isEditable, hasPermission)}`}
                 >
                   <div className="flex flex-col gap-4">
