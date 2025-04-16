@@ -35,14 +35,14 @@ const Index: React.FC = () => {
           return;
         }
 
-        // Initialize system if needed
-        const systemInitialized = connectionTest && connectionTest.length > 0;
+        // Check if system needs initialization
+        const { count } = connectionTest[0] || { count: 0 };
+        const systemInitialized = count > 0;
         
         if (!systemInitialized) {
           console.log("Inicializando o sistema...");
           const result = await initializeSystem();
           if (result) {
-            localStorage.setItem('system-initialized', 'true');
             console.log("Sistema inicializado com sucesso");
             toast.success("Sistema inicializado com sucesso");
           } else {

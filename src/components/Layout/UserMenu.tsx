@@ -11,11 +11,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ChevronDown, User, Settings, LogOut } from "lucide-react"
 import { ProfileDialog } from "./ProfileDialog"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChangePasswordDialog } from "../Auth/ChangePasswordDialog"
 import { DeleteAccountDialog } from "./DeleteAccountDialog"
 import { useAuth } from "@/hooks/useAuth"
-import { getUserName } from "@/utils/auth"
+import { supabase } from '@/integrations/supabase/client'
 
 interface UserMenuProps {
   userRole?: string | null;
@@ -25,17 +25,47 @@ export function UserMenu({ userRole }: UserMenuProps) {
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const { handleLogout } = useAuth()
+  const [userData, setUserData] = useState<{
+    name: string;
+    email: string;
+    role: string;
+    initials: string;
+  }>({
+    name: 'Usuário',
+    email: '',
+    role: '',
+    initials: 'US'
+  })
+  const { handleLogout, user } = useAuth()
   
-  // Get the current user name
-  const userName = getUserName()
-  // Create user info object for the profile dialog
-  const userInfo = {
-    name: userName || 'Usuário',
-    role: userRole || '',
-    initials: userName ? userName.substring(0, 2).toUpperCase() : 'US',
-    email: localStorage.getItem('user-email') || '',
-  }
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('usuarios')
+          .select('nome, email, role')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) throw error;
+        
+        if (data) {
+          setUserData({
+            name: data.nome || 'Usuário',
+            email: data.email || user.email || '',
+            role: data.role || userRole || '',
+            initials: data.nome ? data.nome.substring(0, 2).toUpperCase() : 'US'
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+    
+    fetchUserData();
+  }, [user, userRole]);
   
   return (
     <>
@@ -43,16 +73,16 @@ export function UserMenu({ userRole }: UserMenuProps) {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2 px-2">
             <User className="h-5 w-5" />
-            <span className="hidden md:inline">{userName || 'Usuário'}</span>
+            <span className="hidden md:inline">{userData.name}</span>
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{userName || 'Usuário'}</p>
+              <p className="text-sm font-medium leading-none">{userData.name}</p>
               <p className="text-xs leading-none text-muted-foreground">
-                {localStorage.getItem('user-email') || ''}
+                {userData.email}
               </p>
             </div>
           </DropdownMenuLabel>
@@ -82,7 +112,7 @@ export function UserMenu({ userRole }: UserMenuProps) {
       <ProfileDialog 
         open={showProfileDialog} 
         onOpenChange={setShowProfileDialog}
-        userInfo={userInfo}
+        userInfo={userData}
       />
       <ChangePasswordDialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog} />
       <DeleteAccountDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog} />

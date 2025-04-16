@@ -60,7 +60,7 @@ export async function initializeSystem() {
 
     console.log("Secretaria criada com sucesso:", secretariaData);
 
-    // Create admin user in Supabase Auth with a more secure password
+    // Create admin user in Supabase Auth
     const adminEmail = 'admin@gecom.com';
     const adminPassword = 'Admin@Gecom2024!';
     
@@ -111,6 +111,27 @@ export async function initializeSystem() {
     }
 
     console.log("Associação do usuário admin com secretaria criada com sucesso");
+    
+    // Initialize workflow etapas
+    const workflowEtapas = [
+      { titulo: "Solicitação", ordem: 1 },
+      { titulo: "Análise", ordem: 2 },
+      { titulo: "Aprovação", ordem: 3 },
+      { titulo: "Cotação", ordem: 4 },
+      { titulo: "Aquisição", ordem: 5 },
+      { titulo: "Entrega", ordem: 6 }
+    ];
+    
+    const { error: workflowError } = await supabase
+      .from('workflow_etapas')
+      .insert(workflowEtapas);
+      
+    if (workflowError) {
+      console.error("Erro ao criar etapas de workflow:", workflowError);
+      throw workflowError;
+    }
+    
+    console.log("Etapas de workflow criadas com sucesso");
     console.log("Sistema inicializado com sucesso!");
 
     toast.success('Sistema inicializado com sucesso!');

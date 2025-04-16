@@ -4,7 +4,6 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
 import { toast } from 'sonner';
-import { isAuthenticated, getUserRole, getUserSecretarias } from '@/utils/auth';
 import { supabase } from '@/integrations/supabase/client';
 
 const AppLayout: React.FC = () => {
@@ -12,55 +11,75 @@ const AppLayout: React.FC = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userMunicipality, setUserMunicipality] = useState<string | null>(null);
   const [userSetor, setUserSetor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   
   useEffect(() => {
     const checkAuth = async () => {
-      // Check current session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        // If no Supabase session, redirect to login
-        localStorage.removeItem('user-authenticated');
-        navigate('/login');
-        return;
-      }
-      
-      const authenticated = isAuthenticated();
-      
-      if (!authenticated) {
-        navigate('/login');
-        return;
-      }
-      
-      const role = getUserRole();
-      const municipality = localStorage.getItem('user-municipality');
-      const secretarias = getUserSecretarias();
-      const setor = localStorage.getItem('user-setor');
-      
-      setUserRole(role);
-      setUserMunicipality(municipality);
-      setUserSetor(setor);
-
-      // Restrict access to administrative area (only admin can access)
-      if (role !== 'admin' && location.pathname.includes('/admin')) {
-        toast.error('Você não tem permissão para acessar esta página');
-        navigate('/dashboard');
-        return;
-      }
-      
-      // Restrict dashboard access for regular users (servidores)
-      if (role === 'servidor' && location.pathname === '/dashboard') {
-        toast.error('Você não tem permissão para acessar o dashboard');
+      try {
+        setLoading(true);
         
-        // Redirect to their department page if possible
-        if (secretarias.length > 0) {
-          navigate(`/setores/${secretarias[0]}`);
-        } else {
-          navigate('/pedidos');
+        // Check current session from Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          // If no Supabase session, redirect to login
+          navigate('/login');
+          return;
         }
-        return;
+        
+        // Get user data
+        const { data: userData, error: userError } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (userError || !userData) {
+          console.error('Error fetching user data:', userError);
+          navigate('/login');
+          return;
+        }
+        
+        setUserRole(userData.role);
+        setUserMunicipality(userData.municipio_id);
+        
+        // Get user secretarias
+        const { data: userSecretarias, error: secretariasError } = await supabase
+          .from('usuario_secretarias')
+          .select('secretaria_id')
+          .eq('usuario_id', session.user.id)
+          .limit(1);
+          
+        if (userSecretarias && userSecretarias.length > 0) {
+          setUserSetor(userSecretarias[0].secretaria_id);
+        }
+
+        // Restrict access to administrative area (only admin can access)
+        if (userData.role !== 'admin' && location.pathname.includes('/admin')) {
+          toast.error('Você não tem permissão para acessar esta página');
+          navigate('/dashboard');
+          return;
+        }
+        
+        // Restrict dashboard access for regular users (servidores)
+        if (userData.role === 'servidor' && location.pathname === '/dashboard') {
+          toast.error('Você não tem permissão para acessar o dashboard');
+          
+          // Redirect to their department page if possible
+          if (userSecretarias && userSecretarias.length > 0) {
+            navigate(`/setores/${userSecretarias[0].secretaria_id}`);
+          } else {
+            navigate('/pedidos');
+          }
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        navigate('/login');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -70,6 +89,14 @@ const AppLayout: React.FC = () => {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

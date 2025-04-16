@@ -13,7 +13,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { PasswordChangeDialog } from '@/components/Auth/PasswordChangeDialog';
 import { GDPRConsentDialog } from '@/components/Auth/GDPRConsentDialog';
 import { ForgotPasswordDialog } from '@/components/Auth/ForgotPasswordDialog';
-import { isAuthenticated, getUserRole } from '@/utils/auth';
 import { supabase } from '@/integrations/supabase/client';
 
 const Login: React.FC = () => {
@@ -32,40 +31,43 @@ const Login: React.FC = () => {
     setShowGDPRDialog,
     handleLogin,
     handlePasswordChange,
-    handleGDPRConsent
+    handleGDPRConsent,
+    user,
+    session
   } = useAuth();
 
   // Check authentication status on component mount
   useEffect(() => {
-    const checkAuth = async () => {
-      // Check current session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        // If we have a valid Supabase session, ensure our local state reflects this
-        localStorage.setItem('user-authenticated', 'true');
-        
-        // Redirect based on role
-        const role = getUserRole();
-        switch (role) {
-          case 'admin':
-            navigate('/admin');
-            break;
-          case 'prefeito':
-            navigate('/dashboard');
-            break;
-          default:
-            navigate('/dashboard');
+    if (session) {
+      // User is already authenticated, redirect based on role
+      const redirectUser = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('usuarios')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (error) throw error;
+          
+          switch (data.role) {
+            case 'admin':
+              navigate('/admin');
+              break;
+            case 'prefeito':
+              navigate('/dashboard');
+              break;
+            default:
+              navigate('/dashboard');
+          }
+        } catch (error) {
+          console.error('Error checking user role:', error);
         }
-      } else if (isAuthenticated()) {
-        // If localStorage thinks we're authenticated but Supabase doesn't, clear localStorage
-        localStorage.removeItem('user-authenticated');
-        localStorage.removeItem('user-role');
-      }
-    };
-    
-    checkAuth();
-  }, [navigate]);
+      };
+      
+      redirectUser();
+    }
+  }, [session, navigate]);
 
   const onSubmitLogin = (e: React.FormEvent) => {
     e.preventDefault();

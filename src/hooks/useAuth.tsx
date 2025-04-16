@@ -1,14 +1,93 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getUserRole, getUserSecretarias } from '@/utils/auth/authCore';
 
 export function useAuth() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
   const [showGDPRDialog, setShowGDPRDialog] = useState(false);
+  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
+
+  // Initialize user session and set up listener
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        // Update localStorage for backward compatibility
+        if (currentSession) {
+          localStorage.setItem('user-authenticated', 'true');
+          localStorage.setItem('user-id', currentSession.user.id);
+          localStorage.setItem('user-email', currentSession.user.email);
+
+          // Fetch and store additional user data
+          setTimeout(() => {
+            fetchUserData(currentSession.user.id);
+          }, 0);
+        } else {
+          localStorage.removeItem('user-authenticated');
+          localStorage.removeItem('user-id');
+          localStorage.removeItem('user-email');
+          localStorage.removeItem('user-role');
+          localStorage.removeItem('user-name');
+          localStorage.removeItem('user-municipality');
+          localStorage.removeItem('funcionario-id');
+          localStorage.removeItem('user-secretarias');
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+
+      if (currentSession) {
+        fetchUserData(currentSession.user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchUserData = async (userId) => {
+    try {
+      // Fetch user details
+      const { data: userData, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      // Store in localStorage for backward compatibility
+      if (userData) {
+        localStorage.setItem('user-role', userData.role);
+        localStorage.setItem('user-name', userData.nome);
+        localStorage.setItem('user-municipality', userData.municipio_id);
+        localStorage.setItem('funcionario-id', userId); // For backward compatibility
+      }
+
+      // Fetch user secretarias
+      const secretarias = await getUserSecretarias();
+      localStorage.setItem('user-secretarias', JSON.stringify(secretarias));
+      
+      // Check for first access
+      if (userData.primeiro_acesso) {
+        setShowChangePasswordDialog(true);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
 
   const handleLogin = async (email: string, password: string) => {
     if (!email || !password) {
@@ -42,83 +121,31 @@ export function useAuth() {
       }
 
       console.log('Usuário autenticado:', data.user.id);
-      console.log('Dados da sessão:', data.session);
-
-      // Fetch user information from the usuarios table
+      
+      // Fetch user information to check primeiro_acesso
       const { data: usuarioData, error: usuarioError } = await supabase
         .from('usuarios')
-        .select('*, usuario_secretarias(secretaria_id)')
+        .select('primeiro_acesso')
         .eq('id', data.user.id)
         .single();
 
-      if (usuarioError || !usuarioData) {
-        console.error('Erro ao buscar dados do usuário:', usuarioError);
-        toast.error('Erro ao buscar dados do usuário');
+      if (usuarioError) {
+        console.error('Erro ao verificar primeiro acesso:', usuarioError);
+        toast.error('Erro ao verificar dados do usuário');
         setIsSubmitting(false);
         return;
       }
 
-      console.log('Dados do usuário obtidos:', usuarioData);
-
       // Check for first login
       if (usuarioData.primeiro_acesso) {
-        localStorage.setItem('user-id', data.user.id);
         setShowChangePasswordDialog(true);
         setIsSubmitting(false);
         return;
       }
 
-      // Save information to localStorage
-      localStorage.setItem('user-authenticated', 'true');
-      localStorage.setItem('user-role', usuarioData.role);
-      localStorage.setItem('user-municipality', usuarioData.municipio_id);
-      localStorage.setItem('user-name', usuarioData.nome);
-      localStorage.setItem('user-id', data.user.id);
-      localStorage.setItem('user-email', usuarioData.email);
-      
-      // Manter funcionario-id para compatibilidade com código existente
-      localStorage.setItem('funcionario-id', data.user.id);
-
-      // Prepare list of secretarias
-      if (usuarioData.usuario_secretarias) {
-        const secretarias = usuarioData.usuario_secretarias.map(
-          (us: { secretaria_id: string }) => us.secretaria_id
-        );
-        
-        localStorage.setItem('user-secretarias', JSON.stringify(secretarias));
-      } else {
-        localStorage.setItem('user-secretarias', JSON.stringify([]));
-      }
-
-      console.log('Login bem-sucedido, redirecionando com base na role:', usuarioData.role);
-
-      // Redirect based on role
-      switch (usuarioData.role) {
-        case 'admin':
-          navigate('/admin');
-          break;
-        case 'prefeito':
-          navigate('/dashboard');
-          break;
-        case 'gestor':
-          if (usuarioData.usuario_secretarias && usuarioData.usuario_secretarias.length > 0) {
-            navigate(`/setores/${usuarioData.usuario_secretarias[0].secretaria_id}`);
-          } else {
-            navigate('/dashboard');
-          }
-          break;
-        case 'servidor':
-          if (usuarioData.usuario_secretarias && usuarioData.usuario_secretarias.length > 0) {
-            navigate(`/setores/${usuarioData.usuario_secretarias[0].secretaria_id}`);
-          } else {
-            navigate('/pedidos');
-          }
-          break;
-        default:
-          navigate('/dashboard');
-      }
-
       toast.success('Login realizado com sucesso!');
+      
+      // Redirect will happen via onAuthStateChange and fetchUserData
     } catch (error) {
       console.error('Erro no login:', error);
       toast.error('Erro no login. Tente novamente.');
@@ -130,16 +157,6 @@ export function useAuth() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      
-      // Clear localStorage data
-      localStorage.removeItem('user-authenticated');
-      localStorage.removeItem('user-role');
-      localStorage.removeItem('user-municipality');
-      localStorage.removeItem('user-name');
-      localStorage.removeItem('user-id');
-      localStorage.removeItem('user-email');
-      localStorage.removeItem('funcionario-id');
-      localStorage.removeItem('user-secretarias');
       
       toast.success('Logout realizado com sucesso');
       navigate('/login');
@@ -161,31 +178,26 @@ export function useAuth() {
       }
 
       // Update first access flag
-      const userId = localStorage.getItem('user-id');
-      const { error: updateError } = await supabase
-        .from('usuarios')
-        .update({ primeiro_acesso: false })
-        .eq('id', userId);
+      const userId = user?.id;
+      if (userId) {
+        const { error: updateError } = await supabase
+          .from('usuarios')
+          .update({ primeiro_acesso: false })
+          .eq('id', userId);
 
-      if (updateError) {
-        toast.error(updateError.message);
-        setIsSubmitting(false);
-        return;
+        if (updateError) {
+          toast.error(updateError.message);
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       toast.success('Senha alterada com sucesso!');
       setShowChangePasswordDialog(false);
       
-      // Check if already authenticated
-      const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
-      
-      if (!isAuthenticated) {
-        // Redirect to login to authenticate with new password
-        navigate('/login');
-      } else {
-        // Already authenticated, redirect to dashboard
-        navigate('/dashboard');
-      }
+      // If user was in first access flow, redirect to dashboard
+      const role = await getUserRole();
+      redirectBasedOnRole(role);
     } catch (error) {
       console.error('Erro ao alterar senha:', error);
       toast.error('Erro ao alterar senha');
@@ -194,15 +206,28 @@ export function useAuth() {
     }
   };
 
+  const redirectBasedOnRole = (role) => {
+    switch (role) {
+      case 'admin':
+        navigate('/admin');
+        break;
+      case 'prefeito':
+        navigate('/dashboard');
+        break;
+      case 'gestor':
+        navigate('/dashboard');
+        break;
+      case 'servidor':
+        navigate('/pedidos');
+        break;
+      default:
+        navigate('/dashboard');
+    }
+  };
+
   // Function to handle GDPR consent
   const handleGDPRConsent = () => {
     setShowGDPRDialog(false);
-    const userId = localStorage.getItem('user-id');
-    
-    if (userId) {
-      localStorage.setItem(`gdpr-accepted-${userId}`, 'true');
-    }
-    
     toast.success('Termos aceitos com sucesso!');
   };
 
@@ -215,6 +240,8 @@ export function useAuth() {
     handleLogin,
     handleLogout,
     handlePasswordChange,
-    handleGDPRConsent
+    handleGDPRConsent,
+    user,
+    session
   };
 }

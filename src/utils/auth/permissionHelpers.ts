@@ -1,28 +1,40 @@
 
 // Permission and access control functions
-import { getUserRole, getUserSetor, getUserId } from './authCore';
+import { supabase } from '@/integrations/supabase/client';
 
 // Function to check if user is on first login
-export function isFirstLogin(): boolean {
-  return localStorage.getItem('first-login') === 'true';
+export async function isFirstLogin(userId: string): Promise<boolean> {
+  if (!userId) return false;
+  
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('primeiro_acesso')
+    .eq('id', userId)
+    .single();
+    
+  if (error || !data) return false;
+  return data.primeiro_acesso === true;
 }
 
 // Function to set first login status
-export function setFirstLogin(status: boolean): void {
-  localStorage.setItem('first-login', status.toString());
+export async function setFirstLogin(userId: string, status: boolean): Promise<void> {
+  if (!userId) return;
+  
+  await supabase
+    .from('usuarios')
+    .update({ primeiro_acesso: status })
+    .eq('id', userId);
 }
 
 // Function to check if user has accepted GDPR terms
-export function hasAcceptedGDPR(): boolean {
-  const userId = getUserId();
+export function hasAcceptedGDPR(userId: string): boolean {
   if (!userId) return false;
   
   return localStorage.getItem(`gdpr-accepted-${userId}`) === 'true';
 }
 
 // Function to set GDPR acceptance status
-export function setGDPRAccepted(status: boolean): void {
-  const userId = getUserId();
+export function setGDPRAccepted(userId: string, status: boolean): void {
   if (userId) {
     localStorage.setItem(`gdpr-accepted-${userId}`, status.toString());
   }
@@ -34,10 +46,18 @@ export function getSelectedMunicipality(): string | null {
 }
 
 // Function to check if user can access a specific route
-export function canAccess(requiredRole: string | string[]): boolean {
-  const userRole = getUserRole();
+export async function canAccess(userId: string, requiredRole: string | string[]): Promise<boolean> {
+  if (!userId) return false;
   
-  if (!userRole) return false;
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('role')
+    .eq('id', userId)
+    .single();
+  
+  if (error || !data) return false;
+  
+  const userRole = data.role;
   
   // Admin e prefeito podem acessar tudo
   if (userRole === 'admin' || userRole === 'prefeito') return true;
@@ -49,119 +69,139 @@ export function canAccess(requiredRole: string | string[]): boolean {
   return userRole === requiredRole;
 }
 
-// Function to get the workflow step a user is permitted to edit
-export function getPermittedWorkflowStep(): string | undefined {
-  const userRole = getUserRole();
-  
-  // Admin or prefeito can edit any step
-  if (userRole === 'admin' || userRole === 'prefeito') {
-    return undefined; // Undefined means all steps are permitted
-  }
-  
-  const funcionarioId = getFuncionarioId();
-  if (funcionarioId) {
-    // Get the employee data from localStorage
-    const funcionarios = JSON.parse(localStorage.getItem('funcionarios') || '[]');
-    const funcionario = funcionarios.find((f: any) => f.id === funcionarioId);
-    
-    if (funcionario && funcionario.permissaoEtapa) {
-      return funcionario.permissaoEtapa;
-    }
-  }
-  
-  return undefined;
-}
-
 // Function to check if user can edit a specific workflow step
-export function canEditWorkflowStep(stepTitle: string): boolean {
-  const userRole = getUserRole();
+export async function canEditWorkflowStep(userId: string, stepTitle: string): Promise<boolean> {
+  if (!userId) return false;
+  
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('role')
+    .eq('id', userId)
+    .single();
+  
+  if (error || !data) return false;
+  
+  const userRole = data.role;
   
   // Admin e prefeito can edit any step
   if (userRole === 'admin' || userRole === 'prefeito') {
     return true;
   }
   
-  // For non-admin users, check specific permissions
-  const permittedStep = getPermittedWorkflowStep();
-  
-  // If permittedStep is undefined but not admin, no permission
-  if (permittedStep === undefined) {
-    return false;
-  }
-  
-  // Allow if the permitted step exactly matches the current step
-  if (permittedStep === stepTitle) {
-    return true;
-  }
-  
-  // Allow if the user has "all" permissions
-  if (permittedStep === "all") {
-    return true;
-  }
+  // For future implementation: check specific permissions for workflow steps
   
   return false;
 }
 
 // Function to check if user can access pedidos from a specific sector
-export function canAccessSetor(setor: string): boolean {
-  const userRole = getUserRole();
-  const userSetor = getUserSetor();
+export async function canAccessSetor(userId: string, setor: string): Promise<boolean> {
+  if (!userId || !setor) return false;
+  
+  const { data: userData, error: userError } = await supabase
+    .from('usuarios')
+    .select('role')
+    .eq('id', userId)
+    .single();
+  
+  if (userError || !userData) return false;
   
   // Admin e prefeito podem acessar todos os setores
-  if (userRole === 'admin' || userRole === 'prefeito') {
+  if (userData.role === 'admin' || userData.role === 'prefeito') {
     return true;
   }
   
-  // Gerentes e funcionários só podem acessar seu próprio setor
-  return setor === userSetor;
+  // Check if user belongs to the specified setor
+  const { data: setorData, error: setorError } = await supabase
+    .from('usuario_secretarias')
+    .select('*')
+    .eq('usuario_id', userId)
+    .eq('secretaria_id', setor);
+    
+  if (setorError) return false;
+  
+  return setorData && setorData.length > 0;
 }
 
 // Function to check if user can manage users
-export function canAccessUserManagement(): boolean {
-  const userRole = getUserRole();
-  return userRole === 'admin' || userRole === 'prefeito'; 
+export async function canAccessUserManagement(userId: string): Promise<boolean> {
+  if (!userId) return false;
+  
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('role')
+    .eq('id', userId)
+    .single();
+  
+  if (error || !data) return false;
+  
+  return data.role === 'admin' || data.role === 'prefeito'; 
 }
 
 // Function to check if user should only see data from their own sector
-export function shouldFilterByUserSetor(): boolean {
-  const userRole = getUserRole();
+export async function shouldFilterByUserSetor(userId: string): Promise<boolean> {
+  if (!userId) return true;
+  
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('role')
+    .eq('id', userId)
+    .single();
+  
+  if (error || !data) return true;
+  
   // Admin e prefeito veem tudo, outros veem apenas seu setor
-  return userRole !== 'admin' && userRole !== 'prefeito';
+  return data.role !== 'admin' && data.role !== 'prefeito';
 }
 
 // Get user's secondary sectors if they have access to multiple
-export function getUserSetoresAdicionais(): string[] {
-  const setoresString = localStorage.getItem('user-setores-adicionais');
-  if (setoresString) {
-    try {
-      return JSON.parse(setoresString);
-    } catch (e) {
-      return [];
-    }
-  }
-  return [];
+export async function getUserSetoresAdicionais(userId: string): Promise<string[]> {
+  if (!userId) return [];
+  
+  const { data: primarySetor, error: primaryError } = await supabase
+    .from('usuario_secretarias')
+    .select('secretaria_id')
+    .eq('usuario_id', userId)
+    .limit(1);
+  
+  const { data: allSetores, error: allError } = await supabase
+    .from('usuario_secretarias')
+    .select('secretaria_id')
+    .eq('usuario_id', userId);
+    
+  if (primaryError || allError || !primarySetor || !primarySetor.length || !allSetores) return [];
+  
+  // Filter out the primary sector to get additional sectors
+  const primarySetorId = primarySetor[0].secretaria_id;
+  return allSetores
+    .filter(item => item.secretaria_id !== primarySetorId)
+    .map(item => item.secretaria_id);
 }
 
 // Check if user has access to a specific setor (primary or additional)
-export function hasSetorAccess(setor: string): boolean {
-  const userRole = getUserRole();
+export async function hasSetorAccess(userId: string, setor: string): Promise<boolean> {
+  if (!userId || !setor) return false;
+  
+  const { data: userData, error: userError } = await supabase
+    .from('usuarios')
+    .select('role')
+    .eq('id', userId)
+    .single();
+  
+  if (userError || !userData) return false;
   
   // Admin and prefeito have access to all sectors
-  if (userRole === 'admin' || userRole === 'prefeito') {
+  if (userData.role === 'admin' || userData.role === 'prefeito') {
     return true;
   }
   
-  const primarySetor = getUserSetor();
-  if (primarySetor === setor) {
-    return true;
-  }
+  // Check if user has access to this sector
+  const { data: setorData, error: setorError } = await supabase
+    .from('usuario_secretarias')
+    .select('*')
+    .eq('usuario_id', userId)
+    .eq('secretaria_id', setor);
+    
+  if (setorError) return false;
   
-  // Check additional sectors
-  const additionalSectors = getUserSetoresAdicionais();
-  return additionalSectors.includes(setor);
-}
-
-// Helper for getting funcionario ID
-function getFuncionarioId(): string | null {
-  return localStorage.getItem('user-id');
+  return setorData && setorData.length > 0;
 }
