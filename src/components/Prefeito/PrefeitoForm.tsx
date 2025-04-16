@@ -42,6 +42,7 @@ export const PrefeitoForm: React.FC<PrefeitoFormProps> = ({
             name="nome"
             value={formData.nome}
             onChange={handleInputChange}
+            required
           />
         </div>
         
@@ -53,6 +54,7 @@ export const PrefeitoForm: React.FC<PrefeitoFormProps> = ({
             value={formData.cpf}
             onChange={handleInputChange}
             placeholder="000.000.000-00"
+            required
           />
         </div>
         
@@ -64,6 +66,7 @@ export const PrefeitoForm: React.FC<PrefeitoFormProps> = ({
             type="email"
             value={formData.email}
             onChange={handleInputChange}
+            required
           />
         </div>
         
@@ -86,6 +89,7 @@ export const PrefeitoForm: React.FC<PrefeitoFormProps> = ({
             type="date"
             value={formData.mandatoInicio}
             onChange={handleInputChange}
+            required
           />
         </div>
         
@@ -97,6 +101,7 @@ export const PrefeitoForm: React.FC<PrefeitoFormProps> = ({
             type="date"
             value={formData.mandatoFim}
             onChange={handleInputChange}
+            required
           />
         </div>
       </div>

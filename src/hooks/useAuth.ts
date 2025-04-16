@@ -149,18 +149,47 @@ export function useAuth() {
     toast.success('Login realizado com sucesso!');
     setIsSubmitting(false);
     
-    // Direct users according to their access level
+    // Direct users according to their access level and department
     if (role === 'admin') {
       navigate('/admin');
     } else if (role === 'prefeito') {
-      // Prefeito can access dashboard like manager
       navigate('/dashboard');
     } else if (role === 'manager') {
       navigate('/dashboard');
     } else {
-      // Regular users (servidores) go directly to the order list
-      navigate('/pedidos');
+      // Regular users (servidores) go directly to their department page
+      if (setor) {
+        // Convert setor name to URL format
+        const setorUrl = convertSetorToUrl(setor);
+        navigate(`/setores/${setorUrl}`);
+      } else {
+        // Fallback to pedidos if no setor is defined
+        navigate('/pedidos');
+      }
     }
+  };
+
+  // Helper function to convert setor name to URL format
+  const convertSetorToUrl = (setor: string): string => {
+    const setorMap: {[key: string]: string} = {
+      'Saúde': 'saude',
+      'Educação': 'educacao',
+      'Administrativo': 'administrativo',
+      'Transporte': 'transporte',
+      'Obras': 'obras',
+      'Segurança Pública': 'seguranca',
+      'Assistência Social': 'social',
+      'Meio Ambiente': 'ambiente',
+      'Fazenda': 'fazenda',
+      'Turismo': 'turismo',
+      'Cultura': 'cultura',
+      'Esportes e Lazer': 'esportes',
+      'Planejamento': 'planejamento',
+      'Comunicação': 'comunicacao',
+      'Ciência e Tecnologia': 'ciencia',
+    };
+    
+    return setorMap[setor] || setor.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
   };
 
   return {
