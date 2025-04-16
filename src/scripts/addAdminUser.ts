@@ -99,7 +99,48 @@ export async function addAdminUser() {
       throw userSecretariaError;
     }
 
-    console.log('Usuário administrador criado com sucesso');
+    // Criar usuário adicional solicitado
+    const { data: additionalUserData, error: additionalUserError } = await supabase.auth.signUp({
+      email: 'usuario@exemplo.com',
+      password: 'senha123'
+    });
+
+    if (additionalUserError) {
+      console.error('Erro ao criar usuário adicional:', additionalUserError);
+      throw additionalUserError;
+    }
+
+    // Criar registro do usuário adicional na tabela usuarios
+    const { error: additionalUsuarioError } = await supabase
+      .from('usuarios')
+      .insert({
+        id: additionalUserData.user?.id,
+        nome: 'Nome do Usuário',
+        email: 'usuario@exemplo.com',
+        role: 'servidor',
+        municipio_id: municipioData.id,
+        primeiro_acesso: true
+      });
+
+    if (additionalUsuarioError) {
+      console.error('Erro ao criar registro do usuário adicional:', additionalUsuarioError);
+      throw additionalUsuarioError;
+    }
+
+    // Criar associação entre usuário adicional e secretaria
+    const { error: additionalUserSecretariaError } = await supabase
+      .from('usuario_secretarias')
+      .insert({
+        usuario_id: additionalUserData.user?.id,
+        secretaria_id: secretariaData.id
+      });
+
+    if (additionalUserSecretariaError) {
+      console.error('Erro ao criar associação do usuário adicional:', additionalUserSecretariaError);
+      throw additionalUserSecretariaError;
+    }
+
+    console.log('Usuário administrador e usuário adicional criados com sucesso');
     return true;
   } catch (error) {
     console.error('Erro ao criar usuário administrador:', error);

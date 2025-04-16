@@ -65,6 +65,38 @@ export async function initializeSystem() {
 
     if (userSecretariaError) throw userSecretariaError;
 
+    // Create additional user (usuário solicitado)
+    const { data: additionalUserData, error: additionalUserError } = await supabase.auth.signUp({
+      email: 'usuario@exemplo.com',
+      password: 'senha123'
+    });
+
+    if (additionalUserError) throw additionalUserError;
+
+    // Create corresponding record in usuarios table
+    const { error: additionalUsuarioError } = await supabase
+      .from('usuarios')
+      .insert({
+        id: additionalUserData.user?.id,
+        nome: 'Nome do Usuário',
+        email: 'usuario@exemplo.com',
+        role: 'servidor',
+        municipio_id: municipioData.id,
+        primeiro_acesso: true
+      });
+
+    if (additionalUsuarioError) throw additionalUsuarioError;
+
+    // Associate additional user with secretaria
+    const { error: additionalUserSecretariaError } = await supabase
+      .from('usuario_secretarias')
+      .insert({
+        usuario_id: additionalUserData.user?.id,
+        secretaria_id: secretariaData.id
+      });
+
+    if (additionalUserSecretariaError) throw additionalUserSecretariaError;
+
     toast.success('Sistema inicializado com sucesso!');
     return true;
   } catch (error) {
