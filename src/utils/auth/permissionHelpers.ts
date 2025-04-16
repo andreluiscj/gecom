@@ -1,6 +1,6 @@
 
 // Permission and access control functions
-import { getUserRole, getUserSetor } from './authCore';
+import { getUserRole, getUserSetor, getUserId } from './authCore';
 
 // Function to check if user is on first login
 export function isFirstLogin(): boolean {
