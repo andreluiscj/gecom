@@ -14,6 +14,8 @@ export function useAuth() {
     setIsSubmitting(true);
 
     try {
+      console.log(`Tentando login com email: ${email}`);
+      
       // Autenticar no Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -21,16 +23,20 @@ export function useAuth() {
       });
 
       if (error) {
+        console.error('Erro na autenticação:', error.message);
         toast.error(error.message);
         setIsSubmitting(false);
         return;
       }
 
       if (!data.user) {
+        console.error('Usuário não encontrado');
         toast.error('Usuário não encontrado');
         setIsSubmitting(false);
         return;
       }
+
+      console.log('Usuário autenticado:', data.user.id);
 
       // Buscar informações do usuário na tabela usuarios
       const { data: usuarioData, error: usuarioError } = await supabase
@@ -40,10 +46,13 @@ export function useAuth() {
         .single();
 
       if (usuarioError || !usuarioData) {
+        console.error('Erro ao buscar dados do usuário:', usuarioError);
         toast.error('Erro ao buscar dados do usuário');
         setIsSubmitting(false);
         return;
       }
+
+      console.log('Dados do usuário obtidos:', usuarioData);
 
       // Verificar primeiro acesso
       if (usuarioData.primeiro_acesso) {
@@ -66,6 +75,8 @@ export function useAuth() {
       
       localStorage.setItem('user-secretarias', JSON.stringify(secretarias));
 
+      console.log('Login bem-sucedido, redirecionando com base na role:', usuarioData.role);
+
       // Redirecionar baseado na role
       switch (usuarioData.role) {
         case 'admin':
@@ -84,6 +95,7 @@ export function useAuth() {
 
       toast.success('Login realizado com sucesso!');
     } catch (error) {
+      console.error('Erro no login:', error);
       toast.error('Erro no login. Tente novamente.');
     } finally {
       setIsSubmitting(false);

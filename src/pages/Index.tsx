@@ -11,25 +11,41 @@ const Index: React.FC = () => {
 
   useEffect(() => {
     const checkAndInitialize = async () => {
-      // Check if system is already initialized
-      const systemInitialized = localStorage.getItem('system-initialized') === 'true';
-      
-      if (!systemInitialized) {
-        const result = await initializeSystem();
-        if (result) {
-          localStorage.setItem('system-initialized', 'true');
-          // After system initialization, add the admin user
-          const adminResult = await addAdminUser();
-          if (adminResult) {
-            toast.success("Usuário administrador criado com sucesso");
+      try {
+        // Check if system is already initialized
+        const systemInitialized = localStorage.getItem('system-initialized') === 'true';
+        
+        if (!systemInitialized) {
+          console.log("Inicializando o sistema...");
+          const result = await initializeSystem();
+          if (result) {
+            localStorage.setItem('system-initialized', 'true');
+            console.log("Sistema inicializado com sucesso, criando usuário administrador...");
+            
+            // After system initialization, add the admin user
+            const adminResult = await addAdminUser();
+            if (adminResult) {
+              toast.success("Usuário administrador criado com sucesso");
+              console.log("Usuário administrador criado com sucesso");
+            } else {
+              toast.error("Erro ao criar usuário administrador");
+              console.error("Erro ao criar usuário administrador");
+            }
           } else {
-            toast.error("Erro ao criar usuário administrador");
+            console.error("Falha na inicialização do sistema");
+            toast.error("Falha na inicialização do sistema");
           }
+        } else {
+          console.log("Sistema já inicializado anteriormente");
         }
-      }
 
-      // Always redirect to login page
-      navigate('/login');
+        // Always redirect to login page
+        navigate('/login');
+      } catch (error) {
+        console.error("Erro durante inicialização:", error);
+        toast.error("Erro durante inicialização do sistema");
+        navigate('/login');
+      }
     };
 
     checkAndInitialize();

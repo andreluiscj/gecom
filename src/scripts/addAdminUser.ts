@@ -34,6 +34,11 @@ export async function addAdminUser() {
       throw authError;
     }
 
+    if (!authData.user) {
+      console.error('Usuário não foi criado no Auth');
+      return false;
+    }
+
     console.log('Usuário criado no Auth com sucesso:', authData.user?.id);
 
     // Obter o ID do município (assumindo que já existe pelo menos um)
@@ -54,7 +59,7 @@ export async function addAdminUser() {
     const { error: usuarioError } = await supabase
       .from('usuarios')
       .insert({
-        id: authData.user?.id,
+        id: authData.user.id,
         nome: 'Administrador Principal',
         email: 'andreluiscj2207@gmail.com',
         role: 'admin',
@@ -85,7 +90,7 @@ export async function addAdminUser() {
     const { error: userSecretariaError } = await supabase
       .from('usuario_secretarias')
       .insert({
-        usuario_id: authData.user?.id,
+        usuario_id: authData.user.id,
         secretaria_id: secretariaData.id
       });
 
