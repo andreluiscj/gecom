@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
 import { toast } from 'sonner';
-import { getUserRole, getUserSetor, canAccessDashboard, getUserSecretarias } from '@/utils/auth/authCore';
+import { getUserRole, getUserSetor, canAccessDashboard, getUserSecretarias } from '@/utils/auth';
 
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -28,7 +27,7 @@ import {
   Globe,
   Radio,
   Award,
-  PieChart as PieChartIcon,
+  PieChartIcon,
   LogOut,
   Users,
   UserPlus
@@ -41,7 +40,7 @@ import {
   getUserSetor, 
   shouldFilterByUserSetor,
   hasSetorAccess 
-} from '@/utils/authHelpers';
+} from '@/utils/auth';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -56,13 +55,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
   const [secretariasOpen, setSecretariasOpen] = useState(false);
   const showOnlyUserSetor = shouldFilterByUserSetor();
 
-  // Automatically expand Secretarias section if user is in a setor page
   useEffect(() => {
     if (location.pathname.includes('/setores/')) {
       setSecretariasOpen(true);
     }
     
-    // Auto-expand when user is a regular server
     if (userRole === 'user' && userSetor) {
       setSecretariasOpen(true);
     }
@@ -254,13 +251,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
     },
   ];
 
-  // Filter secretarias based on user access
   const filteredSecretarias = secretariasItems.filter(item => {
     if (showOnlyUserSetor && userSetor) {
-      // Only show the current user's setor AND any additional sectors they have access to
       return hasSetorAccess(item.id);
     }
-    return true; // Admin/prefeito see all
+    return true;
   });
 
   const filteredMenuItems = menuItems.filter(
@@ -327,7 +322,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
               {secretariasOpen && (
                 <div className="mt-1 space-y-1 pl-10 pr-3 max-h-64 overflow-y-auto">
                   {filteredSecretarias.map((subItem, subIdx) => {
-                    // Highlight user's current setor
                     const isUserSetor = userSetor === subItem.id;
                     
                     return (

@@ -122,11 +122,7 @@ export function canAccessUserManagement(): boolean {
   return userRole === 'admin' || userRole === 'prefeito'; 
 }
 
-// Function to check if user can access dashboard
-export function canAccessDashboard(): boolean {
-  const userRole = getUserRole();
-  return userRole === 'admin' || userRole === 'prefeito' || userRole === 'manager';
-}
+// Removed duplicate canAccessDashboard function since it's already in authCore.ts
 
 // Function to check if user should only see data from their own sector
 export function shouldFilterByUserSetor(): boolean {
