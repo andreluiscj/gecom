@@ -4,7 +4,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
 import { toast } from 'sonner';
-import { getUserRole, getUserSetor, canAccessDashboard } from '@/utils/authHelpers';
+import { getUserRole, getUserSetor, canAccessDashboard, getUserSecretarias } from '@/utils/auth/authCore';
 
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -16,9 +16,10 @@ const AppLayout: React.FC = () => {
   
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
-    const role = localStorage.getItem('user-role');
+    const role = getUserRole();
     const municipality = localStorage.getItem('user-municipality');
-    const setor = localStorage.getItem('user-setor');
+    const secretarias = getUserSecretarias();
+    const setor = getUserSetor();
     
     if (!isAuthenticated) {
       navigate('/login');
@@ -41,9 +42,8 @@ const AppLayout: React.FC = () => {
       toast.error('Você não tem permissão para acessar o dashboard');
       
       // Redirect to their department page if possible
-      if (setor) {
-        const setorUrl = convertSetorToUrl(setor);
-        navigate(`/setores/${setorUrl}`);
+      if (secretarias.length > 0) {
+        navigate(`/setores/${secretarias[0]}`);
       } else {
         navigate('/pedidos');
       }

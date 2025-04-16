@@ -24,7 +24,7 @@ export function useAuth() {
 
       if (error) {
         console.error('Erro na autenticação:', error.message);
-        toast.error(error.message);
+        toast.error('Credenciais inválidas. Verifique seu email e senha.');
         setIsSubmitting(false);
         return;
       }
@@ -66,6 +66,9 @@ export function useAuth() {
       localStorage.setItem('user-role', usuarioData.role);
       localStorage.setItem('user-municipality', usuarioData.municipio_id);
       localStorage.setItem('user-name', usuarioData.nome);
+      localStorage.setItem('user-id', data.user.id);
+      
+      // Manter funcionario-id para compatibilidade com código existente
       localStorage.setItem('funcionario-id', data.user.id);
 
       // Preparar lista de secretarias
@@ -91,6 +94,8 @@ export function useAuth() {
         case 'servidor':
           navigate(`/setores/${secretarias[0]}`);
           break;
+        default:
+          navigate('/dashboard');
       }
 
       toast.success('Login realizado com sucesso!');
