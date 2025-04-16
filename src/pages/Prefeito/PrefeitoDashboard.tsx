@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Building2, Users, FileText, TrendingUp, ShieldAlert, Wallet, BriefcaseBusiness, CalendarCheck } from 'lucide-react';
+import { Building2, Users, FileText, TrendingUp, ShieldAlert, Wallet, BriefcaseBusiness, CalendarCheck, UserPlus } from 'lucide-react';
 import { getUserRole } from '@/utils/authHelpers';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
