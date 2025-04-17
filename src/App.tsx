@@ -50,7 +50,7 @@ const App: React.FC = () => {
             {/* Protected Routes */}
             <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
             <Route path="/admin" element={<AppLayout><Admin /></AppLayout>} />
-            <Route path="/admin/cadastro-gerente" element={<AppLayout><CadastroGerente /></AppLayout>} />
+            <Route path="/admin/gerentes" element={<AppLayout><CadastroGerente /></AppLayout>} />
             
             {/* Pedidos Routes */}
             <Route path="/pedidos" element={<AppLayout><ListaPedidos /></AppLayout>} />
@@ -68,7 +68,7 @@ const App: React.FC = () => {
             <Route path="/setores/:id" element={<AppLayout><DetalheSetor /></AppLayout>} />
             
             {/* Gerenciamento Routes */}
-            <Route path="/funcionarios" element={<AppLayout><Funcionarios /></AppLayout>} />
+            <Route path="/gerenciamento/funcionarios" element={<AppLayout><Funcionarios /></AppLayout>} />
             
             {/* Tarefas Routes */}
             <Route path="/tarefas" element={<AppLayout><TarefasSelecao /></AppLayout>} />

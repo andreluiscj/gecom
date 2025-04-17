@@ -3,60 +3,76 @@ import React from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 
 interface GDPRConsentDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onAccept: () => void;
+  onClose: () => void;
 }
 
-export const GDPRConsentDialog: React.FC<GDPRConsentDialogProps> = ({
-  open,
-  onOpenChange,
-  onAccept,
-}) => {
+const GDPRConsentDialog: React.FC<GDPRConsentDialogProps> = ({ open, onClose }) => {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Termos de uso e privacidade</DialogTitle>
+          <DialogTitle>Política de Privacidade e Cookies</DialogTitle>
           <DialogDescription>
-            Para utilizar o GECOM, precisamos que você concorde com nossos termos de uso e política de privacidade.
+            Leia com atenção nossa política de privacidade e cookies.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-2 text-sm">
-          <div className="space-y-2">
-            <div className="flex items-start space-x-2">
-              <Checkbox id="terms" />
-              <label
-                htmlFor="terms"
-                className="leading-tight"
-              >
-                Li e concordo com os <span className="text-primary underline">Termos de Uso</span> do GECOM.
-              </label>
-            </div>
-            <div className="flex items-start space-x-2">
-              <Checkbox id="privacy" />
-              <label
-                htmlFor="privacy"
-                className="leading-tight"
-              >
-                Li e concordo com a <span className="text-primary underline">Política de Privacidade</span> do GECOM.
-              </label>
-            </div>
-          </div>
+        
+        <div className="space-y-4 text-sm">
+          <section>
+            <h3 className="font-semibold text-base mb-2">1. Informações Coletadas</h3>
+            <p>
+              Coletamos informações necessárias para o funcionamento do sistema GECOM, 
+              incluindo dados pessoais como nome, email e cargo, além de informações 
+              sobre o uso do sistema.
+            </p>
+          </section>
+          
+          <section>
+            <h3 className="font-semibold text-base mb-2">2. Uso das Informações</h3>
+            <p>
+              Utilizamos seus dados para gerenciar o sistema de compras públicas, 
+              incluindo autenticação, autorização e auditoria de operações realizadas.
+              Seus dados serão armazenados somente durante o período necessário para 
+              cumprir as finalidades para as quais foram coletados.
+            </p>
+          </section>
+          
+          <section>
+            <h3 className="font-semibold text-base mb-2">3. Cookies</h3>
+            <p>
+              Utilizamos cookies para manter sua sessão ativa e armazenar preferências 
+              de uso. Cookies são pequenos arquivos que seu navegador armazena em seu 
+              dispositivo para melhorar sua experiência.
+            </p>
+          </section>
+          
+          <section>
+            <h3 className="font-semibold text-base mb-2">4. Direitos do Usuário</h3>
+            <p>
+              Você tem direito a acessar, corrigir, portar, eliminar seus dados, além 
+              de revogar o consentimento a qualquer momento, conforme previsto na 
+              Lei Geral de Proteção de Dados (LGPD).
+            </p>
+          </section>
         </div>
+        
         <DialogFooter>
-          <Button onClick={onAccept}>Aceitar e continuar</Button>
+          <Button variant="secondary" onClick={onClose}>
+            Entendi e Concordo
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
+
+export default GDPRConsentDialog;

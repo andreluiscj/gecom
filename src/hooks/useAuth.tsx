@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Usuario, UserRole } from '@/types/supabase';
+import { clearUserInfo } from '@/utils/auth';
 
 interface AuthContextType {
   user: Usuario | null;
@@ -14,6 +15,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
+  handleLogout: () => Promise<void>; // Added for compatibility
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -169,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       
       setUser(null);
+      clearUserInfo();
       navigate('/login');
       toast.success('Sessão encerrada com sucesso');
     } catch (error: any) {
@@ -177,6 +180,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Alias for signOut for compatibility
+  const handleLogout = async () => {
+    return signOut();
   };
 
   const resetPassword = async (email: string) => {
@@ -234,7 +242,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signOut,
       resetPassword,
-      updatePassword
+      updatePassword,
+      handleLogout
     }}>
       {children}
     </AuthContext.Provider>

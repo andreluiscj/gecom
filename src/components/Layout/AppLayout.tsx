@@ -6,7 +6,11 @@ import Sidebar from './Sidebar';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-const AppLayout: React.FC = () => {
+interface AppLayoutProps {
+  children: React.ReactNode;
+}
+
+const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userMunicipality, setUserMunicipality] = useState<string | null>(null);
@@ -113,7 +117,7 @@ const AppLayout: React.FC = () => {
           userMunicipality={userMunicipality} 
         />
         <main className="p-5 md:p-6">
-          <Outlet />
+          {children || <Outlet />}
         </main>
       </div>
     </div>

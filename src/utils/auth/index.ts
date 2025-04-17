@@ -3,6 +3,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/types/supabase';
 
+// Re-export all auth utilities
+export * from './authCore';
+export * from './permissionHelpers';
+export * from './profileHelpers';
+
 // Helper to get user role
 export const getUserRole = async (): Promise<UserRole | null> => {
   try {

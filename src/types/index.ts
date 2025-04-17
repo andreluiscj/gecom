@@ -1,185 +1,84 @@
-
-export type Role = "admin" | "editor" | null;
-
-export type Tarefa = {
-  id: string;
-  title: string;
-  description: string;
-  status: "pendente" | "em_progresso" | "concluida";
-  priority: "alta" | "media" | "baixa";
-  dueDate: Date;
-  assignedTo: string;
-  comments: string[];
-  attachments: string[];
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type Setor =
-  | "Saúde"
-  | "Educação"
-  | "Administrativo"
-  | "Transporte"
-  | "Assistência Social"
-  | "Cultura"
-  | "Meio Ambiente"
-  | "Obras"
-  | "Segurança Pública"
-  | "Fazenda"
-  | "Turismo"
-  | "Esportes e Lazer"
-  | "Planejamento"
-  | "Comunicação"
-  | "Ciência e Tecnologia"
-  | "Gabinete"
-  | "Prefeito"
-  | string; // Add string to make it more compatible with dynamic data
-
-export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
-
-// Database status values - lowercase
-export type DbPedidoStatus = 'pendente' | 'em_analise' | 'aprovado' | 'em_andamento' | 'concluido' | 'rejeitado';
-
-export interface Item {
-  id: string;
-  nome: string;
-  quantidade: number;
-  valorUnitario: number;
-  valorTotal?: number;
-}
-
-export interface PedidoCompra {
-  id: string;
-  descricao: string;
-  dataCompra: Date;
-  setor: Setor; // Now compatible with string
-  itens: Item[];
-  valorTotal: number;
-  status: PedidoStatus;
-  fundoMonetario: string;
-  createdAt: Date;
-  justificativa?: string;
-  solicitante?: string;
-  observacoes?: string;
-  workflow?: Workflow;
-  localEntrega?: string;
-  // Added missing properties
-  fonteRecurso?: string;
-  responsavel?: {
-    id: string;
-    nome: string;
-    email?: string;
-    cargo?: string;
-  };
-  anexos?: Attachment[];
-}
-
-export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído';
-
-export interface WorkflowStep {
-  id: string;
-  title: string;
-  status: WorkflowStepStatus;
-  date?: Date;
-  dataConclusao?: Date;
-  responsavel?: string;
-}
-
-export interface Workflow {
-  currentStep: number;
-  totalSteps: number;
-  percentComplete: number;
-  steps: WorkflowStep[];
-}
-
-export interface Attachment {
-  id: string;
-  name: string;
-  type: string;
-  size?: number;
-  url?: string;
-  createdAt?: Date;
-}
-
 export interface Municipio {
   id: string;
   nome: string;
   estado: string;
   populacao: number;
-  logo?: string;
   orcamento: number;
   orcamentoAnual: number;
   prefeito: string;
 }
 
 export interface DadosDashboard {
-  resumoFinanceiro: {
-    estimativaDespesa: number;
-    valorContratadoTotal: number;
-    percentualUtilizado: number;
-    totalPedidos: number;
-    orcamentoAnual?: number;
-  };
-  cartoes: Array<{
-    titulo: string;
-    valor: string | number;
-    percentualMudanca: number;
-    icon: string;
-    classeCor: string;
-  }>;
+  resumoFinanceiro: ResumoFinanceiro;
+  cartoes: Cartao[];
   orcamentoPrevisto: Record<string, number>;
   gastosPorSetor: Record<string, number>;
   valorContratadoTotal: number;
   pedidosPorSetor: Record<string, number>;
-  indicadoresDesempenho: {
-    tempoMedioConclusao: number;
-    percentualEconomia: number;
-  };
+  indicadoresDesempenho: IndicadoresDesempenho;
 }
 
-export type UserRole = 'admin' | 'user' | 'manager' | 'prefeito';
+export interface ResumoFinanceiro {
+  estimativaDespesa: number;
+  valorContratadoTotal: number;
+  percentualUtilizado: number;
+  totalPedidos: number;
+}
 
-export interface Funcionario {
+export interface Cartao {
+  titulo: string;
+  valor: number | string;
+  percentualMudanca: number;
+  icon: string;
+  classeCor: string;
+}
+
+export interface IndicadoresDesempenho {
+  tempoMedioConclusao: number;
+  percentualEconomia: number;
+}
+
+export interface PedidoCompra {
+  id: string;
+  descricao: string;
+  justificativa: string;
+  setor: string;
+  items: Item[];
+  valorTotal: number;
+  status: string;
+  dataCompra: Date;
+  solicitante: string;
+  localEntrega: string;
+  observacoes?: string;
+}
+
+export interface Item {
   id: string;
   nome: string;
-  cpf: string;
-  dataNascimento: Date;
-  email: string;
-  cargo: string;
-  setor: Setor;
-  setoresAdicionais?: Setor[];
-  dataContratacao: Date;
-  ativo: boolean;
-  senha?: string;
-  permissaoEtapa?: string;
-  username?: string;
-  telefone?: string;
+  quantidade: number;
+  valorUnitario: number;
+  valorTotal: number;
 }
 
-export interface LoginLog {
-  userId: string;
-  timestamp: string;
-  success: boolean;
-  ip: string;
-}
-
-export interface UsuarioLogin {
+export interface WorkflowStep {
   id: string;
-  username: string;
-  senha: string;
-  funcionarioId: string;
+  title: string;
+  status: WorkflowStepStatus;
+  date: Date;
+  dataConclusao?: Date;
+  observacoes?: string; // Add this property
+}
+
+export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído' | 'Aprovado' | 'Reprovado';
+
+// Extend the existing UserRole type
+export type UserRole = 'admin' | 'prefeito' | 'gestor' | 'servidor';
+
+export interface Usuario {
+  id: string;
+  email: string;
+  nome: string;
   role: UserRole;
-  ativo: boolean;
-  primeiroAcesso?: boolean;
-}
-
-export interface PrefeitoData {
-  id: string;
-  nome: string;
-  municipio: string;
-  mandatoInicio: Date;
-  mandatoFim: Date;
-  partido: string;
-  email: string;
-  telefone: string;
+  municipio_id?: string;
+  primeiro_acesso: boolean;
 }

@@ -1,478 +1,313 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { CheckCircle, Clock, AlertTriangle, FileText, User, Calendar, DollarSign, Building, Truck, ClipboardList } from 'lucide-react';
-import { formatCurrency } from '@/utils/formatters';
-import { PedidoCompra } from '@/types';
-import { obterTodosPedidos, atualizarStatusPedido, atualizarEtapaWorkflow } from '@/data/mockData';
-import { getUserRoleSync } from '@/utils/auth';
-import { canAccessSync } from '@/utils/auth/permissionHelpers';
+import { PedidoCompra, WorkflowStep } from '@/types';
+import { getPedido, updatePedido } from '@/services/dfdService';
+import { canEditWorkflowStepSync, getUserNameSync, getUserRoleSync } from '@/utils/authHelpers';
 import WorkflowTimeline from '@/components/Pedidos/WorkflowTimeline';
-import PedidoItemsTable from '@/components/Pedidos/PedidoItemsTable';
-import PedidoAttachments from '@/components/Pedidos/PedidoAttachments';
-import PedidoObservacoes from '@/components/Pedidos/PedidoObservacoes';
+import { Badge } from '@/components/ui/badge';
+import { CheckCheck, ChevronsRight, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const AprovacaoDFD: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [pedido, setPedido] = useState<PedidoCompra | null>(null);
   const [loading, setLoading] = useState(true);
-  const [observacao, setObservacao] = useState('');
-  const [activeTab, setActiveTab] = useState('detalhes');
-  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
+  const [currentStep, setCurrentStep] = useState<WorkflowStep | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [observacoes, setObservacoes] = useState('');
+  
   const userRole = getUserRoleSync();
+  const userName = getUserNameSync();
 
   useEffect(() => {
-    const fetchPedido = async () => {
-      setLoading(true);
-      try {
-        if (!id) {
-          toast.error('ID do pedido não fornecido');
-          navigate('/pedidos');
-          return;
-        }
+    if (!id) {
+      setError('Pedido ID não fornecido.');
+      setLoading(false);
+      return;
+    }
 
-        const pedidos = await obterTodosPedidos();
-        const pedidoEncontrado = pedidos.find(p => p.id === id);
-        
-        if (pedidoEncontrado) {
-          setPedido(pedidoEncontrado);
+    const fetchPedido = async () => {
+      try {
+        setLoading(true);
+        const fetchedPedido = await getPedido(id);
+        if (fetchedPedido) {
+          setPedido(fetchedPedido);
+          setWorkflowSteps(fetchedPedido.workflowSteps || []);
+          
+          // Find the current step where status is 'Pendente'
+          const pendingStep = fetchedPedido.workflowSteps?.find(step => step.status === 'Pendente');
+          setCurrentStep(pendingStep || null);
         } else {
-          toast.error('Pedido não encontrado');
-          navigate('/pedidos');
+          setError('Pedido não encontrado.');
         }
-      } catch (error) {
-        console.error('Erro ao buscar pedido:', error);
-        toast.error('Erro ao carregar dados do pedido');
+      } catch (err: any) {
+        setError(`Erro ao buscar pedido: ${err.message}`);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPedido();
-  }, [id, navigate]);
+  }, [id]);
+
+  const podeAprovar = userRole === 'prefeito' || userRole === 'gestor' || userRole === 'admin';
 
   const handleAprovar = async () => {
-    if (!pedido || !id) return;
-    
-    setSubmitting(true);
-    try {
-      // Verificar permissões
-      if (userRole === 'admin' || userRole === 'manager') {
-        // Atualizar status do pedido
-        const pedidoAtualizado = await atualizarStatusPedido(pedido.id, 'Aprovado');
-        
-        if (pedidoAtualizado) {
-          // Atualizar etapa do workflow
-          const etapaIndex = pedido.workflow?.steps.findIndex(step => step.status === 'Pendente' || step.status === 'Em Andamento');
-          
-          if (etapaIndex !== undefined && etapaIndex !== -1 && pedido.workflow) {
-            const workflowAtualizado = await atualizarEtapaWorkflow(
-              pedido.id,
-              etapaIndex,
-              'Concluído',
-              new Date(),
-              `${localStorage.getItem('user-name') || 'Usuário'}`,
-              new Date()
-            );
-            
-            if (workflowAtualizado) {
-              setPedido(workflowAtualizado);
-              toast.success('Pedido aprovado com sucesso!');
-            }
-          }
-        } else {
-          toast.error('Erro ao aprovar pedido');
-        }
-      } else {
-        toast.error('Você não tem permissão para aprovar este pedido');
-      }
-    } catch (error) {
-      console.error('Erro ao aprovar pedido:', error);
-      toast.error('Erro ao processar aprovação');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleRejeitar = async () => {
     if (!pedido) return;
     
-    if (!observacao.trim()) {
-      toast.error('Por favor, adicione uma observação explicando o motivo da rejeição');
-      return;
-    }
-    
-    setSubmitting(true);
     try {
-      // Atualizar status do pedido
-      const pedidoAtualizado = await atualizarStatusPedido(pedido.id, 'Rejeitado');
+      setLoading(true);
       
-      if (pedidoAtualizado) {
-        // Adicionar observação
-        // Em um sistema real, aqui seria adicionada a observação ao banco de dados
+      // Clone the pedido to avoid mutating the state directly
+      const updatedPedido = { ...pedido };
+      
+      // Find the index of the current pending step
+      const currentStepIndex = updatedPedido.workflowSteps?.findIndex(step => step.status === 'Pendente') ?? -1;
+      
+      if (currentStepIndex !== -1 && updatedPedido.workflowSteps) {
+        // Update the current step
+        updatedPedido.workflowSteps[currentStepIndex] = {
+          ...updatedPedido.workflowSteps[currentStepIndex],
+          status: 'Concluído',
+          dataConclusao: new Date(),
+          observacoes: observacoes,
+        };
         
-        toast.success('Pedido rejeitado com sucesso!');
-        setPedido({
-          ...pedido,
-          status: 'Rejeitado',
-          observacoes: pedido.observacoes + '\n\n' + observacao
-        });
-      } else {
-        toast.error('Erro ao rejeitar pedido');
-      }
-    } catch (error) {
-      console.error('Erro ao rejeitar pedido:', error);
-      toast.error('Erro ao processar rejeição');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleAvancarEtapa = async (etapaIndex: number) => {
-    if (!pedido || !pedido.workflow) return;
-    
-    setSubmitting(true);
-    try {
-      // Verificar permissões
-      if (userRole === 'manager') {
-        // Atualizar etapa do workflow
-        const workflowAtualizado = await atualizarEtapaWorkflow(
-          pedido.id,
-          etapaIndex,
-          'Em Andamento',
-          new Date(),
-          `${localStorage.getItem('user-name') || 'Usuário'}`
-        );
-        
-        if (workflowAtualizado) {
-          setPedido(workflowAtualizado);
-          toast.success('Etapa atualizada com sucesso!');
+        // If there is a next step, set its status to 'Pendente'
+        if (currentStepIndex < updatedPedido.workflowSteps.length - 1) {
+          updatedPedido.workflowSteps[currentStepIndex + 1] = {
+            ...updatedPedido.workflowSteps[currentStepIndex + 1],
+            status: 'Pendente',
+          };
         } else {
-          toast.error('Erro ao atualizar etapa');
+          // If there is no next step, set the pedido status to 'Aprovado'
+          updatedPedido.status = 'Aprovado';
         }
-      } else {
-        toast.error('Você não tem permissão para atualizar esta etapa');
       }
-    } catch (error) {
-      console.error('Erro ao atualizar etapa:', error);
-      toast.error('Erro ao processar atualização');
+      
+      // Update the pedido with the modified workflow steps
+      await updatePedido(updatedPedido);
+      
+      setPedido(updatedPedido);
+      setWorkflowSteps(updatedPedido.workflowSteps || []);
+      setCurrentStep(updatedPedido.workflowSteps?.[currentStepIndex + 1] || null);
+      toast.success('Pedido aprovado com sucesso!');
+      setIsDialogOpen(false);
+      setObservacoes('');
+      
+      // Redirect to the next step or to the list of pedidos
+      if (currentStepIndex === updatedPedido.workflowSteps?.length - 1) {
+        navigate('/pedidos');
+      }
+    } catch (err: any) {
+      console.error('Erro ao aprovar pedido:', err);
+      toast.error(`Erro ao aprovar pedido: ${err.message}`);
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const handleConcluirEtapa = async (etapaIndex: number) => {
-    if (!pedido || !pedido.workflow) return;
+  const handleReprovar = async () => {
+    if (!pedido) return;
     
-    setSubmitting(true);
     try {
-      // Atualizar etapa do workflow
-      const workflowAtualizado = await atualizarEtapaWorkflow(
-        pedido.id,
-        etapaIndex,
-        'Concluído',
-        undefined,
-        undefined,
-        new Date()
-      );
+      setLoading(true);
       
-      if (workflowAtualizado) {
-        setPedido(workflowAtualizado);
-        toast.success('Etapa concluída com sucesso!');
-        
-        // Se todas as etapas foram concluídas, atualizar status do pedido
-        const todasEtapasConcluidas = workflowAtualizado.workflow?.steps.every(step => step.status === 'Concluído');
-        if (todasEtapasConcluidas) {
-          const pedidoFinalizado = await atualizarStatusPedido(pedido.id, 'Concluído');
-          if (pedidoFinalizado) {
-            setPedido({
-              ...workflowAtualizado,
-              status: 'Concluído'
-            });
-            toast.success('Pedido concluído com sucesso!');
-          }
-        }
-      } else {
-        toast.error('Erro ao concluir etapa');
+      // Clone the pedido to avoid mutating the state directly
+      const updatedPedido = { ...pedido };
+      
+      // Set the pedido status to 'Reprovado'
+      updatedPedido.status = 'Reprovado';
+      
+      // Find the index of the current pending step
+      const currentStepIndex = updatedPedido.workflowSteps?.findIndex(step => step.status === 'Pendente') ?? -1;
+      
+      if (currentStepIndex !== -1 && updatedPedido.workflowSteps) {
+        // Update the current step
+        updatedPedido.workflowSteps[currentStepIndex] = {
+          ...updatedPedido.workflowSteps[currentStepIndex],
+          status: 'Reprovado',
+          dataConclusao: new Date(),
+          observacoes: observacoes,
+        };
       }
-    } catch (error) {
-      console.error('Erro ao concluir etapa:', error);
-      toast.error('Erro ao processar conclusão');
+      
+      // Update the pedido with the modified workflow steps
+      await updatePedido(updatedPedido);
+      
+      setPedido(updatedPedido);
+      setWorkflowSteps(updatedPedido.workflowSteps || []);
+      setCurrentStep(null);
+      toast.success('Pedido reprovado com sucesso!');
+      setIsDialogOpen(false);
+      setObservacoes('');
+      navigate('/pedidos');
+    } catch (err: any) {
+      console.error('Erro ao reprovar pedido:', err);
+      toast.error(`Erro ao reprovar pedido: ${err.message}`);
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <div className="text-center">Carregando informações do pedido...</div>;
   }
 
-  if (!pedido) {
-    return (
-      <div className="text-center py-10">
-        <h2 className="text-2xl font-bold">Pedido não encontrado</h2>
-        <p className="text-muted-foreground mt-2">O pedido solicitado não existe ou foi removido.</p>
-        <Button className="mt-4" onClick={() => navigate('/pedidos')}>
-          Voltar para Lista de Pedidos
-        </Button>
-      </div>
-    );
+  if (error || !pedido) {
+    return <div className="text-center text-red-500">Erro: {error || 'Pedido não encontrado.'}</div>;
   }
 
-  const getStatusIcon = () => {
-    switch (pedido.status) {
-      case 'Aprovado':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'Pendente':
-        return <Clock className="h-5 w-5 text-amber-500" />;
-      case 'Rejeitado':
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case 'Em Andamento':
-        return <Clock className="h-5 w-5 text-blue-500" />;
-      case 'Concluído':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      default:
-        return <Clock className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
-  const getStatusColor = () => {
-    switch (pedido.status) {
-      case 'Aprovado':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'Pendente':
-        return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
-      case 'Rejeitado':
-        return 'bg-red-100 text-red-800 hover:bg-red-200';
-      case 'Em Andamento':
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
-      case 'Concluído':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-    }
-  };
+  const isGestorOrHigher = userRole === 'gestor' || userRole === 'admin' || userRole === 'prefeito';
+  const podeEditar = currentStep && canEditWorkflowStepSync(currentStep.title);
+  const showActions = podeAprovar && podeEditar;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Detalhes do Pedido</h1>
-          <p className="text-muted-foreground">
-            Visualize e aprove o pedido de compra
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Badge className={getStatusColor()}>
-            <span className="flex items-center gap-1">
-              {getStatusIcon()}
-              {pedido.status}
-            </span>
-          </Badge>
-          
-          <Button variant="outline" onClick={() => navigate('/pedidos')}>
-            Voltar
-          </Button>
-        </div>
-      </div>
-
+    <div className="container mx-auto p-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">{pedido.descricao}</CardTitle>
+          <CardTitle>Aprovação de DFD</CardTitle>
           <CardDescription>
-            Pedido #{pedido.id.substring(0, 8)} • Criado em {format(pedido.createdAt, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            Visualize e aprove o pedido de compra.
           </CardDescription>
         </CardHeader>
-        
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-start gap-2">
-                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Responsável</p>
-                  <p>{pedido.responsavel?.nome || 'Não definido'}</p>
-                  <p className="text-sm text-muted-foreground">{pedido.responsavel?.cargo || 'Cargo não definido'}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Data do Pedido</p>
-                  <p>{format(pedido.dataCompra, "dd/MM/yyyy")}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Valor Total</p>
-                  <p className="text-lg font-semibold">{formatCurrency(pedido.valorTotal)}</p>
-                </div>
-              </div>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <strong>Descrição:</strong> {pedido.descricao}
             </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-start gap-2">
-                <Building className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Setor</p>
-                  <p>{pedido.setor}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <Truck className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Fonte de Recurso</p>
-                  <p>{pedido.fonteRecurso || pedido.fundoMonetario || 'Não especificado'}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <ClipboardList className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Progresso</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                    <div 
-                      className="bg-blue-600 h-2.5 rounded-full" 
-                      style={{ width: `${pedido.workflow?.percentComplete || 0}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {pedido.workflow?.percentComplete || 0}% concluído
-                  </p>
-                </div>
-              </div>
+            <div>
+              <strong>Setor:</strong> {pedido.setor}
+            </div>
+            <div>
+              <strong>Solicitante:</strong> {pedido.solicitante}
+            </div>
+            <div>
+              <strong>Data da Compra:</strong> {format(new Date(pedido.dataCompra), 'PPP', { locale: ptBR })}
+            </div>
+            <div>
+              <strong>Valor Total:</strong> R$ {pedido.valorTotal.toFixed(2)}
+            </div>
+            <div>
+              <strong>Status:</strong> <Badge>{pedido.status}</Badge>
             </div>
           </div>
+
+          <WorkflowTimeline workflowSteps={workflowSteps} />
+
+          {currentStep && (
+            <div className="border rounded-md p-4">
+              <h3 className="text-lg font-semibold">Ação Necessária</h3>
+              <p>
+                Aguardando sua aprovação para a etapa: <strong>{currentStep.title}</strong>
+              </p>
+              
+              {showActions ? (
+                <div className="flex justify-end gap-2 mt-4">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="destructive">
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        Reprovar
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Reprovar Pedido</DialogTitle>
+                        <DialogDescription>
+                          Tem certeza de que deseja reprovar este pedido?
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="observacoes" className="text-right">
+                            Observações
+                          </Label>
+                          <div className="col-span-3">
+                            <Textarea
+                              id="observacoes"
+                              placeholder="Adicione suas observações aqui"
+                              className="col-span-3"
+                              value={observacoes}
+                              onChange={(e) => setObservacoes(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className='flex justify-end'>
+                        <Button type="submit" onClick={handleReprovar}>
+                          Confirmar Reprovação
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <CheckCheck className="h-4 w-4 mr-2" />
+                        Aprovar
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Aprovar Pedido</DialogTitle>
+                        <DialogDescription>
+                          Tem certeza de que deseja aprovar este pedido?
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="observacoes" className="text-right">
+                            Observações
+                          </Label>
+                          <div className="col-span-3">
+                            <Textarea
+                              id="observacoes"
+                              placeholder="Adicione suas observações aqui"
+                              className="col-span-3"
+                              value={observacoes}
+                              onChange={(e) => setObservacoes(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className='flex justify-end'>
+                        <Button type="submit" onClick={handleAprovar}>
+                          Confirmar Aprovação
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              ) : (
+                <div className="flex items-center text-gray-500">
+                  <ChevronsRight className="h-4 w-4 mr-2" />
+                  Aguardando ação de um gestor...
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 w-full md:w-[600px]">
-          <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
-          <TabsTrigger value="workflow">Workflow</TabsTrigger>
-          <TabsTrigger value="anexos">Anexos</TabsTrigger>
-          <TabsTrigger value="observacoes">Observações</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="detalhes" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Itens do Pedido</CardTitle>
-              <CardDescription>
-                Lista de itens incluídos neste pedido de compra
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PedidoItemsTable items={pedido.itens} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="workflow" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Fluxo de Aprovação</CardTitle>
-              <CardDescription>
-                Acompanhe o progresso do pedido no fluxo de aprovação
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pedido.workflow ? (
-                <WorkflowTimeline 
-                  workflow={pedido.workflow}
-                  onAdvanceStep={handleAvancarEtapa}
-                  onCompleteStep={handleConcluirEtapa}
-                />
-              ) : (
-                <p className="text-muted-foreground">Este pedido não possui um fluxo de aprovação definido.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="anexos" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Documentos Anexos</CardTitle>
-              <CardDescription>
-                Documentos e arquivos relacionados a este pedido
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PedidoAttachments attachments={pedido.anexos || []} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="observacoes" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Observações</CardTitle>
-              <CardDescription>
-                Comentários e observações sobre este pedido
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PedidoObservacoes observacoes={pedido.observacoes || ''} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {pedido.status === 'Pendente' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Ação</CardTitle>
-            <CardDescription>
-              Aprove ou rejeite este pedido de compra
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Textarea
-                placeholder="Adicione uma observação (obrigatório para rejeição)"
-                value={observacao}
-                onChange={(e) => setObservacao(e.target.value)}
-                className="min-h-[100px]"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button 
-              variant="outline" 
-              onClick={handleRejeitar}
-              disabled={submitting}
-            >
-              Rejeitar Pedido
-            </Button>
-            <Button 
-              onClick={handleAprovar}
-              disabled={submitting}
-            >
-              Aprovar Pedido
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
     </div>
   );
 };
