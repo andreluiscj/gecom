@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
-import { MessageSquare } from 'lucide-react';
 
 interface PedidoObservacoesProps {
   observacoes: string;
@@ -10,22 +8,21 @@ interface PedidoObservacoesProps {
 const PedidoObservacoes: React.FC<PedidoObservacoesProps> = ({ observacoes }) => {
   if (!observacoes || observacoes.trim() === '') {
     return (
-      <div className="text-center py-8">
-        <MessageSquare className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-        <p className="text-muted-foreground">Sem observações registradas</p>
+      <div className="text-center p-6 bg-gray-50 rounded-lg">
+        <p className="text-muted-foreground">Nenhuma observação registrada</p>
       </div>
     );
   }
 
-  // Split by double newlines to create paragraphs
-  const paragraphs = observacoes.split('\n\n');
+  // Split by newlines and render each paragraph
+  const paragraphs = observacoes.split('\n\n').filter(p => p.trim() !== '');
 
   return (
     <div className="space-y-4">
       {paragraphs.map((paragraph, index) => (
-        <Card key={index} className="p-4 bg-muted/30">
+        <div key={index} className="p-4 bg-gray-50 rounded-lg">
           <p className="whitespace-pre-wrap">{paragraph}</p>
-        </Card>
+        </div>
       ))}
     </div>
   );

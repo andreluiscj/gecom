@@ -1,173 +1,165 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from '@/components/ui/card';
-import { useAuth } from '@/hooks/useAuth';
-import { PasswordChangeDialog } from '@/components/Auth/PasswordChangeDialog';
-import { GDPRConsentDialog } from '@/components/Auth/GDPRConsentDialog';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ForgotPasswordDialog } from '@/components/Auth/ForgotPasswordDialog';
-import { supabase } from '@/integrations/supabase/client';
+import { GDPRConsentDialog } from '@/components/Auth/GDPRConsentDialog';
+import { toast } from 'sonner';
+
+const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+});
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
-  
-  const { 
-    isSubmitting, 
-    showChangePasswordDialog, 
-    setShowChangePasswordDialog,
-    showGDPRDialog,
-    setShowGDPRDialog,
-    handleLogin,
-    handlePasswordChange,
-    handleGDPRConsent,
-    user,
-    session
-  } = useAuth();
+  const { signIn, user, loading } = useAuth();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
 
-  // Check authentication status on component mount
+  // If user is already logged in, redirect to dashboard
   useEffect(() => {
-    if (session) {
-      // User is already authenticated, redirect based on role
-      const redirectUser = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('usuarios')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (error) throw error;
-          
-          switch (data.role) {
-            case 'admin':
-              navigate('/admin');
-              break;
-            case 'prefeito':
-              navigate('/dashboard');
-              break;
-            default:
-              navigate('/dashboard');
-          }
-        } catch (error) {
-          console.error('Error checking user role:', error);
-        }
-      };
-      
-      redirectUser();
+    if (user && !loading) {
+      navigate('/dashboard');
     }
-  }, [session, navigate]);
+  }, [user, loading, navigate]);
 
-  const onSubmitLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleLogin(email, password);
-  };
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const onSubmitPasswordChange = () => {
-    if (newPassword !== confirmPassword) {
-      return;
+  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+    try {
+      await signIn(values.email, values.password);
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast.error('Erro ao fazer login: ' + (error.message || 'Verifique suas credenciais e tente novamente'));
     }
-    handlePasswordChange(newPassword);
-  };
-
-  const onGDPRConsent = () => {
-    handleGDPRConsent();
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-2">
-            <img 
-              src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
-              alt="GECOM Logo" 
-              className="h-16"
-            />
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={onSubmitLogin} className="space-y-4">
-            <div className="space-y-2">
-              <div className="relative">
-                <Input
-                  id="email"
-                  placeholder="E-mail"
-                  type="email"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  autoCorrect="off"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isSubmitting}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-6 flex justify-center">
+          <img 
+            src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
+            alt="GECOM Logo" 
+            className="h-16"
+          />
+        </div>
+        
+        <Card>
+          <CardHeader className="text-center pb-3">
+            <CardTitle>Acesso ao Sistema</CardTitle>
+            <CardDescription>
+              Digite suas credenciais para acessar o GECOM
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="seu.email@exemplo.com" 
+                          {...field} 
+                          type="email"
+                          autoComplete="email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="relative">
-                <Input
-                  id="password"
-                  placeholder="Senha"
-                  type="password"
-                  autoCapitalize="none"
-                  autoComplete="current-password"
-                  autoCorrect="off"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isSubmitting}
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="********" 
+                          type="password" 
+                          {...field}
+                          autoComplete="current-password" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Entrando...' : 'Entrar'}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center text-sm text-muted-foreground">
-            <button 
-              type="button" 
-              onClick={() => setShowForgotPasswordDialog(true)}
-              className="text-primary hover:underline"
+                
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={loading}
+                >
+                  {loading ? 'Entrando...' : 'Entrar'}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-2 border-t pt-4">
+            <Button 
+              variant="link" 
+              className="text-sm"
+              onClick={() => setShowForgotPassword(true)}
             >
               Esqueceu sua senha?
-            </button>
-          </div>
-        </CardFooter>
-      </Card>
+            </Button>
+            
+            <div className="text-center text-sm text-muted-foreground">
+              <p>
+                Ao acessar, você concorda com os{' '}
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-sm" 
+                  onClick={() => setShowConsent(true)}
+                >
+                  Termos de Uso e Política de Privacidade
+                </Button>
+              </p>
+            </div>
+          </CardFooter>
+        </Card>
+        
+        <div className="mt-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} GECOM - Sistema de Gestão de Compras Municipais
+          </p>
+        </div>
+      </div>
       
-      <PasswordChangeDialog
-        open={showChangePasswordDialog}
-        onOpenChange={setShowChangePasswordDialog}
-        newPassword={newPassword}
-        confirmPassword={confirmPassword}
-        setNewPassword={setNewPassword}
-        setConfirmPassword={setConfirmPassword}
-        onSubmit={onSubmitPasswordChange}
-        isSubmitting={isSubmitting}
-      />
-
-      <GDPRConsentDialog
-        open={showGDPRDialog}
-        onAccept={onGDPRConsent}
-        onOpenChange={setShowGDPRDialog}
-      />
-
-      <ForgotPasswordDialog
-        open={showForgotPasswordDialog}
-        onOpenChange={setShowForgotPasswordDialog}
-      />
+      {showForgotPassword && (
+        <ForgotPasswordDialog 
+          open={showForgotPassword} 
+          onClose={() => setShowForgotPassword(false)} 
+        />
+      )}
+      
+      {showConsent && (
+        <GDPRConsentDialog
+          open={showConsent}
+          onClose={() => setShowConsent(false)}
+        />
+      )}
     </div>
   );
 };

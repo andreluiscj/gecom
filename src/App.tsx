@@ -1,92 +1,88 @@
 
-import { Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
-import { getFuncionarios, getUsuariosLogin } from "./data/funcionarios/mockFuncionarios";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from '@/components/ui/sonner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/hooks/useAuth';
 
-// Lazy load components for better performance
-const AppLayout = lazy(() => import("./components/Layout/AppLayout"));
-const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
-const ListaSetores = lazy(() => import("./pages/Setores/ListaSetores"));
-const DetalheSetor = lazy(() => import("./pages/Setores/DetalheSetor"));
-const TarefasKanban = lazy(() => import("./pages/Tarefas/TarefasKanban"));
-const TarefasSelecao = lazy(() => import("./pages/Tarefas/TarefasSelecao"));
-const ListaPedidos = lazy(() => import("./pages/Pedidos/ListaPedidos"));
-const VisualizarPedido = lazy(() => import("./pages/Pedidos/VisualizarPedido"));
-const NovoPedido = lazy(() => import("./pages/Pedidos/NovoPedido"));
-const MunicipioSelection = lazy(() => import("./pages/Admin/MunicipioSelection"));
-const Admin = lazy(() => import("./pages/Admin/Admin"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Index = lazy(() => import("./pages/Index"));
-const Login = lazy(() => import("./pages/Login"));
-const WorkflowPedido = lazy(() => import("./pages/Pedidos/WorkflowPedido"));
-const AprovacaoDFD = lazy(() => import("./pages/Pedidos/AprovacaoDFD"));
-const Funcionarios = lazy(() => import("./pages/Gerenciamento/Funcionarios"));
-const CadastroGerente = lazy(() => import("./pages/Admin/CadastroGerente"));
-const PrefeitoPage = lazy(() => import("./pages/Prefeito/PrefeitoPage"));
-const PrefeitoDashboard = lazy(() => import("./pages/Prefeito/PrefeitoDashboard"));
+// Pages
+import Index from '@/pages/Index';
+import Login from '@/pages/Login';
+import Dashboard from '@/pages/Dashboard/Dashboard';
+import AppLayout from '@/components/Layout/AppLayout';
+import NotFound from '@/pages/NotFound';
+import Admin from '@/pages/Admin/Admin';
+import CadastroGerente from '@/pages/Admin/CadastroGerente';
+import ListaPedidos from '@/pages/Pedidos/ListaPedidos';
+import NovoPedido from '@/pages/Pedidos/NovoPedido';
+import VisualizarPedido from '@/pages/Pedidos/VisualizarPedido';
+import AprovacaoDFD from '@/pages/Pedidos/AprovacaoDFD';
+import WorkflowPedido from '@/pages/Pedidos/WorkflowPedido';
+import PrefeitoPage from '@/pages/Prefeito/PrefeitoPage';
+import PrefeitoDashboard from '@/pages/Prefeito/PrefeitoDashboard';
+import ListaSetores from '@/pages/Setores/ListaSetores';
+import DetalheSetor from '@/pages/Setores/DetalheSetor';
+import Funcionarios from '@/pages/Gerenciamento/Funcionarios';
+import TarefasKanban from '@/pages/Tarefas/TarefasKanban';
+import TarefasSelecao from '@/pages/Tarefas/TarefasSelecao';
 
-// Loading component
-const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-  </div>
-);
+import './App.css';
 
-// Auth guard for protected routes
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
-};
+// Initialize React Query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
-function App() {
-  // Initialize data on app start
-  useEffect(() => {
-    // These calls ensure the admin user is created
-    getFuncionarios();
-    getUsuariosLogin();
-  }, []);
-
+const App: React.FC = () => {
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin" element={
-          <ProtectedRoute>
-            <Admin />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/municipios" element={
-          <ProtectedRoute>
-            <MunicipioSelection />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/" element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="setores" element={<ListaSetores />} />
-          <Route path="setores/:id" element={<DetalheSetor />} />
-          <Route path="tarefas" element={<TarefasSelecao />} />
-          <Route path="tarefas/kanban" element={<TarefasKanban />} />
-          <Route path="pedidos" element={<ListaPedidos />} />
-          <Route path="pedidos/:id" element={<VisualizarPedido />} />
-          <Route path="pedidos/workflow/:id" element={<WorkflowPedido />} />
-          <Route path="pedidos/aprovacao/:id" element={<AprovacaoDFD />} />
-          <Route path="pedidos/novo" element={<NovoPedido />} />
-          <Route path="admin/gerentes" element={<CadastroGerente />} />
-          <Route path="gerenciamento/funcionarios" element={<Funcionarios />} />
-          <Route path="prefeito" element={<PrefeitoPage />} />
-          <Route path="prefeito/dashboard" element={<PrefeitoDashboard />} />
-        </Route>
-
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+            <Route path="/admin" element={<AppLayout><Admin /></AppLayout>} />
+            <Route path="/admin/cadastro-gerente" element={<AppLayout><CadastroGerente /></AppLayout>} />
+            
+            {/* Pedidos Routes */}
+            <Route path="/pedidos" element={<AppLayout><ListaPedidos /></AppLayout>} />
+            <Route path="/pedidos/novo" element={<AppLayout><NovoPedido /></AppLayout>} />
+            <Route path="/pedidos/:id" element={<AppLayout><VisualizarPedido /></AppLayout>} />
+            <Route path="/pedidos/:id/aprovacao" element={<AppLayout><AprovacaoDFD /></AppLayout>} />
+            <Route path="/pedidos/:id/workflow" element={<AppLayout><WorkflowPedido /></AppLayout>} />
+            
+            {/* Prefeito Routes */}
+            <Route path="/prefeito" element={<AppLayout><PrefeitoPage /></AppLayout>} />
+            <Route path="/prefeito/dashboard" element={<AppLayout><PrefeitoDashboard /></AppLayout>} />
+            
+            {/* Setores Routes */}
+            <Route path="/setores" element={<AppLayout><ListaSetores /></AppLayout>} />
+            <Route path="/setores/:id" element={<AppLayout><DetalheSetor /></AppLayout>} />
+            
+            {/* Gerenciamento Routes */}
+            <Route path="/funcionarios" element={<AppLayout><Funcionarios /></AppLayout>} />
+            
+            {/* Tarefas Routes */}
+            <Route path="/tarefas" element={<AppLayout><TarefasSelecao /></AppLayout>} />
+            <Route path="/tarefas/kanban" element={<AppLayout><TarefasKanban /></AppLayout>} />
+            
+            {/* 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          
+          <Toaster />
+        </AuthProvider>
+      </Router>
+    </QueryClientProvider>
   );
-}
+};
 
 export default App;

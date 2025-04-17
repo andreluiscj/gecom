@@ -1,28 +1,28 @@
 
 import React from 'react';
 import { Item } from '@/types';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/utils/formatters';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface PedidoItemsTableProps {
   items: Item[];
 }
 
-const PedidoItemsTable: React.FC<PedidoItemsTableProps> = ({ items = [] }) => {
+const PedidoItemsTable: React.FC<PedidoItemsTableProps> = ({ items }) => {
   if (!items || items.length === 0) {
     return (
-      <div className="text-center p-4 border rounded-md">
-        <p className="text-muted-foreground">Nenhum item encontrado.</p>
+      <div className="text-center p-6 bg-gray-50 rounded-lg">
+        <p className="text-muted-foreground">Nenhum item encontrado</p>
       </div>
     );
   }
 
   return (
-    <div className="border rounded-md">
+    <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Item</TableHead>
+            <TableHead>Nome</TableHead>
             <TableHead className="text-right">Quantidade</TableHead>
             <TableHead className="text-right">Valor Unitário</TableHead>
             <TableHead className="text-right">Valor Total</TableHead>
@@ -31,18 +31,12 @@ const PedidoItemsTable: React.FC<PedidoItemsTableProps> = ({ items = [] }) => {
         <TableBody>
           {items.map((item) => (
             <TableRow key={item.id}>
-              <TableCell>{item.nome}</TableCell>
+              <TableCell className="font-medium">{item.nome}</TableCell>
               <TableCell className="text-right">{item.quantidade}</TableCell>
               <TableCell className="text-right">{formatCurrency(item.valorUnitario)}</TableCell>
-              <TableCell className="text-right">{formatCurrency(item.valorTotal || (item.quantidade * item.valorUnitario))}</TableCell>
+              <TableCell className="text-right">{formatCurrency(item.valorTotal)}</TableCell>
             </TableRow>
           ))}
-          <TableRow>
-            <TableCell colSpan={3} className="text-right font-medium">Total</TableCell>
-            <TableCell className="text-right font-medium">
-              {formatCurrency(items.reduce((total, item) => total + (item.valorTotal || (item.quantidade * item.valorUnitario)), 0))}
-            </TableCell>
-          </TableRow>
         </TableBody>
       </Table>
     </div>

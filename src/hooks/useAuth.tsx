@@ -1,247 +1,250 @@
 
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { getUserRole, getUserSecretarias } from '@/utils/auth/authCore';
+import { Usuario, UserRole } from '@/types/supabase';
 
-export function useAuth() {
+interface AuthContextType {
+  user: Usuario | null;
+  session: any | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, nome: string, role?: UserRole) => Promise<void>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<Usuario | null>(null);
+  const [session, setSession] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
-  const [showGDPRDialog, setShowGDPRDialog] = useState(false);
-  const [session, setSession] = useState(null);
-  const [user, setUser] = useState(null);
 
-  // Initialize user session and set up listener
+  // Initialize auth state
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
-        // Update localStorage for backward compatibility
-        if (currentSession) {
-          localStorage.setItem('user-authenticated', 'true');
-          localStorage.setItem('user-id', currentSession.user.id);
-          localStorage.setItem('user-email', currentSession.user.email);
-
-          // Fetch and store additional user data
-          setTimeout(() => {
-            fetchUserData(currentSession.user.id);
-          }, 0);
-        } else {
-          localStorage.removeItem('user-authenticated');
-          localStorage.removeItem('user-id');
-          localStorage.removeItem('user-email');
-          localStorage.removeItem('user-role');
-          localStorage.removeItem('user-name');
-          localStorage.removeItem('user-municipality');
-          localStorage.removeItem('funcionario-id');
-          localStorage.removeItem('user-secretarias');
+    const initAuth = async () => {
+      setLoading(true);
+      
+      // Get current session
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      setSession(currentSession);
+      
+      if (currentSession) {
+        try {
+          // Get user profile from database
+          const { data: userData, error: userError } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('id', currentSession.user.id)
+            .single();
+          
+          if (userError) throw userError;
+          
+          setUser(userData);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // Don't sign out - might just be RLS permissions
         }
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-
-      if (currentSession) {
-        fetchUserData(currentSession.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+      
+      setLoading(false);
+      
+      // Set up auth state change listener
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, newSession) => {
+          setSession(newSession);
+          
+          if (event === 'SIGNED_IN' && newSession) {
+            setLoading(true);
+            
+            try {
+              // Get user profile
+              const { data: userData, error: userError } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('id', newSession.user.id)
+                .single();
+              
+              if (userError) throw userError;
+              
+              setUser(userData);
+            } catch (error) {
+              console.error('Error fetching user data on sign in:', error);
+            } finally {
+              setLoading(false);
+            }
+          } else if (event === 'SIGNED_OUT') {
+            setUser(null);
+          }
+        }
+      );
+      
+      // Cleanup subscription
+      return () => {
+        subscription.unsubscribe();
+      };
+    };
+    
+    initAuth();
   }, []);
 
-  const fetchUserData = async (userId) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      // Fetch user details
-      const { data: userData, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-
-      // Store in localStorage for backward compatibility
-      if (userData) {
-        localStorage.setItem('user-role', userData.role);
-        localStorage.setItem('user-name', userData.nome);
-        localStorage.setItem('user-municipality', userData.municipio_id);
-        localStorage.setItem('funcionario-id', userId); // For backward compatibility
-      }
-
-      // Fetch user secretarias
-      const secretarias = await getUserSecretarias();
-      localStorage.setItem('user-secretarias', JSON.stringify(secretarias));
-      
-      // Check for first access
-      if (userData.primeiro_acesso) {
-        setShowChangePasswordDialog(true);
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
-  };
-
-  const handleLogin = async (email: string, password: string) => {
-    if (!email || !password) {
-      toast.error('Por favor, preencha todos os campos');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      console.log(`Tentando login com email: ${email}`);
-      
-      // Authenticate with Supabase
+      setLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-
-      if (error) {
-        console.error('Erro na autenticação:', error.message);
-        toast.error('Credenciais inválidas. Verifique seu email e senha.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!data.user) {
-        console.error('Usuário não encontrado');
-        toast.error('Usuário não encontrado');
-        setIsSubmitting(false);
-        return;
-      }
-
-      console.log('Usuário autenticado:', data.user.id);
       
-      // Fetch user information to check primeiro_acesso
-      const { data: usuarioData, error: usuarioError } = await supabase
-        .from('usuarios')
-        .select('primeiro_acesso')
-        .eq('id', data.user.id)
-        .single();
-
-      if (usuarioError) {
-        console.error('Erro ao verificar primeiro acesso:', usuarioError);
-        toast.error('Erro ao verificar dados do usuário');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Check for first login
-      if (usuarioData.primeiro_acesso) {
-        setShowChangePasswordDialog(true);
-        setIsSubmitting(false);
-        return;
-      }
-
+      if (error) throw error;
+      
       toast.success('Login realizado com sucesso!');
-      
-      // Redirect will happen via onAuthStateChange and fetchUserData
-    } catch (error) {
-      console.error('Erro no login:', error);
-      toast.error('Erro no login. Tente novamente.');
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error('Error during sign in:', error);
+      toast.error(error.message || 'Erro ao realizar login');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
+  const signUp = async (email: string, password: string, nome: string, role: UserRole = 'servidor') => {
     try {
-      await supabase.auth.signOut();
+      setLoading(true);
       
-      toast.success('Logout realizado com sucesso');
-      navigate('/login');
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      toast.error('Erro ao fazer logout');
-    }
-  };
-
-  const handlePasswordChange = async (newPassword: string) => {
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-      if (error) {
-        toast.error(error.message);
-        setIsSubmitting(false);
+      // Check if user already exists
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('usuarios')
+        .select('email')
+        .eq('email', email);
+      
+      if (checkError) throw checkError;
+      
+      if (existingUsers && existingUsers.length > 0) {
+        toast.error('Este email já está cadastrado');
         return;
       }
+      
+      // Create auth user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        // Create user profile
+        const { error: profileError } = await supabase
+          .from('usuarios')
+          .insert({
+            id: data.user.id,
+            email,
+            nome,
+            role,
+            primeiro_acesso: true
+          });
+        
+        if (profileError) throw profileError;
+        
+        toast.success('Cadastro realizado com sucesso!');
+        navigate('/login');
+      }
+    } catch (error: any) {
+      console.error('Error during sign up:', error);
+      toast.error(error.message || 'Erro ao realizar cadastro');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Update first access flag
-      const userId = user?.id;
-      if (userId) {
+  const signOut = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      navigate('/login');
+      toast.success('Sessão encerrada com sucesso');
+    } catch (error: any) {
+      console.error('Error during sign out:', error);
+      toast.error(error.message || 'Erro ao encerrar sessão');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Email de recuperação enviado com sucesso');
+    } catch (error: any) {
+      console.error('Error during password reset:', error);
+      toast.error(error.message || 'Erro ao solicitar recuperação de senha');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Senha atualizada com sucesso');
+      
+      // Update primeiro_acesso if needed
+      if (user && user.primeiro_acesso) {
         const { error: updateError } = await supabase
           .from('usuarios')
           .update({ primeiro_acesso: false })
-          .eq('id', userId);
-
-        if (updateError) {
-          toast.error(updateError.message);
-          setIsSubmitting(false);
-          return;
-        }
+          .eq('id', user.id);
+        
+        if (updateError) throw updateError;
       }
-
-      toast.success('Senha alterada com sucesso!');
-      setShowChangePasswordDialog(false);
-      
-      // If user was in first access flow, redirect to dashboard
-      const role = await getUserRole();
-      redirectBasedOnRole(role);
-    } catch (error) {
-      console.error('Erro ao alterar senha:', error);
-      toast.error('Erro ao alterar senha');
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      toast.error(error.message || 'Erro ao atualizar senha');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const redirectBasedOnRole = (role) => {
-    switch (role) {
-      case 'admin':
-        navigate('/admin');
-        break;
-      case 'prefeito':
-        navigate('/dashboard');
-        break;
-      case 'gestor':
-        navigate('/dashboard');
-        break;
-      case 'servidor':
-        navigate('/pedidos');
-        break;
-      default:
-        navigate('/dashboard');
-    }
-  };
-
-  // Function to handle GDPR consent
-  const handleGDPRConsent = () => {
-    setShowGDPRDialog(false);
-    toast.success('Termos aceitos com sucesso!');
-  };
-
-  return {
-    isSubmitting,
-    showChangePasswordDialog,
-    setShowChangePasswordDialog,
-    showGDPRDialog,
-    setShowGDPRDialog,
-    handleLogin,
-    handleLogout,
-    handlePasswordChange,
-    handleGDPRConsent,
-    user,
-    session
-  };
+  return (
+    <AuthContext.Provider value={{
+      user,
+      session,
+      loading,
+      signIn,
+      signUp,
+      signOut,
+      resetPassword,
+      updatePassword
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

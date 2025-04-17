@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Item, PedidoCompra, Setor, PedidoStatus } from '@/types';
-import { adicionarPedido } from '@/data/mockData';
+import { Item, PedidoCompra, PedidoStatus } from '@/types';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { adicionarPedido } from '@/services/dfdService';
+import { initializeWorkflow } from '@/utils/workflowHelpers';
 
 // Helper function to generate ID
 function gerarId(): string {
@@ -110,8 +110,8 @@ export const usePedidoForm = () => {
         itens: itensCompletos,
         valorTotal: calcularValorTotal(),
         fundoMonetario: data.fundoMonetario,
-        setor: data.setor as Setor,
-        status: 'Pendente',
+        setor: data.setor,
+        status: 'Pendente' as PedidoStatus,
         createdAt: new Date(),
         observacoes: '',
         localEntrega: '',
@@ -123,26 +123,17 @@ export const usePedidoForm = () => {
           cargo: ''
         },
         anexos: [],
-        workflow: {
-          currentStep: 1,
-          totalSteps: 5,
-          percentComplete: 0,
-          steps: []
-        }
+        workflow: initializeWorkflow()
       };
 
       console.log("Salvando pedido:", novoPedido);
-      try {
-        const result = await adicionarPedido(novoPedido);
-        
-        if (result) {
-          toast.success('Pedido de compra cadastrado com sucesso!');
-          navigate('/pedidos');
-        } else {
-          toast.error('Erro ao cadastrar pedido. Verifique os dados e tente novamente.');
-        }
-      } catch (error) {
-        console.error("Erro ao salvar pedido:", error);
+      
+      const result = await adicionarPedido(novoPedido);
+      
+      if (result) {
+        toast.success('Pedido de compra cadastrado com sucesso!');
+        navigate('/pedidos');
+      } else {
         toast.error('Erro ao cadastrar pedido. Verifique os dados e tente novamente.');
       }
     } catch (error) {

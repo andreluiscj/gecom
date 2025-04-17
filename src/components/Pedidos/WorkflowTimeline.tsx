@@ -1,108 +1,139 @@
 
 import React from 'react';
-import { Workflow, WorkflowStep } from '@/types';
-import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Workflow, WorkflowStep } from '@/types';
+import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { canEditStep } from '@/utils/workflowHelpers';
 
 interface WorkflowTimelineProps {
   workflow: Workflow;
-  onAdvanceStep?: (etapaIndex: number) => void;
-  onCompleteStep?: (etapaIndex: number) => void;
+  onAdvanceStep?: (stepIndex: number) => void;
+  onCompleteStep?: (stepIndex: number) => void;
 }
 
-const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({ 
-  workflow, 
+const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
+  workflow,
   onAdvanceStep,
-  onCompleteStep 
+  onCompleteStep
 }) => {
-  if (!workflow || !workflow.steps || workflow.steps.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-        <p className="text-muted-foreground">Workflow não definido para este pedido</p>
-      </div>
-    );
-  }
+  const getStepIcon = (step: WorkflowStep) => {
+    switch (step.status) {
+      case 'Concluído':
+        return <CheckCircle className="h-6 w-6 text-green-500" />;
+      case 'Em Andamento':
+        return <Clock className="h-6 w-6 text-blue-500" />;
+      case 'Pendente':
+      default:
+        return <Clock className="h-6 w-6 text-gray-400" />;
+    }
+  };
+
+  const getStepStatusColor = (step: WorkflowStep) => {
+    switch (step.status) {
+      case 'Concluído':
+        return 'bg-green-100 text-green-800 border-green-500';
+      case 'Em Andamento':
+        return 'bg-blue-100 text-blue-800 border-blue-500';
+      case 'Pendente':
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <p className="text-sm text-muted-foreground">Progresso</p>
-          <p className="font-medium">{workflow.percentComplete}% concluído</p>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Etapa {workflow.currentStep} de {workflow.totalSteps}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {workflow.steps.map((step, index) => (
-          <div key={step.id} className="relative">
-            <div className="flex items-start">
-              <div className="flex flex-col items-center mr-4">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                  step.status === 'Concluído' ? 'bg-green-100 text-green-600' :
-                  step.status === 'Em Andamento' ? 'bg-blue-100 text-blue-600' :
-                  'bg-gray-100 text-gray-400'
-                }`}>
-                  {step.status === 'Concluído' ? (
-                    <CheckCircle className="h-5 w-5" />
-                  ) : step.status === 'Em Andamento' ? (
-                    <Clock className="h-5 w-5" />
-                  ) : (
-                    <XCircle className="h-5 w-5" />
-                  )}
-                </div>
-                {index < workflow.steps.length - 1 && (
-                  <div className="w-px h-10 bg-gray-200"></div>
-                )}
-              </div>
-
-              <div className="flex-1">
-                <h3 className="font-medium">{step.title}</h3>
-                <div className="flex flex-wrap gap-2 mt-1 text-sm text-muted-foreground">
-                  {step.responsavel && (
-                    <span>Responsável: {step.responsavel}</span>
-                  )}
-                  {step.date && (
-                    <span>Iniciado em: {format(step.date, "dd 'de' MMMM", { locale: ptBR })}</span>
-                  )}
-                  {step.dataConclusao && (
-                    <span>Concluído em: {format(step.dataConclusao, "dd 'de' MMMM", { locale: ptBR })}</span>
-                  )}
-                </div>
-
-                {/* Action buttons */}
-                {onAdvanceStep && onCompleteStep && (
-                  <div className="flex gap-2 mt-2">
-                    {step.status === 'Pendente' && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => onAdvanceStep(index)}
-                      >
-                        Iniciar etapa
-                      </Button>
-                    )}
-                    {step.status === 'Em Andamento' && (
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => onCompleteStep(index)}
-                      >
-                        Concluir etapa
-                      </Button>
-                    )}
-                  </div>
-                )}
+      {workflow && workflow.steps && workflow.steps.map((step, index) => (
+        <div key={step.id} className="relative">
+          {/* Timeline connector */}
+          {index < workflow.steps.length - 1 && (
+            <div 
+              className={`absolute left-5 top-12 w-0.5 h-16 ${
+                step.status === 'Concluído' ? 'bg-green-500' : 'bg-gray-300'
+              }`}
+            ></div>
+          )}
+          
+          <div className="flex items-start gap-4">
+            <div className="flex flex-col items-center">
+              <div className={`
+                rounded-full p-1 border-2
+                ${step.status === 'Concluído' ? 'border-green-500 bg-green-50' : 
+                  step.status === 'Em Andamento' ? 'border-blue-500 bg-blue-50' : 
+                  'border-gray-300 bg-gray-50'}
+              `}>
+                {getStepIcon(step)}
               </div>
             </div>
+            
+            <div className={`
+              flex-1 p-4 rounded-lg border
+              ${step.status === 'Concluído' ? 'border-green-200 bg-green-50' : 
+                step.status === 'Em Andamento' ? 'border-blue-200 bg-blue-50' : 
+                'border-gray-200 bg-gray-50'}
+            `}>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <div>
+                  <h4 className="font-medium">{step.title}</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {step.date && (
+                      <>Iniciado em {format(step.date, "dd 'de' MMMM", { locale: ptBR })}</>
+                    )}
+                    {step.dataConclusao && (
+                      <> • Concluído em {format(step.dataConclusao, "dd 'de' MMMM", { locale: ptBR })}</>
+                    )}
+                    {step.responsavel && (
+                      <> • Responsável: {step.responsavel}</>
+                    )}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Badge className={getStepStatusColor(step)}>
+                    {step.status}
+                  </Badge>
+                  
+                  {canEditStep(workflow, index) && onAdvanceStep && step.status === 'Pendente' && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => onAdvanceStep(index)}
+                    >
+                      Iniciar
+                    </Button>
+                  )}
+                  
+                  {canEditStep(workflow, index) && onCompleteStep && step.status === 'Em Andamento' && (
+                    <Button 
+                      size="sm" 
+                      variant="default"
+                      onClick={() => onCompleteStep(index)}
+                    >
+                      Concluir
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              {step.observacoes && (
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <p className="text-sm italic">{step.observacoes}</p>
+                </div>
+              )}
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
+      
+      {(!workflow || !workflow.steps || workflow.steps.length === 0) && (
+        <div className="text-center p-6 border rounded-lg">
+          <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto mb-2" />
+          <h4 className="font-medium">Nenhuma etapa definida</h4>
+          <p className="text-muted-foreground">Este pedido não possui um fluxo de aprovação definido.</p>
+        </div>
+      )}
     </div>
   );
 };

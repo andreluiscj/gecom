@@ -1,116 +1,122 @@
 
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { UserRole } from '@/types';
+import { UserRole } from '@/types/supabase';
 
-export function getUserRoleSync(): UserRole | null {
-  const storedRole = localStorage.getItem('user-role');
-  if (!storedRole) return null;
-  
-  // Validate the role is a valid UserRole
-  if (['admin', 'user', 'manager', 'prefeito'].includes(storedRole)) {
-    return storedRole as UserRole;
-  }
-  
-  return null;
-}
-
-export function getUserIdSync(): string | null {
-  return localStorage.getItem('user-id');
-}
-
-export function getUserNameSync(): string {
-  return localStorage.getItem('user-name') || 'Usuário';
-}
-
-export function getUserSetorSync(): string | null {
-  return localStorage.getItem('user-setor');
-}
-
-export function getUserMunicipioSync(): string | null {
-  return localStorage.getItem('user-municipality');
-}
-
-export function isAuthenticatedSync(): boolean {
-  return localStorage.getItem('user-authenticated') === 'true';
-}
-
-export function getUserSecretariasSync(): string[] {
-  const storedSecretarias = localStorage.getItem('user-secretarias');
-  if (!storedSecretarias) return [];
-  
+// Helper to get user role
+export const getUserRole = async (): Promise<UserRole | null> => {
   try {
-    return JSON.parse(storedSecretarias);
-  } catch (e) {
-    console.error('Error parsing user secretarias', e);
-    return [];
-  }
-}
-
-// New functions needed to resolve errors
-export function canAccessUserManagementSync(): boolean {
-  const userRole = getUserRoleSync();
-  return userRole === 'admin' || userRole === 'prefeito';
-}
-
-export function canAccessDashboardSync(): boolean {
-  const userRole = getUserRoleSync();
-  return userRole === 'admin' || userRole === 'prefeito' || userRole === 'manager';
-}
-
-export function shouldFilterByUserSetorSync(): boolean {
-  const userRole = getUserRoleSync();
-  return userRole !== 'admin' && userRole !== 'prefeito';
-}
-
-export function hasSetorAccessSync(setorId: string): boolean {
-  const userSetor = getUserSetorSync();
-  if (!userSetor) return false;
-  
-  if (userSetor === setorId) return true;
-  
-  const userSecretarias = getUserSecretariasSync();
-  return userSecretarias.includes(setorId);
-}
-
-export function getPermittedWorkflowStep(): number {
-  // TODO: Implement this based on user permissions
-  // For now, return a default value
-  return 0;
-}
-
-// Async versions of the functions above
-export async function getUserRole(): Promise<UserRole | null> {
-  return getUserRoleSync();
-}
-
-export async function getUserId(): Promise<string | null> {
-  return getUserIdSync();
-}
-
-export async function getUserName(): Promise<string> {
-  return getUserNameSync();
-}
-
-export async function getUserSetor(): Promise<string | null> {
-  return getUserSetorSync();
-}
-
-export async function getUserMunicipio(): Promise<string | null> {
-  return getUserMunicipioSync();
-}
-
-export async function isAuthenticated(): Promise<boolean> {
-  return isAuthenticatedSync();
-}
-
-// Session management for Supabase
-export async function checkSession() {
-  const { data, error } = await supabase.auth.getSession();
-  
-  if (error) {
-    console.error('Error checking session:', error);
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) return null;
+    
+    // Get user role from profile
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+    
+    if (error || !data) return null;
+    
+    return data.role;
+  } catch (error) {
+    console.error('Error getting user role:', error);
     return null;
   }
+};
+
+// Sync version - use with caution, for UI purposes only
+export const getUserRoleSync = (): UserRole | null => {
+  // Use local storage as fallback - this is for UI purposes only
+  // Critical permissions should always be checked server-side
+  const role = localStorage.getItem('user-role');
+  return role as UserRole | null;
+};
+
+// Helper to get user secretarias (departments)
+export const getUserSecretarias = async (): Promise<string[]> => {
+  try {
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) return [];
+    
+    // Get user secretarias
+    const { data, error } = await supabase
+      .from('usuario_secretarias')
+      .select('secretaria_id')
+      .eq('usuario_id', session.user.id);
+    
+    if (error || !data) return [];
+    
+    return data.map(item => item.secretaria_id);
+  } catch (error) {
+    console.error('Error getting user secretarias:', error);
+    return [];
+  }
+};
+
+// Sync version - use with caution, for UI purposes only
+export const getUserSetorSync = (): string | null => {
+  return localStorage.getItem('user-setor');
+};
+
+export const getUserInfo = async () => {
+  try {
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) return null;
+    
+    // Get user info
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error getting user info:', error);
+    return null;
+  }
+};
+
+// Function to check if the current user is authenticated
+export const isAuthenticated = async (): Promise<boolean> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    return !!session;
+  } catch (error) {
+    console.error('Error checking authentication:', error);
+    return false;
+  }
+};
+
+// Function to store user info in local storage for faster UI access
+export const storeUserInfo = (user: any) => {
+  if (!user) return;
   
-  return data?.session;
-}
+  localStorage.setItem('user-id', user.id || '');
+  localStorage.setItem('user-name', user.nome || '');
+  localStorage.setItem('user-email', user.email || '');
+  localStorage.setItem('user-role', user.role || '');
+  
+  if (user.municipio_id) {
+    localStorage.setItem('user-municipio', user.municipio_id);
+  }
+};
+
+// Function to clear stored user info
+export const clearUserInfo = () => {
+  localStorage.removeItem('user-id');
+  localStorage.removeItem('user-name');
+  localStorage.removeItem('user-email');
+  localStorage.removeItem('user-role');
+  localStorage.removeItem('user-municipio');
+  localStorage.removeItem('user-setor');
+};
