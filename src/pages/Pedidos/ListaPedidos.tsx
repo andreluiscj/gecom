@@ -2,39 +2,108 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
-import { obterTodosPedidos } from '@/data/mockData';
 import { PedidoCompra } from '@/types';
 import { getUserSetorSync, getUserRoleSync } from '@/utils/auth';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const ListaPedidos: React.FC = () => {
   const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
   const userRole = getUserRoleSync();
+  const userSetor = getUserSetorSync();
   
-  // Check permissions and fetch pedidos on component mount
+  // Fetch pedidos from Supabase
   useEffect(() => {
-    const todosPedidos = obterTodosPedidos();
-    const userSetor = getUserSetorSync();
-    
-    // Filter pedidos based on user role
-    if (userRole === 'admin' || userRole === 'prefeito') {
-      // Admin and prefeito can see all pedidos
-      setPedidos(todosPedidos);
-    } else if (userRole === 'manager') {
-      // Managers (gerentes) can only see pedidos from their sector
-      const pedidosFiltrados = todosPedidos.filter(pedido => pedido.setor === userSetor);
-      setPedidos(pedidosFiltrados);
-    } else if (userRole === 'user') {
-      // Regular users (servidores) can only see pedidos from their sector
-      const pedidosFiltrados = todosPedidos.filter(pedido => pedido.setor === userSetor);
-      setPedidos(pedidosFiltrados);
-    } else {
-      // Unauthorized access attempt
-      toast.error('Você não tem permissão para acessar esta página');
-      navigate('/login');
+    async function fetchPedidos() {
+      setLoading(true);
+      
+      try {
+        // Check user authentication
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session) {
+          toast.error('Você não está autenticado');
+          navigate('/login');
+          return;
+        }
+        
+        // Base query for dfds table
+        let query = supabase
+          .from('dfds')
+          .select(`
+            id, 
+            descricao, 
+            valor_estimado, 
+            valor_realizado,
+            data_pedido, 
+            status, 
+            justificativa,
+            local_entrega,
+            secretaria_id,
+            secretarias(nome),
+            dfd_workflows(percentual_completo)
+          `)
+          .order('created_at', { ascending: false });
+        
+        // Filter based on user role
+        if (userRole !== 'admin' && userRole !== 'prefeito') {
+          if (!userSetor) {
+            setPedidos([]);
+            setLoading(false);
+            return;
+          }
+          // Managers and regular users only see pedidos from their sector
+          query = query.eq('secretaria_id', userSetor);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Error fetching pedidos:', error);
+          toast.error('Erro ao carregar pedidos');
+          setPedidos([]);
+        } else {
+          // Transform the data to match the PedidoCompra type
+          const formattedPedidos = data.map(item => ({
+            id: item.id,
+            descricao: item.descricao,
+            setor: item.secretarias?.nome || '',
+            dataCompra: new Date(item.data_pedido),
+            status: item.status,
+            valorTotal: item.valor_estimado || 0,
+            itens: [], // These would be fetched in a separate query if needed
+            fundoMonetario: '', // This would be properly linked if the fundos structure is implemented
+            createdAt: new Date(item.data_pedido),
+            observacoes: item.justificativa || '',
+            fonteRecurso: '',
+            responsavel: {
+              id: '',
+              nome: '',
+              email: '',
+              cargo: '',
+            },
+            anexos: [], // Would need separate query to fetch attachments
+            workflow: item.dfd_workflows ? {
+              percentComplete: item.dfd_workflows.percentual_completo || 0,
+              currentStep: 0,
+              steps: []
+            } : null
+          }));
+          
+          setPedidos(formattedPedidos);
+        }
+      } catch (err) {
+        console.error('Error in pedidos fetch:', err);
+        toast.error('Erro ao processar dados dos pedidos');
+        setPedidos([]);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [navigate, userRole]);
+
+    fetchPedidos();
+  }, [navigate, userRole, userSetor]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -45,7 +114,13 @@ const ListaPedidos: React.FC = () => {
         </p>
       </div>
 
-      <PedidosTable pedidos={pedidos} />
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : (
+        <PedidosTable pedidos={pedidos} />
+      )}
     </div>
   );
 };

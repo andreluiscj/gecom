@@ -1,296 +1,472 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, User, CheckCircle2 } from 'lucide-react';
-import { obterTodosPedidos, atualizarEtapaWorkflow } from '@/data/mockData';
-import { getFuncionarios, filtrarFuncionariosPorSetor } from '@/data/funcionarios/mockFuncionarios';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { CheckCircle, Clock, AlertTriangle, FileText, User, Calendar, DollarSign, Building, Truck, ClipboardList } from 'lucide-react';
+import { formatCurrency } from '@/utils/formatters';
+import { PedidoCompra } from '@/types';
+import { obterTodosPedidos, atualizarStatusPedido } from '@/data/mockData';
+import { atualizarEtapaWorkflow } from '@/data/mockData';
+import { getUserRoleSync } from '@/utils/auth';
+import { canAccessSync } from '@/utils/auth/permissionHelpers';
+import WorkflowTimeline from '@/components/Pedidos/WorkflowTimeline';
+import PedidoItemsTable from '@/components/Pedidos/PedidoItemsTable';
+import PedidoAttachments from '@/components/Pedidos/PedidoAttachments';
+import PedidoObservacoes from '@/components/Pedidos/PedidoObservacoes';
 import { format } from 'date-fns';
-import { Funcionario, WorkflowStepStatus } from '@/types';
-import { getUserRole } from '@/utils/authHelpers';
-import { DEFAULT_WORKFLOW_STEPS, funcionarioTemPermissao } from '@/utils/workflowHelpers';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-
-interface ResponsavelData {
-  stepIndex: number;
-  stepTitle: string;
-  responsavelId: string;
-  dataLimite: Date | undefined;
-}
+import { ptBR } from 'date-fns/locale';
 
 const AprovacaoDFD: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const userRole = getUserRole();
-  
-  const allPedidos = obterTodosPedidos();
-  const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos]);
-  
-  const funcionarios = useMemo(() => {
-    if (pedido) {
-      const allFuncionarios = getFuncionarios();
-      console.log("Total funcionários:", allFuncionarios.length);
+  const [pedido, setPedido] = useState<PedidoCompra | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [observacao, setObservacao] = useState('');
+  const [activeTab, setActiveTab] = useState('detalhes');
+  const [submitting, setSubmitting] = useState(false);
+  const userRole = getUserRoleSync();
+
+  useEffect(() => {
+    const fetchPedido = async () => {
+      setLoading(true);
+      try {
+        const pedidos = obterTodosPedidos();
+        const pedidoEncontrado = pedidos.find(p => p.id === id);
+        
+        if (pedidoEncontrado) {
+          setPedido(pedidoEncontrado);
+        } else {
+          toast.error('Pedido não encontrado');
+          navigate('/pedidos');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar pedido:', error);
+        toast.error('Erro ao carregar dados do pedido');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPedido();
+  }, [id, navigate]);
+
+  const handleAprovar = async () => {
+    if (!pedido) return;
+    
+    setSubmitting(true);
+    try {
+      // Verificar permissões
+      if (userRole === 'admin' || userRole === 'manager') {
+        // Atualizar status do pedido
+        const pedidoAtualizado = atualizarStatusPedido(pedido.id, 'Aprovado');
+        
+        if (pedidoAtualizado) {
+          // Atualizar etapa do workflow
+          const etapaIndex = pedido.workflow?.steps.findIndex(step => step.status === 'Pendente' || step.status === 'Em Andamento');
+          
+          if (etapaIndex !== undefined && etapaIndex !== -1 && pedido.workflow) {
+            const workflowAtualizado = atualizarEtapaWorkflow(
+              pedido.id,
+              etapaIndex,
+              'Concluído',
+              new Date(),
+              `${localStorage.getItem('user-name') || 'Usuário'}`,
+              new Date()
+            );
+            
+            if (workflowAtualizado) {
+              setPedido(workflowAtualizado);
+              toast.success('Pedido aprovado com sucesso!');
+            }
+          }
+        } else {
+          toast.error('Erro ao aprovar pedido');
+        }
+      } else {
+        toast.error('Você não tem permissão para aprovar este pedido');
+      }
+    } catch (error) {
+      console.error('Erro ao aprovar pedido:', error);
+      toast.error('Erro ao processar aprovação');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRejeitar = async () => {
+    if (!pedido) return;
+    
+    if (!observacao.trim()) {
+      toast.error('Por favor, adicione uma observação explicando o motivo da rejeição');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      // Atualizar status do pedido
+      const pedidoAtualizado = atualizarStatusPedido(pedido.id, 'Rejeitado');
       
-      const filtered = allFuncionarios.filter(f => 
-        f.ativo && (
-          f.setor === pedido.setor || 
-          (f.setoresAdicionais && f.setoresAdicionais.includes(pedido.setor)) ||
-          f.cargo.toLowerCase().includes('gerente') ||
-          f.setor === 'Saúde'
-        )
+      if (pedidoAtualizado) {
+        // Adicionar observação
+        // Em um sistema real, aqui seria adicionada a observação ao banco de dados
+        
+        toast.success('Pedido rejeitado com sucesso!');
+        setPedido({
+          ...pedido,
+          status: 'Rejeitado',
+          observacoes: pedido.observacoes + '\n\n' + observacao
+        });
+      } else {
+        toast.error('Erro ao rejeitar pedido');
+      }
+    } catch (error) {
+      console.error('Erro ao rejeitar pedido:', error);
+      toast.error('Erro ao processar rejeição');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAvancarEtapa = async (etapaIndex: number) => {
+    if (!pedido || !pedido.workflow) return;
+    
+    setSubmitting(true);
+    try {
+      // Verificar permissões
+      if (userRole === 'manager') {
+        // Atualizar etapa do workflow
+        const workflowAtualizado = atualizarEtapaWorkflow(
+          pedido.id,
+          etapaIndex,
+          'Em Andamento',
+          new Date(),
+          `${localStorage.getItem('user-name') || 'Usuário'}`
+        );
+        
+        if (workflowAtualizado) {
+          setPedido(workflowAtualizado);
+          toast.success('Etapa atualizada com sucesso!');
+        } else {
+          toast.error('Erro ao atualizar etapa');
+        }
+      } else {
+        toast.error('Você não tem permissão para atualizar esta etapa');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar etapa:', error);
+      toast.error('Erro ao processar atualização');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleConcluirEtapa = async (etapaIndex: number) => {
+    if (!pedido || !pedido.workflow) return;
+    
+    setSubmitting(true);
+    try {
+      // Atualizar etapa do workflow
+      const workflowAtualizado = atualizarEtapaWorkflow(
+        pedido.id,
+        etapaIndex,
+        'Concluído',
+        undefined,
+        undefined,
+        new Date()
       );
       
-      console.log("Filtered funcionários:", filtered.length, "for setor:", pedido.setor);
-      return filtered;
+      if (workflowAtualizado) {
+        setPedido(workflowAtualizado);
+        toast.success('Etapa concluída com sucesso!');
+        
+        // Se todas as etapas foram concluídas, atualizar status do pedido
+        const todasEtapasConcluidas = workflowAtualizado.workflow?.steps.every(step => step.status === 'Concluído');
+        if (todasEtapasConcluidas) {
+          const pedidoFinalizado = atualizarStatusPedido(pedido.id, 'Concluído');
+          if (pedidoFinalizado) {
+            setPedido({
+              ...workflowAtualizado,
+              status: 'Concluído'
+            });
+            toast.success('Pedido concluído com sucesso!');
+          }
+        }
+      } else {
+        toast.error('Erro ao concluir etapa');
+      }
+    } catch (error) {
+      console.error('Erro ao concluir etapa:', error);
+      toast.error('Erro ao processar conclusão');
+    } finally {
+      setSubmitting(false);
     }
-    return [];
-  }, [pedido]);
-  
-  const [responsaveis, setResponsaveis] = useState<ResponsavelData[]>([]);
-  const [todosAtribuidos, setTodosAtribuidos] = useState<boolean>(false);
+  };
 
-  useEffect(() => {
-    if (userRole !== 'admin' && userRole !== 'manager') {
-      toast.error("Você não tem permissão para acessar esta página");
-      navigate(-1);
-    }
-  }, [userRole, navigate]);
-
-  useEffect(() => {
-    if (pedido?.workflow?.steps) {
-      const initialResponsaveis = pedido.workflow.steps.map((step, index) => ({
-        stepIndex: index,
-        stepTitle: step.title,
-        responsavelId: '',
-        dataLimite: undefined
-      }));
-      setResponsaveis(initialResponsaveis);
-    }
-  }, [pedido]);
-
-  useEffect(() => {
-    if (responsaveis.length === 0) return;
-    
-    const todosPreenchidos = responsaveis.every(r => r.responsavelId);
-    
-    setTodosAtribuidos(todosPreenchidos);
-  }, [responsaveis]);
-
-  if (!pedido) {
+  if (loading) {
     return (
-      <div className="space-y-4 animate-fade-in">
-        <div className="flex items-center gap-2 mb-4">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">Pedido não encontrado</h1>
-        </div>
+      <div className="flex justify-center items-center h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  const handleSelectResponsavel = (stepIndex: number, funcionarioId: string) => {
-    setResponsaveis(prev => prev.map(item => 
-      item.stepIndex === stepIndex 
-        ? { ...item, responsavelId: funcionarioId } 
-        : item
-    ));
-  };
-
-  const handleSelectData = (stepIndex: number, data: Date | undefined) => {
-    setResponsaveis(prev => prev.map(item => 
-      item.stepIndex === stepIndex 
-        ? { ...item, dataLimite: data } 
-        : item
-    ));
-  };
-
-  const handleAprovarDFD = () => {
-    if (!pedido || !pedido.workflow) return;
-    
-    atualizarEtapaWorkflow(
-      pedido.id, 
-      0, 
-      'Concluído',
-      new Date(),
-      getUserRole() === 'manager' ? 'Amanda Amarante' : 'Administrador',
-      new Date()
+  if (!pedido) {
+    return (
+      <div className="text-center py-10">
+        <h2 className="text-2xl font-bold">Pedido não encontrado</h2>
+        <p className="text-muted-foreground mt-2">O pedido solicitado não existe ou foi removido.</p>
+        <Button className="mt-4" onClick={() => navigate('/pedidos')}>
+          Voltar para Lista de Pedidos
+        </Button>
+      </div>
     );
+  }
 
-    atualizarEtapaWorkflow(
-      pedido.id, 
-      1, 
-      'Em Andamento'
-    );
-
-    responsaveis.forEach(resp => {
-      if (resp.responsavelId) {
-        const funcionario = funcionarios.find(f => f.id === resp.responsavelId);
-        if (funcionario) {
-          atualizarEtapaWorkflow(
-            pedido.id,
-            resp.stepIndex,
-            pedido.workflow.steps[resp.stepIndex].status,
-            undefined,
-            funcionario.nome,
-            resp.dataLimite
-          );
-        }
-      }
-    });
-
-    toast.success("DFD aprovada com sucesso! O processo seguirá para as próximas etapas.");
-    navigate(`/pedidos/workflow/${pedido.id}`);
+  const getStatusIcon = () => {
+    switch (pedido.status) {
+      case 'Aprovado':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'Pendente':
+        return <Clock className="h-5 w-5 text-amber-500" />;
+      case 'Rejeitado':
+        return <AlertTriangle className="h-5 w-5 text-red-500" />;
+      case 'Em Andamento':
+        return <Clock className="h-5 w-5 text-blue-500" />;
+      case 'Concluído':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      default:
+        return <Clock className="h-5 w-5 text-gray-500" />;
+    }
   };
 
-  const getFuncionariosByStep = (stepTitle: string): Funcionario[] => {
-    console.log(`Getting funcionarios for step: ${stepTitle}, count: ${funcionarios.length}`);
-    return funcionarios;
+  const getStatusColor = () => {
+    switch (pedido.status) {
+      case 'Aprovado':
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
+      case 'Pendente':
+        return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
+      case 'Rejeitado':
+        return 'bg-red-100 text-red-800 hover:bg-red-200';
+      case 'Em Andamento':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+      case 'Concluído':
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
+      default:
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+    }
   };
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center gap-2 mb-4">
-        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold">Aprovação da DFD</h1>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Detalhes do Pedido</h1>
+          <p className="text-muted-foreground">
+            Visualize e aprove o pedido de compra
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Badge className={getStatusColor()}>
+            <span className="flex items-center gap-1">
+              {getStatusIcon()}
+              {pedido.status}
+            </span>
+          </Badge>
+          
+          <Button variant="outline" onClick={() => navigate('/pedidos')}>
+            Voltar
+          </Button>
+        </div>
       </div>
-      
-      <Card className="mb-6">
+
+      <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Detalhes do Pedido</CardTitle>
+          <CardTitle className="text-xl">{pedido.descricao}</CardTitle>
           <CardDescription>
-            {pedido.descricao} • Secretaria: {pedido.setor} • DFD #{pedido.id.substring(0, 8)}
+            Pedido #{pedido.id.substring(0, 8)} • Criado em {format(pedido.createdAt, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </CardDescription>
         </CardHeader>
         
         <CardContent>
-          <div className="space-y-6">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <h3 className="text-sm font-medium text-blue-800 mb-2">Instruções</h3>
-              <p className="text-sm text-blue-700">
-                Como gestor(a), você precisa aprovar esta DFD e atribuir responsáveis para cada etapa do processo.
-                Todos os responsáveis devem ser atribuídos para prosseguir com a aprovação.
-              </p>
-              <p className="text-sm text-blue-700 mt-2">
-                Apenas funcionários da secretaria "{pedido.setor}" ou que atuam nesta secretaria estão disponíveis para atribuição.
-              </p>
-              <p className="text-sm text-blue-700 mt-2">
-                Funcionários da secretaria de Saúde podem trabalhar em qualquer etapa do processo.
-              </p>
-              <p className="text-sm text-blue-700 mt-2">
-                Data limite é opcional para cada etapa.
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-start gap-2">
+                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Responsável</p>
+                  <p>{pedido.responsavel.nome}</p>
+                  <p className="text-sm text-muted-foreground">{pedido.responsavel.cargo}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Data do Pedido</p>
+                  <p>{format(pedido.dataCompra, "dd/MM/yyyy")}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Valor Total</p>
+                  <p className="text-lg font-semibold">{formatCurrency(pedido.valorTotal)}</p>
+                </div>
+              </div>
             </div>
             
             <div className="space-y-4">
-              <h3 className="text-sm font-medium border-b pb-2">Atribuição de Responsabilidades</h3>
-              
-              {DEFAULT_WORKFLOW_STEPS.map((step, index) => (
-                <div key={`step-${index}`} className="border rounded-lg p-4">
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <h4 className="font-medium">{step.title}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Etapa {index + 1} de {DEFAULT_WORKFLOW_STEPS.length}</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">
-                          <User className="h-3 w-3 inline mr-1" /> Responsável <span className="text-red-500">*</span>
-                        </label>
-                        <Select
-                          value={responsaveis[index]?.responsavelId || ''}
-                          onValueChange={(value) => handleSelectResponsavel(index, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Selecione um responsável" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {getFuncionariosByStep(step.title).map(funcionario => (
-                              <SelectItem key={funcionario.id} value={funcionario.id}>
-                                {funcionario.nome} - {funcionario.cargo}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">
-                          <Calendar className="h-3 w-3 inline mr-1" /> Data Limite <span className="text-gray-500">(opcional)</span>
-                        </label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start text-left"
-                            >
-                              <Calendar className="mr-2 h-4 w-4" />
-                              {responsaveis[index]?.dataLimite 
-                                ? format(responsaveis[index].dataLimite, 'dd/MM/yyyy') 
-                                : 'Selecionar data (opcional)'}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <CalendarComponent
-                              mode="single"
-                              selected={responsaveis[index]?.dataLimite}
-                              onSelect={(date) => handleSelectData(index, date)}
-                              initialFocus
-                              disabled={(date) => date < new Date()}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </div>
-                  </div>
+              <div className="flex items-start gap-2">
+                <Building className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Setor</p>
+                  <p>{pedido.setor}</p>
                 </div>
-              ))}
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <Truck className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Fonte de Recurso</p>
+                  <p>{pedido.fonteRecurso || pedido.fundoMonetario || 'Não especificado'}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <ClipboardList className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Progresso</p>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                    <div 
+                      className="bg-blue-600 h-2.5 rounded-full" 
+                      style={{ width: `${pedido.workflow?.percentComplete || 0}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {pedido.workflow?.percentComplete || 0}% concluído
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
-        
-        <CardFooter className="flex justify-end">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button 
-                disabled={!todosAtribuidos}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Aprovar DFD
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmar aprovação da DFD</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Você está prestes a aprovar esta DFD e iniciar o processo de compra.
-                  Esta ação não pode ser desfeita e notificará todos os responsáveis atribuídos.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleAprovarDFD}>
-                  Confirmar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </CardFooter>
       </Card>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-4 w-full md:w-[600px]">
+          <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
+          <TabsTrigger value="workflow">Workflow</TabsTrigger>
+          <TabsTrigger value="anexos">Anexos</TabsTrigger>
+          <TabsTrigger value="observacoes">Observações</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="detalhes" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Itens do Pedido</CardTitle>
+              <CardDescription>
+                Lista de itens incluídos neste pedido de compra
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PedidoItemsTable items={pedido.itens} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="workflow" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Fluxo de Aprovação</CardTitle>
+              <CardDescription>
+                Acompanhe o progresso do pedido no fluxo de aprovação
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {pedido.workflow ? (
+                <WorkflowTimeline 
+                  workflow={pedido.workflow}
+                  onAdvanceStep={handleAvancarEtapa}
+                  onCompleteStep={handleConcluirEtapa}
+                />
+              ) : (
+                <p className="text-muted-foreground">Este pedido não possui um fluxo de aprovação definido.</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="anexos" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Documentos Anexos</CardTitle>
+              <CardDescription>
+                Documentos e arquivos relacionados a este pedido
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PedidoAttachments attachments={pedido.anexos} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="observacoes" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Observações</CardTitle>
+              <CardDescription>
+                Comentários e observações sobre este pedido
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PedidoObservacoes observacoes={pedido.observacoes} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {pedido.status === 'Pendente' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Ação</CardTitle>
+            <CardDescription>
+              Aprove ou rejeite este pedido de compra
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Textarea
+                placeholder="Adicione uma observação (obrigatório para rejeição)"
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={handleRejeitar}
+              disabled={submitting}
+            >
+              Rejeitar Pedido
+            </Button>
+            <Button 
+              onClick={handleAprovar}
+              disabled={submitting}
+            >
+              Aprovar Pedido
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
     </div>
   );
 };

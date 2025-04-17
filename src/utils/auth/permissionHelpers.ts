@@ -1,4 +1,3 @@
-
 // Permission and access control functions
 import { supabase } from '@/integrations/supabase/client';
 import { getUserIdSync, getUserRoleSync, getUserSetorSync, getUserSecretariasSync } from './authCore';
