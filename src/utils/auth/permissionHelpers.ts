@@ -1,7 +1,7 @@
 
 // Permission and access control functions
 import { supabase } from '@/integrations/supabase/client';
-import { getUserIdSync, getUserRoleSync, getUserSetorSync } from './authCore';
+import { getUserIdSync, getUserRoleSync, getUserSetorSync, getUserSecretariasSync } from './authCore';
 
 // Function to check if user is on first login
 export async function isFirstLogin(userId: string): Promise<boolean> {

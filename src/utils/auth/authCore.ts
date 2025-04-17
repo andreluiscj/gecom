@@ -91,6 +91,30 @@ export function getUserSetorSync(): string | null {
   }
 }
 
+// Function to get user's secretarias (departments)
+export async function getUserSecretarias(): Promise<string[]> {
+  const userId = await getUserId();
+  if (!userId) return [];
+  
+  const { data, error } = await supabase
+    .from('usuario_secretarias')
+    .select('secretaria_id')
+    .eq('usuario_id', userId);
+    
+  if (error || !data) return [];
+  return data.map(item => item.secretaria_id);
+}
+
+// Synchronous version that gets the user secretarias from localStorage
+export function getUserSecretariasSync(): string[] {
+  try {
+    const secretarias = localStorage.getItem('user-secretarias');
+    return secretarias ? JSON.parse(secretarias) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
 // Function to get the user's municipality ID
 export async function getUserMunicipality(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
@@ -121,30 +145,6 @@ export async function canAccessDashboard(): Promise<boolean> {
 export function canAccessDashboardSync(): boolean {
   const role = getUserRoleSync();
   return role === 'admin' || role === 'prefeito' || role === 'gestor';
-}
-
-// Function to get user's secretarias (departments)
-export async function getUserSecretarias(): Promise<string[]> {
-  const userId = await getUserId();
-  if (!userId) return [];
-  
-  const { data, error } = await supabase
-    .from('usuario_secretarias')
-    .select('secretaria_id')
-    .eq('usuario_id', userId);
-    
-  if (error || !data) return [];
-  return data.map(item => item.secretaria_id);
-}
-
-// Synchronous version that gets the user secretarias from localStorage
-export function getUserSecretariasSync(): string[] {
-  try {
-    const secretarias = localStorage.getItem('user-secretarias');
-    return secretarias ? JSON.parse(secretarias) : [];
-  } catch (e) {
-    return [];
-  }
 }
 
 // Helper functions for user roles

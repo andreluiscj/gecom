@@ -2,12 +2,12 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Building2, Users, FileText, TrendingUp, ShieldAlert, Wallet, BriefcaseBusiness, CalendarCheck, UserPlus } from 'lucide-react';
-import { getUserRole } from '@/utils/authHelpers';
+import { getUserRoleSync } from '@/utils/auth';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
 const PrefeitoDashboard = () => {
-  const userRole = getUserRole();
+  const userRole = getUserRoleSync();
   const isPrefeito = userRole === 'prefeito';
   const navigate = useNavigate();
 

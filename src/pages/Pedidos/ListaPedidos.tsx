@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
 import { obterTodosPedidos } from '@/data/mockData';
 import { PedidoCompra } from '@/types';
-import { getUserSetorSync, getUserRoleSync } from '@/utils/authHelpers';
+import { getUserSetorSync, getUserRoleSync } from '@/utils/auth';
 import { toast } from 'sonner';
 
 const ListaPedidos: React.FC = () => {

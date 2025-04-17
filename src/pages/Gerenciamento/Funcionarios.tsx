@@ -53,7 +53,7 @@ import {
   getUsuariosLogin,
   getLoginLogs,
 } from '@/data/funcionarios/mockFuncionarios';
-import { canAccessUserManagement } from '@/utils/authHelpers';
+import { canAccessUserManagementSync } from '@/utils/authHelpers';
 import { toast } from 'sonner';
 import { CheckCircle, Edit, PlusCircle, Search, Trash2, History } from 'lucide-react';
 
@@ -98,7 +98,7 @@ const Funcionarios: React.FC = () => {
   });
 
   useEffect(() => {
-    if (!canAccessUserManagement()) {
+    if (!canAccessUserManagementSync()) {
       toast.error('Você não tem permissão para acessar esta página');
       navigate('/dashboard');
       return;
