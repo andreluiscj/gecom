@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,8 +11,7 @@ import { toast } from 'sonner';
 import { CheckCircle, Clock, AlertTriangle, FileText, User, Calendar, DollarSign, Building, Truck, ClipboardList } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { PedidoCompra } from '@/types';
-import { obterTodosPedidos, atualizarStatusPedido } from '@/data/mockData';
-import { atualizarEtapaWorkflow } from '@/data/mockData';
+import { obterTodosPedidos, atualizarStatusPedido, atualizarEtapaWorkflow } from '@/data/mockData';
 import { getUserRoleSync } from '@/utils/auth';
 import { canAccessSync } from '@/utils/auth/permissionHelpers';
 import WorkflowTimeline from '@/components/Pedidos/WorkflowTimeline';
@@ -35,7 +35,13 @@ const AprovacaoDFD: React.FC = () => {
     const fetchPedido = async () => {
       setLoading(true);
       try {
-        const pedidos = obterTodosPedidos();
+        if (!id) {
+          toast.error('ID do pedido não fornecido');
+          navigate('/pedidos');
+          return;
+        }
+
+        const pedidos = await obterTodosPedidos();
         const pedidoEncontrado = pedidos.find(p => p.id === id);
         
         if (pedidoEncontrado) {
@@ -56,21 +62,21 @@ const AprovacaoDFD: React.FC = () => {
   }, [id, navigate]);
 
   const handleAprovar = async () => {
-    if (!pedido) return;
+    if (!pedido || !id) return;
     
     setSubmitting(true);
     try {
       // Verificar permissões
       if (userRole === 'admin' || userRole === 'manager') {
         // Atualizar status do pedido
-        const pedidoAtualizado = atualizarStatusPedido(pedido.id, 'Aprovado');
+        const pedidoAtualizado = await atualizarStatusPedido(pedido.id, 'Aprovado');
         
         if (pedidoAtualizado) {
           // Atualizar etapa do workflow
           const etapaIndex = pedido.workflow?.steps.findIndex(step => step.status === 'Pendente' || step.status === 'Em Andamento');
           
           if (etapaIndex !== undefined && etapaIndex !== -1 && pedido.workflow) {
-            const workflowAtualizado = atualizarEtapaWorkflow(
+            const workflowAtualizado = await atualizarEtapaWorkflow(
               pedido.id,
               etapaIndex,
               'Concluído',
@@ -109,7 +115,7 @@ const AprovacaoDFD: React.FC = () => {
     setSubmitting(true);
     try {
       // Atualizar status do pedido
-      const pedidoAtualizado = atualizarStatusPedido(pedido.id, 'Rejeitado');
+      const pedidoAtualizado = await atualizarStatusPedido(pedido.id, 'Rejeitado');
       
       if (pedidoAtualizado) {
         // Adicionar observação
@@ -140,7 +146,7 @@ const AprovacaoDFD: React.FC = () => {
       // Verificar permissões
       if (userRole === 'manager') {
         // Atualizar etapa do workflow
-        const workflowAtualizado = atualizarEtapaWorkflow(
+        const workflowAtualizado = await atualizarEtapaWorkflow(
           pedido.id,
           etapaIndex,
           'Em Andamento',
@@ -171,7 +177,7 @@ const AprovacaoDFD: React.FC = () => {
     setSubmitting(true);
     try {
       // Atualizar etapa do workflow
-      const workflowAtualizado = atualizarEtapaWorkflow(
+      const workflowAtualizado = await atualizarEtapaWorkflow(
         pedido.id,
         etapaIndex,
         'Concluído',
@@ -187,7 +193,7 @@ const AprovacaoDFD: React.FC = () => {
         // Se todas as etapas foram concluídas, atualizar status do pedido
         const todasEtapasConcluidas = workflowAtualizado.workflow?.steps.every(step => step.status === 'Concluído');
         if (todasEtapasConcluidas) {
-          const pedidoFinalizado = atualizarStatusPedido(pedido.id, 'Concluído');
+          const pedidoFinalizado = await atualizarStatusPedido(pedido.id, 'Concluído');
           if (pedidoFinalizado) {
             setPedido({
               ...workflowAtualizado,
@@ -300,8 +306,8 @@ const AprovacaoDFD: React.FC = () => {
                 <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Responsável</p>
-                  <p>{pedido.responsavel.nome}</p>
-                  <p className="text-sm text-muted-foreground">{pedido.responsavel.cargo}</p>
+                  <p>{pedido.responsavel?.nome || 'Não definido'}</p>
+                  <p className="text-sm text-muted-foreground">{pedido.responsavel?.cargo || 'Cargo não definido'}</p>
                 </div>
               </div>
               
@@ -412,7 +418,7 @@ const AprovacaoDFD: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PedidoAttachments attachments={pedido.anexos} />
+              <PedidoAttachments attachments={pedido.anexos || []} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -426,7 +432,7 @@ const AprovacaoDFD: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PedidoObservacoes observacoes={pedido.observacoes} />
+              <PedidoObservacoes observacoes={pedido.observacoes || ''} />
             </CardContent>
           </Card>
         </TabsContent>

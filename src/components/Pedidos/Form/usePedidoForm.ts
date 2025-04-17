@@ -132,12 +132,17 @@ export const usePedidoForm = () => {
       };
 
       console.log("Salvando pedido:", novoPedido);
-      const result = await adicionarPedido(novoPedido);
-      
-      if (result) {
-        toast.success('Pedido de compra cadastrado com sucesso!');
-        navigate('/pedidos');
-      } else {
+      try {
+        const result = await adicionarPedido(novoPedido);
+        
+        if (result) {
+          toast.success('Pedido de compra cadastrado com sucesso!');
+          navigate('/pedidos');
+        } else {
+          toast.error('Erro ao cadastrar pedido. Verifique os dados e tente novamente.');
+        }
+      } catch (error) {
+        console.error("Erro ao salvar pedido:", error);
         toast.error('Erro ao cadastrar pedido. Verifique os dados e tente novamente.');
       }
     } catch (error) {

@@ -1,4 +1,5 @@
-import { Workflow } from '@/types';
+
+import { Workflow, WorkflowStepStatus } from '@/types';
 import { getUserRoleSync } from './auth';
 import { canEditWorkflowStepSync } from './auth/permissionHelpers';
 
@@ -36,4 +37,59 @@ export const canEditStep = (workflow: Workflow, stepIndex: number): boolean => {
   
   // For other roles, check specific permissions
   return canEditWorkflowStepSync(workflow.steps[stepIndex].title);
+};
+
+// Initialize a new workflow with default steps
+export const initializeWorkflow = (): Workflow => {
+  // Generate random IDs for each step
+  const generateId = () => crypto.randomUUID();
+  
+  return {
+    currentStep: 0,
+    totalSteps: 8,
+    percentComplete: 0,
+    steps: [
+      {
+        id: generateId(),
+        title: 'Aprovação da DFD',
+        status: 'Pendente',
+        date: new Date()
+      },
+      {
+        id: generateId(),
+        title: 'Cotação',
+        status: 'Pendente'
+      },
+      {
+        id: generateId(),
+        title: 'Abertura de Processo',
+        status: 'Pendente'
+      },
+      {
+        id: generateId(),
+        title: 'Empenhamento',
+        status: 'Pendente'
+      },
+      {
+        id: generateId(),
+        title: 'Licitação',
+        status: 'Pendente'
+      },
+      {
+        id: generateId(),
+        title: 'Contratação',
+        status: 'Pendente'
+      },
+      {
+        id: generateId(),
+        title: 'Entrega',
+        status: 'Pendente'
+      },
+      {
+        id: generateId(),
+        title: 'Pagamento',
+        status: 'Pendente'
+      }
+    ]
+  };
 };

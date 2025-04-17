@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,9 +9,10 @@ import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { obterTodosPedidos, atualizarEtapaWorkflow } from '@/data/mockData';
 import { toast } from 'sonner';
-import { WorkflowStepStatus } from '@/types';
+import { WorkflowStepStatus, PedidoCompra } from '@/types';
 import { canEditStep } from '@/utils/workflowHelpers';
-import { canEditWorkflowStepSync, getPermittedWorkflowStep, getUserRoleSync, getUserIdSync } from '@/utils/auth';
+import { getUserRoleSync, getUserIdSync } from '@/utils/auth';
+import { canEditWorkflowStepSync, getPermittedWorkflowStep } from '@/utils/auth/permissionHelpers';
 import {
   Select,
   SelectContent,
@@ -26,40 +28,40 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 const WorkflowPedido: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [pedido, setPedido] = useState<PedidoCompra | null>(null);
+  const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  
-  const allPedidos = obterTodosPedidos();
-  const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos, refreshKey]);
   const permittedStep = getPermittedWorkflowStep();
   const userRole = getUserRoleSync();
   const userId = getUserIdSync();
 
-  if (!pedido) {
-    return (
-      <div className="space-y-4 animate-fade-in">
-        <div className="flex items-center gap-2 mb-4">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">Pedido não encontrado</h1>
-        </div>
+  // Fetch the pedido when the component mounts or when refreshKey changes
+  useEffect(() => {
+    const fetchPedido = async () => {
+      try {
+        if (!id) return;
         
-        <Card>
-          <CardContent className="p-6 text-center">
-            <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
-            <p className="mt-4 text-muted-foreground">
-              O pedido que você está procurando não existe ou foi removido.
-            </p>
-            <Button className="mt-4" onClick={() => navigate('/pedidos')}>
-              Ver todos os pedidos
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+        setLoading(true);
+        const pedidos = await obterTodosPedidos();
+        const found = pedidos.find(p => p.id === id);
+        
+        if (found) {
+          setPedido(found);
+        } else {
+          toast.error('Pedido não encontrado');
+        }
+      } catch (error) {
+        console.error('Error fetching pedido:', error);
+        toast.error('Erro ao buscar dados do pedido');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPedido();
+  }, [id, refreshKey]);
 
-  const handleUpdateStepStatus = (stepIndex: number, status: WorkflowStepStatus) => {
+  const handleUpdateStepStatus = async (stepIndex: number, status: WorkflowStepStatus) => {
     if (!userId || !pedido || !pedido.workflow) return;
     
     const currentStep = pedido.workflow.steps[stepIndex];
@@ -76,25 +78,30 @@ const WorkflowPedido: React.FC = () => {
       return;
     }
     
-    // Verificar se a alteração segue a ordem lógica
-    if (status === 'Concluído' && stepIndex < pedido.workflow.steps.length - 1) {
-      // Se estamos concluindo uma etapa, precisamos verificar se a próxima etapa existe
-      // e atualizá-la para "Em Andamento" se estiver "Pendente"
-      if (pedido.workflow.steps[stepIndex + 1].status === 'Pendente') {
-        atualizarEtapaWorkflow(
-          pedido.id, 
-          stepIndex + 1, 
-          'Em Andamento'
-        );
+    try {
+      // Verificar se a alteração segue a ordem lógica
+      if (status === 'Concluído' && stepIndex < pedido.workflow.steps.length - 1) {
+        // Se estamos concluindo uma etapa, precisamos verificar se a próxima etapa existe
+        // e atualizá-la para "Em Andamento" se estiver "Pendente"
+        if (pedido.workflow.steps[stepIndex + 1].status === 'Pendente') {
+          await atualizarEtapaWorkflow(
+            pedido.id, 
+            stepIndex + 1, 
+            'Em Andamento'
+          );
+        }
       }
+      
+      await atualizarEtapaWorkflow(pedido.id, stepIndex, status);
+      toast.success(`Status da etapa atualizado para ${status}`);
+      setRefreshKey(prev => prev + 1); // Force refresh
+    } catch (error) {
+      console.error('Error updating step status:', error);
+      toast.error('Erro ao atualizar status da etapa');
     }
-    
-    atualizarEtapaWorkflow(pedido.id, stepIndex, status);
-    toast.success(`Status da etapa atualizado para ${status}`);
-    setRefreshKey(prev => prev + 1); // Force refresh
   };
 
-  const handleUpdateResponsavel = (stepIndex: number, responsavel: string) => {
+  const handleUpdateResponsavel = async (stepIndex: number, responsavel: string) => {
     if (!userId || !pedido || !pedido.workflow) return;
     
     const currentStep = pedido.workflow.steps[stepIndex];
@@ -110,18 +117,23 @@ const WorkflowPedido: React.FC = () => {
       return;
     }
     
-    atualizarEtapaWorkflow(
-      pedido.id, 
-      stepIndex, 
-      pedido.workflow.steps[stepIndex].status,
-      undefined,
-      responsavel
-    );
-    toast.success('Responsável atualizado com sucesso');
-    setRefreshKey(prev => prev + 1);
+    try {
+      await atualizarEtapaWorkflow(
+        pedido.id, 
+        stepIndex, 
+        pedido.workflow.steps[stepIndex].status,
+        undefined,
+        responsavel
+      );
+      toast.success('Responsável atualizado com sucesso');
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error updating responsavel:', error);
+      toast.error('Erro ao atualizar responsável');
+    }
   };
 
-  const handleUpdateDataConclusao = (stepIndex: number, data: Date | undefined) => {
+  const handleUpdateDataConclusao = async (stepIndex: number, data: Date | undefined) => {
     if (!userId || !pedido || !pedido.workflow) return;
     
     const currentStep = pedido.workflow.steps[stepIndex];
@@ -137,16 +149,21 @@ const WorkflowPedido: React.FC = () => {
       return;
     }
     
-    atualizarEtapaWorkflow(
-      pedido.id, 
-      stepIndex, 
-      pedido.workflow.steps[stepIndex].status,
-      pedido.workflow.steps[stepIndex].date,
-      pedido.workflow.steps[stepIndex].responsavel,
-      data
-    );
-    toast.success('Data de conclusão atualizada com sucesso');
-    setRefreshKey(prev => prev + 1);
+    try {
+      await atualizarEtapaWorkflow(
+        pedido.id, 
+        stepIndex, 
+        pedido.workflow.steps[stepIndex].status,
+        pedido.workflow.steps[stepIndex].date,
+        pedido.workflow.steps[stepIndex].responsavel,
+        data
+      );
+      toast.success('Data de conclusão atualizada com sucesso');
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error updating data conclusao:', error);
+      toast.error('Erro ao atualizar data de conclusão');
+    }
   };
   
   const getStatusIcon = (status: WorkflowStepStatus) => {
@@ -182,6 +199,39 @@ const WorkflowPedido: React.FC = () => {
     if (percent < 70) return 'bg-yellow-500';
     return 'bg-green-500';
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!pedido) {
+    return (
+      <div className="space-y-4 animate-fade-in">
+        <div className="flex items-center gap-2 mb-4">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-2xl font-bold">Pedido não encontrado</h1>
+        </div>
+        
+        <Card>
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
+            <p className="mt-4 text-muted-foreground">
+              O pedido que você está procurando não existe ou foi removido.
+            </p>
+            <Button className="mt-4" onClick={() => navigate('/pedidos')}>
+              Ver todos os pedidos
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -224,14 +274,13 @@ const WorkflowPedido: React.FC = () => {
             <Progress 
               value={pedido.workflow?.percentComplete || 0} 
               className="h-2" 
-              color={getProgressColor(pedido.workflow?.percentComplete || 0)}
             />
           </div>
           
           <div className="space-y-6 mt-8">
             {pedido && pedido.workflow?.steps.map((step, index) => {
               // Verificando se a etapa pode ser editada com base na função canEditStep
-              const isEditable = canEditStep(pedido.workflow!, index);
+              const isEditable = pedido.workflow ? canEditStep(pedido.workflow, index) : false;
               // Verificando se o usuário tem permissão para editar esta etapa específica
               const hasPermission = canEditWorkflowStepSync(step.title);
               
@@ -362,10 +411,9 @@ const WorkflowPedido: React.FC = () => {
                           <PopoverContent className="w-auto p-0" align="start">
                             <CalendarComponent
                               mode="single"
-                              selected={step.dataConclusao}
+                              selected={step.dataConclusao instanceof Date ? step.dataConclusao : undefined}
                               onSelect={(isEditable && hasPermission && step.title !== 'Aprovação da DFD') ? handleUpdateDataConclusao.bind(null, index) : undefined}
                               initialFocus
-                              disabled={!isEditable || !hasPermission || step.title === 'Aprovação da DFD'}
                             />
                           </PopoverContent>
                         </Popover>

@@ -69,5 +69,3 @@ export function canAccessSync(feature: string): boolean {
   // Check if the user's role is allowed for this feature
   return featurePermissions[feature]?.includes(role) || false;
 }
-
-export { canEditWorkflowStepSync, canAccessSync, getPermittedWorkflowStep };

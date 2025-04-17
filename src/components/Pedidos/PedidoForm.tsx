@@ -162,26 +162,36 @@ const PedidoForm: React.FC = () => {
       const novoPedido: PedidoCompra = {
         id: uuidv4(),
         descricao: combinedData.descricao,
-        justificativa: combinedData.justificativa,
-        dataCompra: new Date(combinedData.dataCompra),
         setor: combinedData.setor,
-        solicitante: combinedData.responsavel,
+        dataCompra: new Date(combinedData.dataCompra),
+        status: 'Pendente',
         valorTotal: combinedData.valorEstimado || total,
         itens: itens.map(item => ({
           ...item,
           valorTotal: item.quantidade * item.valorUnitario
         })),
-        status: 'Pendente',
         fundoMonetario: combinedData.fundoMonetario,
         createdAt: new Date(),
-        observacoes: '',
+        observacoes: combinedData.justificativa || '',
+        localEntrega: combinedData.localEntrega,
         workflow: initializeWorkflow(),
-        localEntrega: combinedData.localEntrega
+        responsavel: {
+          id: '',
+          nome: userName,
+          email: '',
+          cargo: '',
+        },
+        anexos: []
       };
 
-      const pedidoAdicionado = adicionarPedido(novoPedido);
-      toast.success('DFD cadastrada com sucesso! A DFD já está disponível na página da secretaria e nos relatórios do sistema.');
-      navigate(`/pedidos/${pedidoAdicionado.id}`);
+      try {
+        const savedPedido = await adicionarPedido(novoPedido);
+        toast.success('DFD cadastrada com sucesso! A DFD já está disponível na página da secretaria e nos relatórios do sistema.');
+        navigate(`/pedidos/${savedPedido.id}`);
+      } catch (error) {
+        console.error("Error saving pedido:", error);
+        toast.error('Erro ao cadastrar DFD. Tente novamente.');
+      }
     } catch (error) {
       console.error('Erro ao submeter o formulário:', error);
       toast.error('Erro ao cadastrar DFD. Tente novamente.');
