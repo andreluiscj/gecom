@@ -32,9 +32,13 @@ export type Setor =
   | "Comunicação"
   | "Ciência e Tecnologia"
   | "Gabinete"
-  | "Prefeito";
+  | "Prefeito"
+  | string; // Add string to make it more compatible with dynamic data
 
 export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
+
+// Database status values - lowercase
+export type DbPedidoStatus = 'pendente' | 'em_analise' | 'aprovado' | 'em_andamento' | 'concluido' | 'rejeitado';
 
 export interface Item {
   id: string;
@@ -48,7 +52,7 @@ export interface PedidoCompra {
   id: string;
   descricao: string;
   dataCompra: Date;
-  setor: Setor;
+  setor: Setor; // Now compatible with string
   itens: Item[];
   valorTotal: number;
   status: PedidoStatus;
@@ -59,6 +63,15 @@ export interface PedidoCompra {
   observacoes?: string;
   workflow?: Workflow;
   localEntrega?: string;
+  // Added missing properties
+  fonteRecurso?: string;
+  responsavel?: {
+    id: string;
+    nome: string;
+    email?: string;
+    cargo?: string;
+  };
+  anexos?: Attachment[];
 }
 
 export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído';
@@ -77,6 +90,15 @@ export interface Workflow {
   totalSteps: number;
   percentComplete: number;
   steps: WorkflowStep[];
+}
+
+export interface Attachment {
+  id: string;
+  name: string;
+  type: string;
+  size?: number;
+  url?: string;
+  createdAt?: Date;
 }
 
 export interface Municipio {

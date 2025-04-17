@@ -1,101 +1,108 @@
 
 import React from 'react';
-import { CheckCircle, Clock, Circle } from 'lucide-react';
-import { format } from 'date-fns';
+import { Workflow, WorkflowStep } from '@/types';
+import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Workflow } from '@/types';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface WorkflowTimelineProps {
   workflow: Workflow;
-  onAdvanceStep?: (stepIndex: number) => void;
-  onCompleteStep?: (stepIndex: number) => void;
+  onAdvanceStep?: (etapaIndex: number) => void;
+  onCompleteStep?: (etapaIndex: number) => void;
 }
 
 const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({ 
   workflow, 
-  onAdvanceStep, 
+  onAdvanceStep,
   onCompleteStep 
 }) => {
-  if (!workflow?.steps || workflow.steps.length === 0) {
+  if (!workflow || !workflow.steps || workflow.steps.length === 0) {
     return (
-      <div className="text-center p-4">
-        <p className="text-muted-foreground">
-          Não há etapas de workflow definidas para este pedido.
-        </p>
+      <div className="text-center py-8">
+        <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+        <p className="text-muted-foreground">Workflow não definido para este pedido</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 py-2">
-      {workflow.steps.map((step, index) => (
-        <div key={index} className="flex items-start">
-          <div className="flex flex-col items-center mr-4">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-              step.status === 'Concluído' ? 'bg-green-100' :
-              step.status === 'Em Andamento' ? 'bg-blue-100' : 'bg-gray-100'
-            } border ${
-              step.status === 'Concluído' ? 'border-green-500' :
-              step.status === 'Em Andamento' ? 'border-blue-500' : 'border-gray-300'
-            }`}>
-              {step.status === 'Concluído' ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              ) : step.status === 'Em Andamento' ? (
-                <Clock className="h-5 w-5 text-blue-600" />
-              ) : (
-                <Circle className="h-5 w-5 text-gray-400" />
-              )}
-            </div>
-            {index < workflow.steps.length - 1 && (
-              <div className={`h-12 w-0.5 ${
-                step.status === 'Concluído' ? 'bg-green-500' : 'bg-gray-200'
-              } mx-auto`}></div>
-            )}
-          </div>
-          
-          <div className="flex-1">
-            <h3 className="font-medium mb-1">{step.title}</h3>
-            <div className="space-y-2 text-sm">
-              {step.date && (
-                <p className="text-muted-foreground">
-                  Data: {format(new Date(step.date), 'dd/MM/yyyy')}
-                </p>
-              )}
-              {step.responsavel && (
-                <p className="text-muted-foreground">
-                  Responsável: {step.responsavel}
-                </p>
-              )}
-              {step.dataConclusao && (
-                <p className="text-muted-foreground">
-                  Concluído em: {format(new Date(step.dataConclusao), 'dd/MM/yyyy')}
-                </p>
-              )}
-              
-              <div className="flex space-x-2 pt-1">
-                {step.status === 'Pendente' && onAdvanceStep && (
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => onAdvanceStep(index)}
-                  >
-                    Iniciar Etapa
-                  </Button>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <p className="text-sm text-muted-foreground">Progresso</p>
+          <p className="font-medium">{workflow.percentComplete}% concluído</p>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Etapa {workflow.currentStep} de {workflow.totalSteps}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {workflow.steps.map((step, index) => (
+          <div key={step.id} className="relative">
+            <div className="flex items-start">
+              <div className="flex flex-col items-center mr-4">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                  step.status === 'Concluído' ? 'bg-green-100 text-green-600' :
+                  step.status === 'Em Andamento' ? 'bg-blue-100 text-blue-600' :
+                  'bg-gray-100 text-gray-400'
+                }`}>
+                  {step.status === 'Concluído' ? (
+                    <CheckCircle className="h-5 w-5" />
+                  ) : step.status === 'Em Andamento' ? (
+                    <Clock className="h-5 w-5" />
+                  ) : (
+                    <XCircle className="h-5 w-5" />
+                  )}
+                </div>
+                {index < workflow.steps.length - 1 && (
+                  <div className="w-px h-10 bg-gray-200"></div>
                 )}
-                
-                {step.status === 'Em Andamento' && onCompleteStep && (
-                  <Button 
-                    size="sm" 
-                    onClick={() => onCompleteStep(index)}
-                  >
-                    Concluir Etapa
-                  </Button>
+              </div>
+
+              <div className="flex-1">
+                <h3 className="font-medium">{step.title}</h3>
+                <div className="flex flex-wrap gap-2 mt-1 text-sm text-muted-foreground">
+                  {step.responsavel && (
+                    <span>Responsável: {step.responsavel}</span>
+                  )}
+                  {step.date && (
+                    <span>Iniciado em: {format(step.date, "dd 'de' MMMM", { locale: ptBR })}</span>
+                  )}
+                  {step.dataConclusao && (
+                    <span>Concluído em: {format(step.dataConclusao, "dd 'de' MMMM", { locale: ptBR })}</span>
+                  )}
+                </div>
+
+                {/* Action buttons */}
+                {onAdvanceStep && onCompleteStep && (
+                  <div className="flex gap-2 mt-2">
+                    {step.status === 'Pendente' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => onAdvanceStep(index)}
+                      >
+                        Iniciar etapa
+                      </Button>
+                    )}
+                    {step.status === 'Em Andamento' && (
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => onCompleteStep(index)}
+                      >
+                        Concluir etapa
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };

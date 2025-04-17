@@ -8,7 +8,7 @@ interface PedidoItemsTableProps {
   items: Item[];
 }
 
-const PedidoItemsTable: React.FC<PedidoItemsTableProps> = ({ items }) => {
+const PedidoItemsTable: React.FC<PedidoItemsTableProps> = ({ items = [] }) => {
   if (!items || items.length === 0) {
     return (
       <div className="text-center p-4 border rounded-md">

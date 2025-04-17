@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { obterPedidos } from '@/data/mockData';
-import { PedidoCompra } from '@/types';
+import { PedidoCompra, PedidoStatus } from '@/types';
 
 const NotificationMenu: React.FC = () => {
   const navigate = useNavigate();
@@ -29,9 +29,9 @@ const NotificationMenu: React.FC = () => {
         // Filter for recent or important pedidos
         const recentPedidos = pedidos
           .filter(pedido => 
-            pedido.status === 'pendente' || 
-            pedido.status === 'aprovado' || 
-            pedido.status === 'em_andamento'
+            pedido.status === 'Pendente' || 
+            pedido.status === 'Aprovado' || 
+            pedido.status === 'Em Andamento'
           )
           .slice(0, 5); // Limit to 5 notifications
         
@@ -52,11 +52,11 @@ const NotificationMenu: React.FC = () => {
 
   const getNotificationTitle = (pedido: PedidoCompra) => {
     switch (pedido.status) {
-      case 'pendente':
+      case 'Pendente':
         return 'Nova DFD para aprovação';
-      case 'aprovado':
+      case 'Aprovado':
         return 'DFD aprovada recentemente';
-      case 'em_andamento':
+      case 'Em Andamento':
         return 'Processo em andamento';
       default:
         return 'Atualização de DFD';
@@ -110,8 +110,8 @@ const NotificationMenu: React.FC = () => {
                 <Badge 
                   variant="outline" 
                   className={
-                    pedido.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' : 
-                    pedido.status === 'aprovado' ? 'bg-green-100 text-green-800' : 
+                    pedido.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' : 
+                    pedido.status === 'Aprovado' ? 'bg-green-100 text-green-800' : 
                     'bg-blue-100 text-blue-800'
                   }
                 >

@@ -63,14 +63,14 @@ const ListaPedidos: React.FC = () => {
           console.error('Error fetching pedidos:', error);
           toast.error('Erro ao carregar pedidos');
           setPedidos([]);
-        } else {
+        } else if (data) {
           // Transform the data to match the PedidoCompra type
           const formattedPedidos: PedidoCompra[] = data.map(item => ({
             id: item.id,
             descricao: item.descricao,
             setor: item.secretarias?.nome || 'Outro',
             dataCompra: new Date(item.data_pedido),
-            status: item.status,
+            status: mapDbStatusToUiStatus(item.status),
             valorTotal: item.valor_estimado || 0,
             itens: [], // These would be fetched in a separate query if needed
             fundoMonetario: '', // This would be properly linked if the fundos structure is implemented
@@ -88,8 +88,14 @@ const ListaPedidos: React.FC = () => {
             workflow: item.dfd_workflows ? {
               percentComplete: item.dfd_workflows.percentual_completo || 0,
               currentStep: 0,
+              totalSteps: 5,
               steps: []
-            } : null
+            } : {
+              percentComplete: 0,
+              currentStep: 0,
+              totalSteps: 5,
+              steps: []
+            }
           }));
           
           setPedidos(formattedPedidos);
@@ -105,6 +111,19 @@ const ListaPedidos: React.FC = () => {
 
     fetchPedidos();
   }, [navigate, userRole, userSetor]);
+  
+  // Helper function to map database status to UI status
+  function mapDbStatusToUiStatus(dbStatus: string): 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado' {
+    const statusMap: Record<string, 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado'> = {
+      'pendente': 'Pendente',
+      'em_analise': 'Em Análise',
+      'aprovado': 'Aprovado',
+      'em_andamento': 'Em Andamento',
+      'concluido': 'Concluído',
+      'rejeitado': 'Rejeitado'
+    };
+    return statusMap[dbStatus] || 'Pendente';
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

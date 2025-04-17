@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/utils/formatters';
 import { getUserRoleSync } from '@/utils/auth';
-import { PedidoCompra } from '@/types';
+import { PedidoCompra, PedidoStatus } from '@/types';
 import { obterPedidos, atualizarStatusPedido } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,7 +26,7 @@ const PrefeitoPage: React.FC = () => {
         
         // Fetch pedidos pendentes
         const allPedidos = await obterPedidos();
-        const pendentes = allPedidos.filter(p => p.status === 'pendente');
+        const pendentes = allPedidos.filter(p => p.status === 'Pendente');
         setPedidosPendentes(pendentes);
       } catch (error) {
         console.error('Error fetching pedidos:', error);
@@ -42,7 +42,7 @@ const PrefeitoPage: React.FC = () => {
   const handleAprove = async (pedido: PedidoCompra) => {
     try {
       // Update pedido status to 'aprovado'
-      const updatedPedido = await atualizarStatusPedido(pedido.id, 'aprovado');
+      const updatedPedido = await atualizarStatusPedido(pedido.id, 'Aprovado');
       
       if (updatedPedido) {
         toast.success('Pedido aprovado com sucesso!');
@@ -51,21 +51,25 @@ const PrefeitoPage: React.FC = () => {
         setPedidosPendentes(prev => prev.filter(p => p.id !== pedido.id));
         
         // Create workflow if needed
-        const { data: workflow } = await supabase
-          .from('dfd_workflows')
-          .select('*')
-          .eq('dfd_id', pedido.id)
-          .single();
-        
-        if (!workflow) {
-          // Create workflow
-          await supabase
+        try {
+          const { data: workflow } = await supabase
             .from('dfd_workflows')
-            .insert({
-              dfd_id: pedido.id,
-              percentual_completo: 10,
-              etapa_atual: 1
-            });
+            .select('*')
+            .eq('dfd_id', pedido.id)
+            .single();
+          
+          if (!workflow) {
+            // Create workflow
+            await supabase
+              .from('dfd_workflows')
+              .insert({
+                dfd_id: pedido.id,
+                percentual_completo: 10,
+                etapa_atual: 1
+              });
+          }
+        } catch (err) {
+          console.error('Error checking/creating workflow:', err);
         }
       } else {
         toast.error('Erro ao aprovar pedido');
@@ -79,7 +83,7 @@ const PrefeitoPage: React.FC = () => {
   const handleReject = async (pedido: PedidoCompra) => {
     try {
       // Update pedido status to 'rejeitado'
-      const updatedPedido = await atualizarStatusPedido(pedido.id, 'rejeitado');
+      const updatedPedido = await atualizarStatusPedido(pedido.id, 'Rejeitado');
       
       if (updatedPedido) {
         toast.success('Pedido rejeitado com sucesso!');

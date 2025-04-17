@@ -3,21 +3,13 @@ import React from 'react';
 import { FileIcon, Download, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-
-interface Attachment {
-  id: string;
-  name: string;
-  type: string;
-  size?: number;
-  url?: string;
-  createdAt?: Date;
-}
+import { Attachment } from '@/types';
 
 interface PedidoAttachmentsProps {
   attachments: Attachment[];
 }
 
-const PedidoAttachments: React.FC<PedidoAttachmentsProps> = ({ attachments }) => {
+const PedidoAttachments: React.FC<PedidoAttachmentsProps> = ({ attachments = [] }) => {
   if (!attachments || attachments.length === 0) {
     return (
       <div className="text-center py-8">

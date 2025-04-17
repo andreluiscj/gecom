@@ -10,11 +10,21 @@ import { obterPedidosPorSetor } from '@/data/mockData';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import { Progress } from '@/components/ui/progress';
+import { PedidoCompra, Setor } from '@/types';
+
+interface SecretariaCountProps {
+  nome: string;
+  quantidade: number;
+}
 
 const TarefasSelecao: React.FC = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState('pt');
   const [trigger, setTrigger] = useState(0);
+  const [secretariaCounts, setSecretariaCounts] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+  const [secretariaSelecionada, setSecretariaSelecionada] = useState<string | null>(null);
+  const [pedidosDaSecretaria, setPedidosDaSecretaria] = useState<PedidoCompra[]>([]);
 
   useEffect(() => {
     // Force re-render every 5 seconds to reflect any changes in data
@@ -31,7 +41,52 @@ const TarefasSelecao: React.FC = () => {
     if (savedLanguage) {
       setLanguage(savedLanguage);
     }
-  }, []);
+    
+    // Load initial counts
+    async function loadCounts() {
+      setLoading(true);
+      const counts: Record<string, number> = {};
+      
+      // List of secretarias we want to check
+      const secretariasToCheck = secretarias.map(s => s.nome);
+      
+      // Load counts for each secretaria
+      for (const secretaria of secretariasToCheck) {
+        try {
+          const pedidos = await obterPedidosPorSetor(secretaria);
+          counts[secretaria] = pedidos.length;
+        } catch (error) {
+          console.error(`Error loading pedidos for ${secretaria}:`, error);
+          counts[secretaria] = 0;
+        }
+      }
+      
+      setSecretariaCounts(counts);
+      setLoading(false);
+    }
+    
+    loadCounts();
+  }, [trigger]);
+
+  useEffect(() => {
+    // Load pedidos for selected secretaria
+    async function loadPedidosForSecretaria() {
+      if (!secretariaSelecionada) {
+        setPedidosDaSecretaria([]);
+        return;
+      }
+      
+      try {
+        const pedidos = await obterPedidosPorSetor(secretariaSelecionada);
+        setPedidosDaSecretaria(pedidos);
+      } catch (error) {
+        console.error(`Error loading pedidos for ${secretariaSelecionada}:`, error);
+        setPedidosDaSecretaria([]);
+      }
+    }
+    
+    loadPedidosForSecretaria();
+  }, [secretariaSelecionada]);
 
   const texts = {
     title: language === 'pt' ? 'Gerenciamento de Tarefas' : 'Task Management',
@@ -53,7 +108,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <HeartPulse className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Saúde').length,
+      tarefasPendentes: secretariaCounts['Saúde'] || 0,
     },
     {
       nome: language === 'pt' ? 'Educação' : 'Education',
@@ -61,7 +116,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <BookOpen className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Educação').length,
+      tarefasPendentes: secretariaCounts['Educação'] || 0,
     },
     {
       nome: language === 'pt' ? 'Administrativo' : 'Administrative',
@@ -69,7 +124,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Building2 className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Administrativo').length,
+      tarefasPendentes: secretariaCounts['Administrativo'] || 0,
     },
     {
       nome: language === 'pt' ? 'Transporte' : 'Transport',
@@ -77,7 +132,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Bus className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Transporte').length,
+      tarefasPendentes: secretariaCounts['Transporte'] || 0,
     },
     {
       nome: language === 'pt' ? 'Obras' : 'Construction',
@@ -85,7 +140,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Briefcase className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Obras').length,
+      tarefasPendentes: secretariaCounts['Obras'] || 0,
     },
     {
       nome: language === 'pt' ? 'Segurança Pública' : 'Public Safety',
@@ -93,7 +148,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Shield className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Segurança Pública').length,
+      tarefasPendentes: secretariaCounts['Segurança Pública'] || 0,
     },
     {
       nome: language === 'pt' ? 'Assistência Social' : 'Social Assistance',
@@ -101,7 +156,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Heart className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Assistência Social').length,
+      tarefasPendentes: secretariaCounts['Assistência Social'] || 0,
     },
     {
       nome: language === 'pt' ? 'Meio Ambiente' : 'Environment',
@@ -109,7 +164,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Leaf className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Meio Ambiente').length,
+      tarefasPendentes: secretariaCounts['Meio Ambiente'] || 0,
     },
     {
       nome: language === 'pt' ? 'Fazenda' : 'Treasury',
@@ -117,7 +172,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Coins className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Fazenda').length,
+      tarefasPendentes: secretariaCounts['Fazenda'] || 0,
     },
     {
       nome: language === 'pt' ? 'Turismo' : 'Tourism',
@@ -125,7 +180,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Globe className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Turismo').length,
+      tarefasPendentes: secretariaCounts['Turismo'] || 0,
     },
     {
       nome: language === 'pt' ? 'Cultura' : 'Culture',
@@ -133,7 +188,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Music className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Cultura').length,
+      tarefasPendentes: secretariaCounts['Cultura'] || 0,
     },
     {
       nome: language === 'pt' ? 'Esportes e Lazer' : 'Sports and Recreation',
@@ -141,7 +196,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Award className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Esportes e Lazer').length,
+      tarefasPendentes: secretariaCounts['Esportes e Lazer'] || 0,
     },
     {
       nome: language === 'pt' ? 'Planejamento' : 'Planning',
@@ -149,7 +204,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <PieChart className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Planejamento').length,
+      tarefasPendentes: secretariaCounts['Planejamento'] || 0,
     },
     {
       nome: language === 'pt' ? 'Comunicação' : 'Communication',
@@ -157,7 +212,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <Radio className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Comunicação').length,
+      tarefasPendentes: secretariaCounts['Comunicação'] || 0,
     },
     {
       nome: language === 'pt' ? 'Ciência e Tecnologia' : 'Science and Technology',
@@ -165,7 +220,7 @@ const TarefasSelecao: React.FC = () => {
       icone: <MapPin className="h-5 w-5 text-black" />,
       colorClass: 'bg-white',
       bgClass: 'bg-white border-gray-200',
-      tarefasPendentes: obterPedidosPorSetor('Ciência e Tecnologia').length,
+      tarefasPendentes: secretariaCounts['Ciência e Tecnologia'] || 0,
     },
   ];
 
@@ -173,16 +228,20 @@ const TarefasSelecao: React.FC = () => {
   
   const totalPendentes = secretarias.reduce((sum, dept) => sum + dept.tarefasPendentes, 0);
 
-  const [secretariaSelecionada, setSecretariaSelecionada] = useState<string | null>(null);
-
   const handleSecretariaClick = (key: string) => {
-    const secretaria = secretarias.find(d => d.key === key)?.nome as any;
-    setSecretariaSelecionada(secretaria);
+    const secretaria = secretarias.find(d => d.key === key)?.nome;
+    if (secretaria) {
+      setSecretariaSelecionada(secretaria);
+    }
   };
 
-  const pedidosDaSecretaria = secretariaSelecionada 
-    ? obterPedidosPorSetor(secretariaSelecionada as any)
-    : [];
+  if (loading) {
+    return (
+      <div className="flex justify-center py-10">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

@@ -1,7 +1,6 @@
 
 // This file will be greatly simplified as we transition to Supabase
-// Most functions will be replaced with direct Supabase queries
-import { PedidoCompra, PedidoStatus, Setor } from '@/types';
+import { PedidoCompra, PedidoStatus, DbPedidoStatus, Setor, Item, Workflow, WorkflowStep } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -12,6 +11,32 @@ export function gerarId(): string {
 
 // Empty array as placeholder - no more static data
 const todosPedidos: PedidoCompra[] = [];
+
+// Map between database status and UI status
+const mapDbStatusToUiStatus = (dbStatus: DbPedidoStatus): PedidoStatus => {
+  const statusMap: Record<DbPedidoStatus, PedidoStatus> = {
+    'pendente': 'Pendente',
+    'em_analise': 'Em Análise',
+    'aprovado': 'Aprovado',
+    'em_andamento': 'Em Andamento',
+    'concluido': 'Concluído',
+    'rejeitado': 'Rejeitado'
+  };
+  return statusMap[dbStatus] || 'Pendente';
+};
+
+// Map between UI status and database status
+const mapUiStatusToDbStatus = (uiStatus: PedidoStatus): DbPedidoStatus => {
+  const statusMap: Record<PedidoStatus, DbPedidoStatus> = {
+    'Pendente': 'pendente',
+    'Em Análise': 'em_analise',
+    'Aprovado': 'aprovado',
+    'Em Andamento': 'em_andamento',
+    'Concluído': 'concluido',
+    'Rejeitado': 'rejeitado'
+  };
+  return statusMap[uiStatus] || 'pendente';
+};
 
 // Function to add a new pedido to Supabase
 export async function adicionarPedido(pedido: PedidoCompra): Promise<PedidoCompra | null> {
@@ -24,10 +49,11 @@ export async function adicionarPedido(pedido: PedidoCompra): Promise<PedidoCompr
         descricao: pedido.descricao,
         secretaria_id: pedido.setor, // Assuming setor contains the secretaria_id
         data_pedido: pedido.dataCompra.toISOString(),
-        status: pedido.status.toLowerCase(),
+        status: mapUiStatusToDbStatus(pedido.status),
         valor_estimado: pedido.valorTotal,
         justificativa: pedido.observacoes || '',
-        local_entrega: pedido.localEntrega || ''
+        local_entrega: pedido.localEntrega || '',
+        solicitante_id: '00000000-0000-0000-0000-000000000000' // Default user ID - should be replaced with actual user ID
       })
       .select()
       .single();
@@ -110,12 +136,12 @@ export async function obterTodosPedidos(): Promise<PedidoCompra[]> {
     }
     
     // Transform to match PedidoCompra type
-    return data.map(item => ({
+    const pedidos: PedidoCompra[] = data.map(item => ({
       id: item.id,
       descricao: item.descricao,
-      setor: item.secretarias?.nome as Setor || 'Outro' as Setor,
+      setor: item.secretarias?.nome as Setor || 'Outro',
       dataCompra: new Date(item.data_pedido),
-      status: (item.status || 'pendente') as PedidoStatus,
+      status: mapDbStatusToUiStatus(item.status as DbPedidoStatus || 'pendente'),
       valorTotal: item.valor_estimado || 0,
       itens: [],
       fundoMonetario: '',
@@ -125,13 +151,42 @@ export async function obterTodosPedidos(): Promise<PedidoCompra[]> {
       fonteRecurso: '',
       responsavel: {
         id: '',
-        nome: '',
+        nome: 'Sistema',
         email: '',
         cargo: '',
       },
       anexos: [],
-      workflow: { percentComplete: 0, currentStep: 0, steps: [] }
+      workflow: { 
+        percentComplete: 0, 
+        currentStep: 0, 
+        totalSteps: 5,
+        steps: [] 
+      }
     }));
+    
+    // Fetch workflow information for each pedido
+    for (const pedido of pedidos) {
+      try {
+        const { data: workflowData } = await supabase
+          .from('dfd_workflows')
+          .select('*')
+          .eq('dfd_id', pedido.id)
+          .single();
+          
+        if (workflowData) {
+          pedido.workflow = {
+            percentComplete: workflowData.percentual_completo || 0,
+            currentStep: workflowData.etapa_atual || 0,
+            totalSteps: 5, // Default value
+            steps: []
+          };
+        }
+      } catch (err) {
+        console.error(`Error fetching workflow for pedido ${pedido.id}:`, err);
+      }
+    }
+    
+    return pedidos;
   } catch (err) {
     console.error('Error in obterTodosPedidos:', err);
     return [];
@@ -169,9 +224,9 @@ export async function obterPedidosPorSetor(setor: string): Promise<PedidoCompra[
     return data.map(item => ({
       id: item.id,
       descricao: item.descricao,
-      setor: item.secretarias?.nome as Setor || 'Outro' as Setor,
+      setor: item.secretarias?.nome as Setor || 'Outro',
       dataCompra: new Date(item.data_pedido),
-      status: (item.status || 'pendente') as PedidoStatus,
+      status: mapDbStatusToUiStatus(item.status as DbPedidoStatus || 'pendente'),
       valorTotal: item.valor_estimado || 0,
       itens: [],
       fundoMonetario: '',
@@ -181,12 +236,17 @@ export async function obterPedidosPorSetor(setor: string): Promise<PedidoCompra[
       fonteRecurso: '',
       responsavel: {
         id: '',
-        nome: '',
+        nome: 'Sistema',
         email: '',
         cargo: '',
       },
       anexos: [],
-      workflow: { percentComplete: 0, currentStep: 0, steps: [] }
+      workflow: { 
+        percentComplete: 0, 
+        currentStep: 0, 
+        totalSteps: 5,
+        steps: [] 
+      }
     }));
   } catch (err) {
     console.error('Error in obterPedidosPorSetor:', err);
@@ -209,7 +269,7 @@ export const fundosMonetarios = [
 export async function atualizarStatusPedido(id: string, novoStatus: PedidoStatus): Promise<PedidoCompra | null> {
   try {
     // Convert PedidoStatus to lowercase for database compatibility
-    const statusDB = novoStatus.toLowerCase();
+    const statusDB = mapUiStatusToDbStatus(novoStatus);
     
     const { data, error } = await supabase
       .from('dfds')
@@ -224,12 +284,12 @@ export async function atualizarStatusPedido(id: string, novoStatus: PedidoStatus
     }
     
     // Transform to PedidoCompra format
-    return {
+    const pedido: PedidoCompra = {
       id: data.id,
       descricao: data.descricao,
-      setor: 'Outro' as Setor, // Default value, would need to fetch from secretarias
+      setor: 'Outro', // Default value, would need to fetch from secretarias
       dataCompra: new Date(data.data_pedido),
-      status: data.status as PedidoStatus,
+      status: mapDbStatusToUiStatus(data.status as DbPedidoStatus),
       valorTotal: data.valor_estimado || 0,
       itens: [],
       fundoMonetario: '',
@@ -239,13 +299,20 @@ export async function atualizarStatusPedido(id: string, novoStatus: PedidoStatus
       fonteRecurso: '',
       responsavel: {
         id: '',
-        nome: '',
+        nome: 'Sistema',
         email: '',
         cargo: '',
       },
       anexos: [],
-      workflow: { percentComplete: 0, currentStep: 0, steps: [] }
+      workflow: { 
+        percentComplete: 0, 
+        currentStep: 0, 
+        totalSteps: 5,
+        steps: [] 
+      }
     };
+    
+    return pedido;
   } catch (err) {
     console.error('Error in atualizarStatusPedido:', err);
     return null;
@@ -256,7 +323,7 @@ export async function atualizarStatusPedido(id: string, novoStatus: PedidoStatus
 export async function atualizarEtapaWorkflow(
   pedidoId: string, 
   etapaIndex: number, 
-  status: string,
+  status: WorkflowStepStatus,
   data?: Date,
   responsavel?: string,
   dataConclusao?: Date

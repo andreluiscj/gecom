@@ -4,9 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Item, PedidoCompra, Setor } from '@/types';
-import { adicionarPedido, gerarId } from '@/data/mockData';
+import { Item, PedidoCompra, Setor, PedidoStatus } from '@/types';
+import { adicionarPedido } from '@/data/mockData';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+
+// Helper function to generate ID
+function gerarId(): string {
+  return crypto.randomUUID();
+}
 
 // Schema for form validation
 const pedidoSchema = z.object({
@@ -105,7 +111,7 @@ export const usePedidoForm = () => {
         valorTotal: calcularValorTotal(),
         fundoMonetario: data.fundoMonetario,
         setor: data.setor as Setor,
-        status: 'pendente',
+        status: 'Pendente',
         createdAt: new Date(),
         observacoes: '',
         localEntrega: '',
@@ -117,7 +123,12 @@ export const usePedidoForm = () => {
           cargo: ''
         },
         anexos: [],
-        workflow: null
+        workflow: {
+          currentStep: 1,
+          totalSteps: 5,
+          percentComplete: 0,
+          steps: []
+        }
       };
 
       console.log("Salvando pedido:", novoPedido);
@@ -143,5 +154,6 @@ export const usePedidoForm = () => {
     atualizarItem,
     calcularValorTotal,
     onSubmit,
+    gerarId
   };
 };

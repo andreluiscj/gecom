@@ -4,11 +4,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { obterTodosPedidos } from '@/data/mockData';
+import { obterTodosPedidos, removerPedido } from '@/data/mockData';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { getSetorIcon } from '@/utils/iconHelpers';
 import { Badge } from '@/components/ui/badge';
-import { removerPedido } from '@/data/mockData';
 import { toast } from 'sonner';
 import { PedidoCompra } from '@/types';
 import {
@@ -104,13 +103,6 @@ const VisualizarPedido: React.FC = () => {
   }
   
   const statusColor = {
-    'pendente': 'bg-orange-100 text-orange-800',
-    'em_analise': 'bg-blue-100 text-blue-800',
-    'aprovado': 'bg-green-100 text-green-800',
-    'em_andamento': 'bg-purple-100 text-purple-800',
-    'concluido': 'bg-green-100 text-green-800',
-    'rejeitado': 'bg-red-100 text-red-800',
-    // Add capitalized versions for backward compatibility
     'Pendente': 'bg-orange-100 text-orange-800',
     'Em Análise': 'bg-blue-100 text-blue-800',
     'Aprovado': 'bg-green-100 text-green-800',
