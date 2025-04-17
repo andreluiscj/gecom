@@ -65,10 +65,10 @@ const ListaPedidos: React.FC = () => {
           setPedidos([]);
         } else {
           // Transform the data to match the PedidoCompra type
-          const formattedPedidos = data.map(item => ({
+          const formattedPedidos: PedidoCompra[] = data.map(item => ({
             id: item.id,
             descricao: item.descricao,
-            setor: item.secretarias?.nome || '',
+            setor: item.secretarias?.nome || 'Outro',
             dataCompra: new Date(item.data_pedido),
             status: item.status,
             valorTotal: item.valor_estimado || 0,
@@ -77,6 +77,7 @@ const ListaPedidos: React.FC = () => {
             createdAt: new Date(item.data_pedido),
             observacoes: item.justificativa || '',
             fonteRecurso: '',
+            localEntrega: item.local_entrega || '',
             responsavel: {
               id: '',
               nome: '',

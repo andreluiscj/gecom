@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Trash2 } from 'lucide-react';
@@ -9,6 +10,7 @@ import { getSetorIcon } from '@/utils/iconHelpers';
 import { Badge } from '@/components/ui/badge';
 import { removerPedido } from '@/data/mockData';
 import { toast } from 'sonner';
+import { PedidoCompra } from '@/types';
 import {
   Dialog,
   DialogContent,
@@ -22,16 +24,42 @@ import { gerarPDF } from '@/utils/pdfGenerator';
 const VisualizarPedido: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pedido, setPedido] = useState<PedidoCompra | null>(null);
+  const [loading, setLoading] = useState(true);
   
-  const todosPedidos = obterTodosPedidos();
-  const pedido = useMemo(() => todosPedidos.find(p => p.id === id), [id, todosPedidos]);
+  useEffect(() => {
+    async function fetchPedido() {
+      if (!id) return;
+      setLoading(true);
+      
+      try {
+        const pedidos = await obterTodosPedidos();
+        const foundPedido = pedidos.find(p => p.id === id);
+        
+        if (foundPedido) {
+          setPedido(foundPedido);
+        } else {
+          toast.error('Pedido não encontrado');
+        }
+      } catch (error) {
+        console.error('Error fetching pedido details:', error);
+        toast.error('Erro ao carregar detalhes do pedido');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchPedido();
+  }, [id]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (pedido) {
-      removerPedido(pedido.id, pedido.setor);
-      toast.success('DFD excluída com sucesso!');
-      navigate('/pedidos');
+      const success = await removerPedido(pedido.id, pedido.setor);
+      if (success) {
+        toast.success('DFD excluída com sucesso!');
+        navigate('/pedidos');
+      }
     }
     setConfirmDelete(false);
   };
@@ -42,6 +70,14 @@ const VisualizarPedido: React.FC = () => {
       toast.success('PDF gerado com sucesso!');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-10">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!pedido) {
     return (
@@ -68,6 +104,13 @@ const VisualizarPedido: React.FC = () => {
   }
   
   const statusColor = {
+    'pendente': 'bg-orange-100 text-orange-800',
+    'em_analise': 'bg-blue-100 text-blue-800',
+    'aprovado': 'bg-green-100 text-green-800',
+    'em_andamento': 'bg-purple-100 text-purple-800',
+    'concluido': 'bg-green-100 text-green-800',
+    'rejeitado': 'bg-red-100 text-red-800',
+    // Add capitalized versions for backward compatibility
     'Pendente': 'bg-orange-100 text-orange-800',
     'Em Análise': 'bg-blue-100 text-blue-800',
     'Aprovado': 'bg-green-100 text-green-800',
@@ -106,7 +149,7 @@ const VisualizarPedido: React.FC = () => {
             <span>{pedido.descricao}</span>
           </CardTitle>
           {pedido.status && (
-            <Badge variant="outline" className={statusColor[pedido.status as keyof typeof statusColor]}>
+            <Badge variant="outline" className={statusColor[pedido.status] || 'bg-gray-100 text-gray-800'}>
               {pedido.status}
             </Badge>
           )}
@@ -124,10 +167,10 @@ const VisualizarPedido: React.FC = () => {
                   <span className="text-muted-foreground">Secretaria:</span>
                   <span>{pedido.setor}</span>
                 </p>
-                {pedido.solicitante && (
+                {pedido.responsavel?.nome && (
                   <p className="flex justify-between">
                     <span className="text-muted-foreground">Responsável:</span>
-                    <span>{pedido.solicitante}</span>
+                    <span>{pedido.responsavel.nome}</span>
                   </p>
                 )}
                 {pedido.fundoMonetario && (
@@ -149,10 +192,10 @@ const VisualizarPedido: React.FC = () => {
               </div>
             </div>
             
-            {pedido.justificativa && (
+            {pedido.observacoes && (
               <div>
                 <h3 className="font-semibold mb-2">Justificativa</h3>
-                <p className="text-sm">{pedido.justificativa}</p>
+                <p className="text-sm">{pedido.observacoes}</p>
               </div>
             )}
           </div>
@@ -170,12 +213,12 @@ const VisualizarPedido: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {pedido.itens.map((item) => (
+                  {pedido.itens && pedido.itens.map((item) => (
                     <tr key={item.id}>
                       <td className="px-4 py-3 text-sm">{item.nome}</td>
                       <td className="px-4 py-3 text-sm text-right">{item.quantidade}</td>
                       <td className="px-4 py-3 text-sm text-right">{formatCurrency(item.valorUnitario)}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-right">{formatCurrency(item.valorTotal)}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-right">{formatCurrency(item.valorTotal || (item.quantidade * item.valorUnitario))}</td>
                     </tr>
                   ))}
                 </tbody>

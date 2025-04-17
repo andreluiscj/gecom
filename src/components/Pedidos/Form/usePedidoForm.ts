@@ -86,7 +86,7 @@ export const usePedidoForm = () => {
     return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
   };
 
-  const onSubmit = (data: PedidoFormValues) => {
+  const onSubmit = async (data: PedidoFormValues) => {
     try {
       // Garantir que os itens tenham valores corretos
       const itensCompletos = itens.map((item) => ({
@@ -105,14 +105,30 @@ export const usePedidoForm = () => {
         valorTotal: calcularValorTotal(),
         fundoMonetario: data.fundoMonetario,
         setor: data.setor as Setor,
-        status: 'Pendente',
+        status: 'pendente',
         createdAt: new Date(),
+        observacoes: '',
+        localEntrega: '',
+        fonteRecurso: '',
+        responsavel: {
+          id: '',
+          nome: '',
+          email: '',
+          cargo: ''
+        },
+        anexos: [],
+        workflow: null
       };
 
       console.log("Salvando pedido:", novoPedido);
-      adicionarPedido(novoPedido);
-      toast.success('Pedido de compra cadastrado com sucesso!');
-      navigate('/pedidos');
+      const result = await adicionarPedido(novoPedido);
+      
+      if (result) {
+        toast.success('Pedido de compra cadastrado com sucesso!');
+        navigate('/pedidos');
+      } else {
+        toast.error('Erro ao cadastrar pedido. Verifique os dados e tente novamente.');
+      }
     } catch (error) {
       console.error("Erro ao salvar pedido:", error);
       toast.error('Erro ao cadastrar pedido. Verifique os dados e tente novamente.');

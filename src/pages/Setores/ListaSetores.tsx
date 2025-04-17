@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { 
@@ -10,11 +10,31 @@ import {
 import { obterDadosDashboard } from '@/data/extended-mockData';
 import { formatCurrency, calcularPorcentagem } from '@/utils/formatters';
 import { Link } from 'react-router-dom';
-import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
+import { obterPedidos } from '@/data/mockData';
 
 const ListaSetores: React.FC = () => {
-  const dadosDashboard = obterDadosDashboard();
-  const todosPedidos = obterPedidosFicticios();
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [pedidos, setPedidos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const data = await obterDadosDashboard();
+        setDashboardData(data);
+        
+        const allPedidos = await obterPedidos();
+        setPedidos(allPedidos);
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchData();
+  }, []);
 
   const secretarias = [
     {
@@ -125,8 +145,16 @@ const ListaSetores: React.FC = () => {
   ];
 
   const getPedidosForSetor = (titulo: string) => {
-    return todosPedidos.filter(pedido => pedido.setor === titulo).length;
+    return pedidos.filter((pedido: any) => pedido.setor === titulo).length;
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-10">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -140,10 +168,10 @@ const ListaSetores: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {secretarias.map((secretaria) => {
           const totalDFDs = getPedidosForSetor(secretaria.titulo);
-          const gastosRealizados = dadosDashboard.gastosPorSetor[secretaria.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 0;
+          const gastosRealizados = dashboardData?.gastosPorSetor?.[secretaria.titulo] || 0;
           const hasPedidos = totalDFDs > 0 && gastosRealizados > 0;
           
-          const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[secretaria.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 0;
+          const orcamentoPrevisto = dashboardData?.orcamentoPrevisto?.[secretaria.titulo] || 0;
           const percentualGasto = calcularPorcentagem(gastosRealizados, orcamentoPrevisto);
           
           return (
