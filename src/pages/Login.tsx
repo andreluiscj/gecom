@@ -6,89 +6,77 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import GecomLogo from "@/assets/GecomLogo";
-import { toast } from "sonner";
+import { signIn } from "@/services/authService";
+import { ForgotPasswordDialog } from "@/components/Auth/ForgotPasswordDialog";
+import { PasswordChangeDialog } from "@/components/Auth/PasswordChangeDialog";
+import { GDPRConsentDialog } from "@/components/Auth/GDPRConsentDialog";
 import { supabase } from "@/integrations/supabase/client";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showPasswordChangeDialog, setShowPasswordChangeDialog] = useState(false);
+  const [showGDPRDialog, setShowGDPRDialog] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
   const navigate = useNavigate();
 
+  // Check if user is already logged in
   useEffect(() => {
-    // Check if user is already logged in
     const checkAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          redirectBasedOnRole(data.session.user?.user_metadata?.role || 'servidor');
-        }
-      } catch (error) {
-        console.error("Error checking auth:", error);
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate("/dashboard");
       }
     };
     
     checkAuth();
   }, [navigate]);
 
-  const redirectBasedOnRole = (role: string) => {
-    // Redirect based on role
-    console.log("Redirecting based on role:", role);
-    
-    if (role === 'admin') {
-      navigate('/admin');
-    } else if (role === 'prefeito') {
-      navigate('/dashboard');
-    } else if (role === 'gestor') {
-      navigate('/dashboard');
-    } else {
-      navigate('/pedidos');
-    }
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error("Por favor, preencha todos os campos");
-      return;
-    }
-    
     setIsSubmitting(true);
 
     try {
-      console.log("Iniciando login com:", { email });
-      console.log("Tentando login com:", email);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const { success, data, error } = await signIn({ email: username, password });
 
-      if (error) {
-        console.error("Login error:", error);
-        toast.error(error.message || "Erro ao fazer login");
-        setIsSubmitting(false);
-        return;
-      }
+      if (success && data.session) {
+        // Check if it's first login
+        if (data.user?.user_metadata?.primeiroAcesso) {
+          setCurrentUserId(data.user.id);
+          setShowPasswordChangeDialog(true);
+          setIsSubmitting(false);
+          return;
+        }
 
-      if (data?.session) {
-        console.log("Login successful:", data.session);
-        toast.success("Login realizado com sucesso");
-        
-        // Get user profile and additional data if needed
+        // Check if GDPR consent is needed
+        const gdprAccepted = localStorage.getItem(`gdpr-accepted-${data.user.id}`);
+        if (!gdprAccepted) {
+          setCurrentUserId(data.user.id);
+          setShowGDPRDialog(true);
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Regular login
         const userProfile = data.user?.user_metadata;
         const role = userProfile?.role || 'servidor';
-        
-        redirectBasedOnRole(role);
-      } else {
-        console.error("No session data returned");
-        toast.error("Erro ao fazer login: sessão não iniciada");
-        setIsSubmitting(false);
+
+        // Redirect based on role
+        if (role === 'admin') {
+          navigate('/admin');
+        } else if (role === 'prefeito') {
+          navigate('/dashboard');
+        } else if (role === 'gestor') {
+          navigate('/dashboard');
+        } else {
+          navigate('/pedidos');
+        }
       }
     } catch (error: any) {
-      console.error("Login exception:", error);
-      toast.error(error.message || "Erro inesperado ao fazer login");
+      console.error("Login error:", error);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -100,26 +88,37 @@ const Login: React.FC = () => {
           <div className="flex justify-center mb-4">
             <GecomLogo className="w-64 h-auto" />
           </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Bem-vindo ao GECOM</h1>
+          <p className="text-gray-600">Sistema de Gestão de Compras Municipal</p>
         </div>
 
         <Card className="shadow-lg border-0">
           <CardContent className="pt-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Email</Label>
                 <Input
-                  id="email"
+                  id="username"
                   type="email"
                   placeholder="Seu email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   disabled={isSubmitting}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="password">Senha</Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    Esqueceu sua senha?
+                  </button>
+                </div>
                 <Input
                   id="password"
                   type="password"
@@ -141,6 +140,31 @@ const Login: React.FC = () => {
             </form>
           </CardContent>
         </Card>
+
+        <ForgotPasswordDialog
+          open={showForgotPassword}
+          onOpenChange={setShowForgotPassword}
+        />
+        
+        <PasswordChangeDialog
+          open={showPasswordChangeDialog}
+          onOpenChange={setShowPasswordChangeDialog}
+          newPassword=""
+          confirmPassword=""
+          setNewPassword={() => {}}
+          setConfirmPassword={() => {}}
+          onSubmit={() => {}}
+          isSubmitting={false}
+        />
+        
+        <GDPRConsentDialog
+          open={showGDPRDialog}
+          onOpenChange={setShowGDPRDialog}
+          onAccept={() => {
+            localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
+            navigate('/dashboard');
+          }}
+        />
       </div>
     </div>
   );

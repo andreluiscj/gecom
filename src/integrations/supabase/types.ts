@@ -191,7 +191,6 @@ export type Database = {
           active: boolean | null
           address: string
           birthdate: string
-          city: string | null
           complement: string | null
           cpf: string
           created_at: string | null
@@ -199,9 +198,7 @@ export type Database = {
           email: string | null
           id: string
           name: string
-          position_title: string | null
           role: string
-          street_number: string | null
           updated_at: string | null
           zip_code: string
         }
@@ -209,7 +206,6 @@ export type Database = {
           active?: boolean | null
           address: string
           birthdate: string
-          city?: string | null
           complement?: string | null
           cpf: string
           created_at?: string | null
@@ -217,9 +213,7 @@ export type Database = {
           email?: string | null
           id: string
           name: string
-          position_title?: string | null
           role: string
-          street_number?: string | null
           updated_at?: string | null
           zip_code: string
         }
@@ -227,7 +221,6 @@ export type Database = {
           active?: boolean | null
           address?: string
           birthdate?: string
-          city?: string | null
           complement?: string | null
           cpf?: string
           created_at?: string | null
@@ -235,9 +228,7 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string
-          position_title?: string | null
           role?: string
-          street_number?: string | null
           updated_at?: string | null
           zip_code?: string
         }
