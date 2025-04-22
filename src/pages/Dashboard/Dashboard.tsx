@@ -4,14 +4,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { User, Building2, Activity, BarChart3, FileText, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { getMunicipalities } from "@/services/municipalityService";
+import { getMunicipalityById } from "@/services/municipalityService";
 import { Municipality } from "@/types";
 import { toast } from "sonner";
 
+type UserStats = {
+  total: number;
+  active: number;
+};
+
+type DfdStats = {
+  total: number;
+  inProgress: number;
+  completed: number;
+};
+
 const Dashboard: React.FC = () => {
   const { user, userMunicipality } = useAuth();
-  const [userStats, setUserStats] = useState({ total: 0, active: 0 });
-  const [dfdsStats, setDfdsStats] = useState({ total: 0, inProgress: 0, completed: 0 });
+  const [userStats, setUserStats] = useState<UserStats>({ total: 0, active: 0 });
+  const [dfdsStats, setDfdsStats] = useState<DfdStats>({ total: 0, inProgress: 0, completed: 0 });
   const [municipality, setMunicipality] = useState<Municipality | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,16 +30,15 @@ const Dashboard: React.FC = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        // Carregar dados do município
+        // Load municipality data
         if (userMunicipality?.id) {
-          const municipalities = await getMunicipalities();
-          const currentMunicipality = municipalities.find(m => m.id === userMunicipality.id);
-          if (currentMunicipality) {
-            setMunicipality(currentMunicipality);
+          const municipalityData = await getMunicipalityById(userMunicipality.id);
+          if (municipalityData) {
+            setMunicipality(municipalityData);
           }
         }
 
-        // Carregar estatísticas de usuários
+        // Load user statistics
         if (userMunicipality?.id) {
           const { count: totalUsers } = await supabase
             .from("profiles")
@@ -47,7 +57,7 @@ const Dashboard: React.FC = () => {
           });
         }
 
-        // Carregar estatísticas de DFDs
+        // Load DFD statistics
         if (userMunicipality?.id) {
           const { count: totalDfds } = await supabase
             .from("dfds")
