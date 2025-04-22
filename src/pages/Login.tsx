@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -7,19 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import GecomLogo from "@/assets/GecomLogo";
 import { signIn } from "@/services/authService";
-import { ForgotPasswordDialog } from "@/components/Auth/ForgotPasswordDialog";
-import { PasswordChangeDialog } from "@/components/Auth/PasswordChangeDialog";
-import { GDPRConsentDialog } from "@/components/Auth/GDPRConsentDialog";
 import { supabase } from "@/integrations/supabase/client";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showPasswordChangeDialog, setShowPasswordChangeDialog] = useState(false);
-  const [showGDPRDialog, setShowGDPRDialog] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string>("");
   const navigate = useNavigate();
 
   // Check if user is already logged in
@@ -88,8 +80,6 @@ const Login: React.FC = () => {
           <div className="flex justify-center mb-4">
             <GecomLogo className="w-64 h-auto" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Bem-vindo ao GECOM</h1>
-          <p className="text-gray-600">Sistema de Gestão de Compras Municipal</p>
         </div>
 
         <Card className="shadow-lg border-0">
@@ -109,16 +99,7 @@ const Login: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="password">Senha</Label>
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPassword(true)}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Esqueceu sua senha?
-                  </button>
-                </div>
+                <Label htmlFor="password">Senha</Label>
                 <Input
                   id="password"
                   type="password"
@@ -140,31 +121,6 @@ const Login: React.FC = () => {
             </form>
           </CardContent>
         </Card>
-
-        <ForgotPasswordDialog
-          open={showForgotPassword}
-          onOpenChange={setShowForgotPassword}
-        />
-        
-        <PasswordChangeDialog
-          open={showPasswordChangeDialog}
-          onOpenChange={setShowPasswordChangeDialog}
-          newPassword=""
-          confirmPassword=""
-          setNewPassword={() => {}}
-          setConfirmPassword={() => {}}
-          onSubmit={() => {}}
-          isSubmitting={false}
-        />
-        
-        <GDPRConsentDialog
-          open={showGDPRDialog}
-          onOpenChange={setShowGDPRDialog}
-          onAccept={() => {
-            localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
-            navigate('/dashboard');
-          }}
-        />
       </div>
     </div>
   );
