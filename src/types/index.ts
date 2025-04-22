@@ -1,4 +1,3 @@
-
 export type Role = "admin" | "editor" | null;
 
 export type Tarefa = {
@@ -143,7 +142,7 @@ export interface LoginLog {
 
 export interface UsuarioLogin {
   id: string;
-  username: string;
+  email: string;
   senha: string;
   funcionarioId: string;
   role: UserRole;

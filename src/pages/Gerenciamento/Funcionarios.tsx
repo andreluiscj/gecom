@@ -109,14 +109,11 @@ const Funcionarios: React.FC = () => {
   }, [navigate]);
 
   const loadFuncionarios = () => {
-    // Get all funcionarios and filter out admins and managers
     const allFuncionarios = getFuncionarios();
     const usuariosLogin = getUsuariosLogin();
     
-    // Filter out admins and managers - only keep regular employees
     const onlyEmployees = allFuncionarios.filter(funcionario => {
       const userLogin = usuariosLogin.find(u => u.funcionarioId === funcionario.id);
-      // Keep only if user is not admin and not manager (role is 'user')
       return userLogin && userLogin.role === 'user';
     });
     
@@ -228,7 +225,7 @@ const Funcionarios: React.FC = () => {
         toast.success(
           <div className="flex flex-col gap-1">
             <div>Funcionário {formData.nome} adicionado com sucesso</div>
-            <div className="text-sm">Login criado: {result.login.username} | Senha: 123</div>
+            <div className="text-sm">Login criado: {result.login.email} | Senha: 123</div>
           </div>
         );
       }

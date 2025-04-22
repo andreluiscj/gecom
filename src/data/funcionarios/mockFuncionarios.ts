@@ -181,10 +181,13 @@ export function addFuncionario(funcionarioData: any) {
   funcionarios.push(newFuncionario);
   localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
   
+  // Generate email from name if not provided
+  const emailPrefix = generateUsername(funcionarioData.nome);
+  const email = funcionarioData.email || `${emailPrefix}@gecom.com`;
+  
   // Create user login for new funcionario
-  const username = generateUsername(funcionarioData.nome);
   const login = adicionarUsuarioLogin(
-    funcionarioData.email || `${username}@gecom.com`,
+    email,
     '123', // Default password
     funcionarioData.cargo?.toLowerCase().includes('prefeito') ? 'prefeito' : 
       funcionarioData.cargo?.toLowerCase().includes('gerente') ? 'gestor' : 'user',
