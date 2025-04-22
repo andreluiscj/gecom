@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { getFuncionarios, getUsuariosLogin } from "./data/funcionarios/mockFuncionarios";

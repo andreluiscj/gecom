@@ -6,79 +6,47 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import GecomLogo from "@/assets/GecomLogo";
-import { signIn } from "@/services/authService";
-import { ForgotPasswordDialog } from "@/components/Auth/ForgotPasswordDialog";
-import { PasswordChangeDialog } from "@/components/Auth/PasswordChangeDialog";
-import { GDPRConsentDialog } from "@/components/Auth/GDPRConsentDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showPasswordChangeDialog, setShowPasswordChangeDialog] = useState(false);
-  const [showGDPRDialog, setShowGDPRDialog] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string>("");
   const navigate = useNavigate();
+  
+  // Use the custom hook for authentication
+  const { 
+    isSubmitting, 
+    handleLogin, 
+    showChangePasswordDialog, 
+    setShowChangePasswordDialog,
+    showGDPRDialog,
+    setShowGDPRDialog,
+    handlePasswordChange,
+    handleGDPRConsent
+  } = useAuth();
 
   // Check if user is already logged in
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate("/dashboard");
+    const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
+    if (isAuthenticated) {
+      // Get role and redirect accordingly
+      const role = localStorage.getItem('user-role');
+      if (role === 'admin') {
+        navigate('/admin');
+      } else if (role === 'prefeito') {
+        navigate('/dashboard');
+      } else if (role === 'manager') {
+        navigate('/dashboard');
+      } else {
+        navigate('/pedidos');
       }
-    };
-    
-    checkAuth();
+    }
   }, [navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const { success, data, error } = await signIn({ email: username, password });
-
-      if (success && data.session) {
-        // Check if it's first login
-        if (data.user?.user_metadata?.primeiroAcesso) {
-          setCurrentUserId(data.user.id);
-          setShowPasswordChangeDialog(true);
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Check if GDPR consent is needed
-        const gdprAccepted = localStorage.getItem(`gdpr-accepted-${data.user.id}`);
-        if (!gdprAccepted) {
-          setCurrentUserId(data.user.id);
-          setShowGDPRDialog(true);
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Regular login
-        const userProfile = data.user?.user_metadata;
-        const role = userProfile?.role || 'servidor';
-
-        // Redirect based on role
-        if (role === 'admin') {
-          navigate('/admin');
-        } else if (role === 'prefeito') {
-          navigate('/dashboard');
-        } else if (role === 'gestor') {
-          navigate('/dashboard');
-        } else {
-          navigate('/pedidos');
-        }
-      }
-    } catch (error: any) {
-      console.error("Login error:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    handleLogin(username, password);
   };
 
   return (
@@ -94,7 +62,7 @@ const Login: React.FC = () => {
 
         <Card className="shadow-lg border-0">
           <CardContent className="pt-6">
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username">Email</Label>
                 <Input
@@ -109,16 +77,7 @@ const Login: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="password">Senha</Label>
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPassword(true)}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Esqueceu sua senha?
-                  </button>
-                </div>
+                <Label htmlFor="password">Senha</Label>
                 <Input
                   id="password"
                   type="password"
@@ -140,31 +99,6 @@ const Login: React.FC = () => {
             </form>
           </CardContent>
         </Card>
-
-        <ForgotPasswordDialog
-          open={showForgotPassword}
-          onOpenChange={setShowForgotPassword}
-        />
-        
-        <PasswordChangeDialog
-          open={showPasswordChangeDialog}
-          onOpenChange={setShowPasswordChangeDialog}
-          newPassword=""
-          confirmPassword=""
-          setNewPassword={() => {}}
-          setConfirmPassword={() => {}}
-          onSubmit={() => {}}
-          isSubmitting={false}
-        />
-        
-        <GDPRConsentDialog
-          open={showGDPRDialog}
-          onOpenChange={setShowGDPRDialog}
-          onAccept={() => {
-            localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
-            navigate('/dashboard');
-          }}
-        />
       </div>
     </div>
   );
