@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   AreaChart, Area, BarChart, Bar, LineChart, Line, 
@@ -429,7 +430,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                       fill="#8884d8"
                       dataKey="valor"
                       nameKey="name"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(2)}%`}
                     >
                       {departmentData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -514,7 +515,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                         </div>
                       </div>
                       <div className="sm:col-span-2 text-right">
-                        <Badge>{dept.percent}%</Badge>
+                        <Badge>{dept.percent.toFixed(2)}%</Badge>
                       </div>
                     </div>
                   ))}

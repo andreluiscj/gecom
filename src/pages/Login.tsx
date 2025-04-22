@@ -46,11 +46,11 @@ const Login: React.FC = () => {
   };
 
   const onSubmitPasswordChange = () => {
-    handlePasswordChange(newPassword, confirmPassword);
+    handlePasswordChange(newPassword);
   };
 
   const onGDPRConsent = () => {
-    handleGDPRConsent(username, password);
+    handleGDPRConsent();
   };
 
   return (
@@ -71,10 +71,10 @@ const Login: React.FC = () => {
               <div className="relative">
                 <Input
                   id="username"
-                  placeholder="Nome de usuário"
+                  placeholder="E-mail"
                   type="text"
                   autoCapitalize="none"
-                  autoComplete="username"
+                  autoComplete="email"
                   autoCorrect="off"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
