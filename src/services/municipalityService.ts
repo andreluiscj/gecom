@@ -35,7 +35,14 @@ export async function getMunicipalityById(id: number) {
   }
 }
 
-export async function createMunicipality(municipalityData: Partial<Municipality>) {
+export async function createMunicipality(municipalityData: {
+  name: string;
+  state: string;
+  population?: number | null;
+  budget?: number | null;
+  mayor?: string | null;
+  logo?: string | null;
+}) {
   try {
     // Create the municipality first
     const { data, error } = await supabase
