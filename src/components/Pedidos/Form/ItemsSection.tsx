@@ -7,9 +7,9 @@ import ItemForm from './ItemForm';
 
 interface ItemsSectionProps {
   items: Item[];
-  onAddItem: () => void;
+  onAddItem: (item?: Item) => void;
   onRemoveItem: (index: number) => void;
-  onUpdateItem: (index: number, field: keyof Item, value: string | number) => void;
+  onUpdateItem?: (index: number, field: keyof Item, value: string | number) => void;
 }
 
 const ItemsSection: React.FC<ItemsSectionProps> = ({
@@ -26,7 +26,7 @@ const ItemsSection: React.FC<ItemsSectionProps> = ({
           type="button"
           variant="outline"
           size="sm"
-          onClick={onAddItem}
+          onClick={() => onAddItem()}
         >
           <Plus className="h-4 w-4 mr-1" /> Adicionar Item
         </Button>

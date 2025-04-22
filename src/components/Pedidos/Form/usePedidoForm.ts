@@ -20,7 +20,7 @@ const pedidoSchema = z.object({
   descricao: z.string().min(5, 'Descrição deve ter pelo menos 5 caracteres'),
   fundoMonetario: z.string().nonempty('Fundo monetário é obrigatório'),
   setor: z.string().nonempty('Setor é obrigatório'),
-  itens: z.array(
+  items: z.array(
     z.object({
       nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
       quantidade: z.number().min(1, 'Quantidade deve ser pelo menos 1'),
@@ -33,7 +33,7 @@ export type PedidoFormValues = z.infer<typeof pedidoSchema>;
 
 export const usePedidoForm = () => {
   const navigate = useNavigate();
-  const [itens, setItens] = useState<Item[]>([
+  const [items, setItems] = useState<Item[]>([
     { id: gerarId(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
   ]);
 
@@ -44,58 +44,58 @@ export const usePedidoForm = () => {
       descricao: '',
       fundoMonetario: '',
       setor: '',
-      itens: [{ nome: '', quantidade: 1, valorUnitario: 0 }],
+      items: [{ nome: '', quantidade: 1, valorUnitario: 0 }],
     },
   });
 
   const adicionarItem = () => {
-    setItens([
-      ...itens,
+    setItems([
+      ...items,
       { id: gerarId(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
     ]);
   };
 
   const removerItem = (index: number) => {
-    if (itens.length > 1) {
-      const novosItens = [...itens];
-      novosItens.splice(index, 1);
-      setItens(novosItens);
+    if (items.length > 1) {
+      const novosItems = [...items];
+      novosItems.splice(index, 1);
+      setItems(novosItems);
     }
   };
 
   const atualizarItem = (index: number, campo: keyof Item, valor: string | number) => {
-    const novosItens = [...itens];
-    novosItens[index] = {
-      ...novosItens[index],
+    const novosItems = [...items];
+    novosItems[index] = {
+      ...novosItems[index],
       [campo]: valor,
     };
 
     // Recalcular valor total
     if (campo === 'quantidade' || campo === 'valorUnitario') {
-      novosItens[index].valorTotal =
-        Number(novosItens[index].quantidade) * Number(novosItens[index].valorUnitario);
+      novosItems[index].valorTotal =
+        Number(novosItems[index].quantidade) * Number(novosItems[index].valorUnitario);
     }
 
-    setItens(novosItens);
+    setItems(novosItems);
     
     // Atualiza os valores no formulário também
-    const formItens = form.getValues().itens || [];
-    formItens[index] = {
-      nome: novosItens[index].nome,
-      quantidade: Number(novosItens[index].quantidade),
-      valorUnitario: Number(novosItens[index].valorUnitario),
+    const formItems = form.getValues().items || [];
+    formItems[index] = {
+      nome: novosItems[index].nome,
+      quantidade: Number(novosItems[index].quantidade),
+      valorUnitario: Number(novosItems[index].valorUnitario),
     };
-    form.setValue('itens', formItens);
+    form.setValue('items', formItems);
   };
 
   const calcularValorTotal = () => {
-    return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
+    return items.reduce((total, item) => total + (item.valorTotal || 0), 0);
   };
 
   const onSubmit = async (data: PedidoFormValues) => {
     try {
-      // Garantir que os itens tenham valores corretos
-      const itensCompletos = itens.map((item) => ({
+      // Garantir que os items tenham valores corretos
+      const itemsCompletos = items.map((item) => ({
         id: item.id,
         nome: item.nome,
         quantidade: Number(item.quantidade),
@@ -107,24 +107,19 @@ export const usePedidoForm = () => {
         id: gerarId(),
         dataCompra: new Date(data.dataCompra),
         descricao: data.descricao,
-        itens: itensCompletos,
+        items: itemsCompletos,
         valorTotal: calcularValorTotal(),
         fundoMonetario: data.fundoMonetario,
         setor: data.setor,
         status: 'Pendente' as PedidoStatus,
-        createdAt: new Date(),
-        observacoes: '',
+        solicitante: '',
         localEntrega: '',
-        fonteRecurso: '',
-        responsavel: {
-          id: '',
-          nome: '',
-          email: '',
-          cargo: ''
-        },
-        anexos: [],
-        workflow: initializeWorkflow()
+        justificativa: '',
       };
+
+      if (initializeWorkflow) {
+        novoPedido.workflow = initializeWorkflow();
+      }
 
       console.log("Salvando pedido:", novoPedido);
       
@@ -144,7 +139,7 @@ export const usePedidoForm = () => {
 
   return {
     form,
-    itens,
+    items,
     adicionarItem,
     removerItem,
     atualizarItem,

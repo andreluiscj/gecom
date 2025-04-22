@@ -1,9 +1,22 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PedidoForm from '@/components/Pedidos/PedidoForm';
-import { Card } from '@/components/ui/card';
+import { PedidoCompra } from '@/types';
+import { toast } from 'sonner';
 
 const NovoPedido: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = (pedido: PedidoCompra) => {
+    toast.success('Pedido criado com sucesso!');
+    navigate('/pedidos');
+  };
+
+  const handleCancel = () => {
+    navigate('/pedidos');
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -14,7 +27,7 @@ const NovoPedido: React.FC = () => {
         </p>
       </div>
 
-      <PedidoForm />
+      <PedidoForm onSubmit={handleSubmit} onCancel={handleCancel} />
     </div>
   );
 };

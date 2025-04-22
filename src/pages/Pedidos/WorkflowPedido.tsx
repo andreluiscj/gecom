@@ -233,6 +233,14 @@ const WorkflowPedido: React.FC = () => {
     );
   }
 
+  // Ensure workflow exists on pedido to avoid null errors
+  const workflow = pedido.workflow || { 
+    percentComplete: 0, 
+    currentStep: 0, 
+    totalSteps: 0, 
+    steps: [] 
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center gap-2 mb-4">
@@ -265,22 +273,22 @@ const WorkflowPedido: React.FC = () => {
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">
-                Progresso do Processo: {pedido.workflow?.percentComplete || 0}%
+                Progresso do Processo: {workflow.percentComplete || 0}%
               </span>
               <span className="text-xs text-muted-foreground">
-                {pedido.workflow?.currentStep || 0} de {pedido.workflow?.totalSteps || 8} etapas
+                {workflow.currentStep || 0} de {workflow.totalSteps || 8} etapas
               </span>
             </div>
             <Progress 
-              value={pedido.workflow?.percentComplete || 0} 
+              value={workflow.percentComplete || 0} 
               className="h-2" 
             />
           </div>
           
           <div className="space-y-6 mt-8">
-            {pedido && pedido.workflow?.steps.map((step, index) => {
+            {workflow && workflow.steps.map((step, index) => {
               // Verificando se a etapa pode ser editada com base na função canEditStep
-              const isEditable = pedido.workflow ? canEditStep(pedido.workflow, index) : false;
+              const isEditable = canEditStep(workflow, index);
               // Verificando se o usuário tem permissão para editar esta etapa específica
               const hasPermission = canEditWorkflowStepSync(step.title);
               
@@ -338,7 +346,7 @@ const WorkflowPedido: React.FC = () => {
                       {/* Replace dropdown with approval button for the first step, keep dropdown for others */}
                       {step.title === 'Aprovação da DFD' ? (
                         <div>
-                          {userRole === 'admin' || userRole === 'manager' ? (
+                          {userRole === 'admin' || userRole === 'gestor' ? (
                             <Button 
                               variant="default" 
                               className="bg-blue-600 hover:bg-blue-700"

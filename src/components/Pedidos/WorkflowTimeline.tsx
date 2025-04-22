@@ -2,23 +2,28 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Workflow, WorkflowStep } from '@/types';
+import { WorkflowStep } from '@/types';
 import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { canEditStep } from '@/utils/workflowHelpers';
 
 interface WorkflowTimelineProps {
-  workflow: Workflow;
+  workflowSteps: WorkflowStep[];
+  workflow?: { steps: WorkflowStep[] };
   onAdvanceStep?: (stepIndex: number) => void;
   onCompleteStep?: (stepIndex: number) => void;
 }
 
 const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
+  workflowSteps,
   workflow,
   onAdvanceStep,
   onCompleteStep
 }) => {
+  // Use workflowSteps if provided, otherwise use workflow.steps if available
+  const steps = workflowSteps || (workflow?.steps || []);
+  
   const getStepIcon = (step: WorkflowStep) => {
     switch (step.status) {
       case 'Concluído':
@@ -45,10 +50,10 @@ const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
 
   return (
     <div className="space-y-6">
-      {workflow && workflow.steps && workflow.steps.map((step, index) => (
+      {steps && steps.length > 0 ? steps.map((step, index) => (
         <div key={step.id} className="relative">
           {/* Timeline connector */}
-          {index < workflow.steps.length - 1 && (
+          {index < steps.length - 1 && (
             <div 
               className={`absolute left-5 top-12 w-0.5 h-16 ${
                 step.status === 'Concluído' ? 'bg-green-500' : 'bg-gray-300'
@@ -79,10 +84,10 @@ const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
                   <h4 className="font-medium">{step.title}</h4>
                   <p className="text-sm text-muted-foreground mt-1">
                     {step.date && (
-                      <>Iniciado em {format(step.date, "dd 'de' MMMM", { locale: ptBR })}</>
+                      <>Iniciado em {format(new Date(step.date), "dd 'de' MMMM", { locale: ptBR })}</>
                     )}
                     {step.dataConclusao && (
-                      <> • Concluído em {format(step.dataConclusao, "dd 'de' MMMM", { locale: ptBR })}</>
+                      <> • Concluído em {format(new Date(step.dataConclusao), "dd 'de' MMMM", { locale: ptBR })}</>
                     )}
                     {step.responsavel && (
                       <> • Responsável: {step.responsavel}</>
@@ -95,7 +100,7 @@ const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
                     {step.status}
                   </Badge>
                   
-                  {canEditStep(workflow, index) && onAdvanceStep && step.status === 'Pendente' && (
+                  {workflow && canEditStep(workflow, index) && onAdvanceStep && step.status === 'Pendente' && (
                     <Button 
                       size="sm" 
                       variant="outline"
@@ -105,7 +110,7 @@ const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
                     </Button>
                   )}
                   
-                  {canEditStep(workflow, index) && onCompleteStep && step.status === 'Em Andamento' && (
+                  {workflow && canEditStep(workflow, index) && onCompleteStep && step.status === 'Em Andamento' && (
                     <Button 
                       size="sm" 
                       variant="default"
@@ -125,9 +130,7 @@ const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({
             </div>
           </div>
         </div>
-      ))}
-      
-      {(!workflow || !workflow.steps || workflow.steps.length === 0) && (
+      )) : (
         <div className="text-center p-6 border rounded-lg">
           <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto mb-2" />
           <h4 className="font-medium">Nenhuma etapa definida</h4>

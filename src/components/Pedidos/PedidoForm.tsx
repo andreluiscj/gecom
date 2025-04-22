@@ -13,21 +13,28 @@ import ActionButtons from './Form/ActionButtons';
 import { PedidoCompra, Item } from '@/types';
 import { adicionarPedido } from '@/services/dfdService';
 import { getUserNameSync, getUserRoleSync } from '@/utils/authHelpers';
-import { UserRole } from '@/types/supabase';
+import { UserRole } from '@/types';
 
-interface PedidoFormProps {
+export interface PedidoFormProps {
   initialData?: PedidoCompra | null;
   isEditing?: boolean;
   onCancel: () => void;
   onSubmit: (pedido: PedidoCompra) => void;
 }
 
-const PedidoForm: React.FC<PedidoFormProps> = ({ initialData, isEditing = false, onCancel, onSubmit }) => {
+const PedidoForm: React.FC<PedidoFormProps> = ({ 
+  initialData, 
+  isEditing = false, 
+  onCancel = () => window.history.back(),
+  onSubmit = () => {},
+}) => {
   const [descricao, setDescricao] = useState(initialData?.descricao || '');
   const [justificativa, setJustificativa] = useState(initialData?.justificativa || '');
   const [setor, setSetor] = useState(initialData?.setor || '');
   const [localEntrega, setLocalEntrega] = useState(initialData?.localEntrega || '');
-  const [items, setItems] = useState<Item[]>(initialData?.items || []);
+  const [items, setItems] = useState<Item[]>(initialData?.items || [
+    { id: crypto.randomUUID(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 }
+  ]);
   const [total, setTotal] = useState(initialData?.valorTotal || 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -40,13 +47,36 @@ const PedidoForm: React.FC<PedidoFormProps> = ({ initialData, isEditing = false,
     setTotal(newTotal);
   }, [items]);
 
-  const handleAddItem = (item: Item) => {
-    setItems([...items, item]);
+  const handleAddItem = () => {
+    setItems([...items, { 
+      id: crypto.randomUUID(), 
+      nome: '', 
+      quantidade: 1, 
+      valorUnitario: 0,
+      valorTotal: 0
+    }]);
   };
 
   const handleRemoveItem = (index: number) => {
     const newItems = [...items];
     newItems.splice(index, 1);
+    setItems(newItems);
+  };
+
+  const handleUpdateItem = (index: number, field: keyof Item, value: string | number) => {
+    const newItems = [...items];
+    newItems[index] = {
+      ...newItems[index],
+      [field]: value,
+    };
+
+    // Recalculate the total value
+    if (field === 'quantidade' || field === 'valorUnitario') {
+      const quantidade = field === 'quantidade' ? Number(value) : Number(newItems[index].quantidade);
+      const valorUnitario = field === 'valorUnitario' ? Number(value) : Number(newItems[index].valorUnitario);
+      newItems[index].valorTotal = quantidade * valorUnitario;
+    }
+
     setItems(newItems);
   };
 
@@ -170,7 +200,8 @@ const PedidoForm: React.FC<PedidoFormProps> = ({ initialData, isEditing = false,
       <ItemsSection 
         items={items} 
         onAddItem={handleAddItem} 
-        onRemoveItem={handleRemoveItem} 
+        onRemoveItem={handleRemoveItem}
+        onUpdateItem={handleUpdateItem}
       />
       
       <TotalSection total={total} />
