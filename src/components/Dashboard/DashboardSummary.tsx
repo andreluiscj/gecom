@@ -3,21 +3,58 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DadosDashboard, Municipio } from '@/types';
 import { formatCurrency } from '@/utils/formatters';
-import { Building, Users, Crown, DollarSign } from 'lucide-react';
+import { Building, Users, Crown, DollarSign, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface DashboardSummaryProps {
-  dadosDashboard: DadosDashboard;
-  municipio: Municipio;
-  language: string;
+  dadosDashboard?: DadosDashboard | null;
+  municipio?: Municipio | null;
+  language?: string;
+  loading?: boolean;
+  error?: string | null;
 }
 
 const DashboardSummary: React.FC<DashboardSummaryProps> = ({
   dadosDashboard,
   municipio,
-  language
+  language = 'pt',
+  loading = false,
+  error = null
 }) => {
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-32 bg-muted animate-pulse rounded-md"></div>
+        <div className="h-32 bg-muted animate-pulse rounded-md"></div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+  
+  // Check if we have valid data
+  if (!dadosDashboard || !municipio) {
+    return (
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          {language === 'pt' ? 'Dados não disponíveis' : 'Data not available'}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
   // Calculate the percentage of homologated expenses against estimated budget
-  const percentualOrcamento = ((dadosDashboard.valorContratadoTotal / municipio.orcamentoAnual) * 100).toFixed(2);
+  const percentualOrcamento = municipio.orcamentoAnual ? 
+    ((dadosDashboard.valorContratadoTotal / municipio.orcamentoAnual) * 100).toFixed(2) : 
+    "0.00";
   
   return (
     <>
@@ -46,7 +83,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
                       Estimativa de Despesa
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      {formatCurrency(municipio.orcamentoAnual)}
+                      {formatCurrency(municipio.orcamentoAnual || 0)}
                     </td>
                   </tr>
                   <tr>
@@ -55,7 +92,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
                       Valor Contratado
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      {formatCurrency(dadosDashboard.valorContratadoTotal)}
+                      {formatCurrency(dadosDashboard.valorContratadoTotal || 0)}
                     </td>
                   </tr>
                   <tr>
@@ -64,7 +101,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
                       Diferença
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      {formatCurrency(municipio.orcamentoAnual - dadosDashboard.valorContratadoTotal)}
+                      {formatCurrency((municipio.orcamentoAnual || 0) - (dadosDashboard.valorContratadoTotal || 0))}
                     </td>
                   </tr>
                 </tbody>
@@ -86,7 +123,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{language === 'pt' ? 'Nome' : 'Name'}</p>
-                <p className="font-medium">{municipio.nome}</p>
+                <p className="font-medium">{municipio.nome || 'N/A'}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -95,7 +132,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{language === 'pt' ? 'Estado' : 'State'}</p>
-                <p className="font-medium">{municipio.estado}</p>
+                <p className="font-medium">{municipio.estado || 'N/A'}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -104,7 +141,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{language === 'pt' ? 'População' : 'Population'}</p>
-                <p className="font-medium">{municipio.populacao.toLocaleString('pt-BR')} habitantes</p>
+                <p className="font-medium">{municipio.populacao ? municipio.populacao.toLocaleString('pt-BR') + ' habitantes' : 'N/A'}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -113,7 +150,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{language === 'pt' ? 'Prefeito' : 'Mayor'}</p>
-                <p className="font-medium">{municipio.prefeito}</p>
+                <p className="font-medium">{municipio.prefeito || 'N/A'}</p>
               </div>
             </div>
           </div>

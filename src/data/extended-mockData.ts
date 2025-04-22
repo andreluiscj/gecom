@@ -1,9 +1,11 @@
-
-// Exibir dashboard sempre com dados zerados se não houver pedidos de compras
+// This file is no longer used for dashboard data
+// All data is now fetched directly from the database
 
 import { obterPedidos } from './mockData';
 import { Setor } from '@/types';
 
+// This function is kept for backward compatibility but is no longer used
+// by the dashboard
 export function calcularDadosDashboard() {
   const pedidos = obterPedidos();
   const valorTotal = pedidos.reduce((sum, pedido) => sum + pedido.valorTotal, 0);
@@ -51,48 +53,18 @@ export function calcularDadosDashboard() {
   };
 }
 
-// Painel utiliza resultados calculados — sempre retorna zero se vazio
+// Also keeping this for backward compatibility
 export function obterDadosDashboard() {
-  const calculatedData = calcularDadosDashboard();
+  // Return empty data to avoid any possible issues in case some code still uses this
   return {
     resumoFinanceiro: {
-      orcamentoAnual: 2500000.00,
-      orcamentoUtilizado: calculatedData.valorTotal,
-      percentualUtilizado: (calculatedData.valorTotal / 2500000.00) * 100,
-      totalPedidos: calculatedData.totalPedidos,
+      orcamentoAnual: 0,
+      orcamentoUtilizado: 0,
+      percentualUtilizado: 0,
+      totalPedidos: 0,
     },
-    cartoes: [
-      {
-        titulo: "Pedidos Abertos",
-        valor: calculatedData.totalPedidos,
-        percentualMudanca: 0,
-        icon: "ShoppingCart",
-        classeCor: "bg-blue-500"
-      },
-      {
-        titulo: "Orçamento Restante",
-        valor: `R$ ${(2500000.00 - calculatedData.valorTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
-        percentualMudanca: 0,
-        icon: "Wallet",
-        classeCor: "bg-green-500"
-      },
-      {
-        titulo: "Pedidos Aprovados",
-        valor: 0, // não existem aprovados
-        percentualMudanca: 0,
-        icon: "CheckCircle",
-        classeCor: "bg-emerald-500"
-      },
-      {
-        titulo: "Valor Médio",
-        valor: `R$ 0,00`,
-        percentualMudanca: 0,
-        icon: "TrendingUp",
-        classeCor: "bg-amber-500"
-      }
-    ],
-    orcamentoPrevisto: calculatedData.orcamentoPrevisto,
-    gastosPorSetor: calculatedData.gastosPorSetor
+    cartoes: [],
+    orcamentoPrevisto: {},
+    gastosPorSetor: {}
   };
 }
-
