@@ -1,3 +1,4 @@
+
 // Function to generate a unique ID
 function generateId() {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -20,6 +21,17 @@ if (!localStorage.getItem('usuarios-login')) {
     { id: generateId(), email: 'gestor@gecom.com', senha: 'gestor', role: 'gestor', funcionarioId: JSON.parse(localStorage.getItem('funcionarios') || '[]')[2].id, primeiroAcesso: false }
   ];
   localStorage.setItem('usuarios-login', JSON.stringify(initialUsuariosLogin));
+}
+
+// Function to generate username from name
+export function generateUsername(name: string) {
+  // Convert to lowercase, remove accents, replace spaces with dots
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, ".")
+    .substring(0, 20);
 }
 
 // Function to get all funcionarios
@@ -138,4 +150,105 @@ export function atualizarSenhaUsuario(userId: string, newPassword: string) {
     return true;
   }
   return false;
+}
+
+// ADD MISSING FUNCTIONS NEEDED BY OTHER COMPONENTS
+
+// Function to get user by ID
+export function getUserById(userId: string) {
+  const usuarios = getUsuariosLogin();
+  const usuario = usuarios.find(u => u.id === userId);
+  
+  if (usuario) {
+    const funcionarios = getFuncionarios();
+    const funcionario = funcionarios.find(f => f.id === usuario.funcionarioId);
+    
+    if (funcionario) {
+      return { usuario, funcionario };
+    }
+  }
+  
+  return null;
+}
+
+// Function to add a new funcionario with full data
+export function addFuncionario(funcionarioData: any) {
+  const funcionarios = getFuncionarios();
+  const newFuncionario = { 
+    id: generateId(),
+    ...funcionarioData
+  };
+  funcionarios.push(newFuncionario);
+  localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+  
+  // Create user login for new funcionario
+  const username = generateUsername(funcionarioData.nome);
+  const login = adicionarUsuarioLogin(
+    funcionarioData.email || `${username}@gecom.com`,
+    '123', // Default password
+    funcionarioData.cargo?.toLowerCase().includes('prefeito') ? 'prefeito' : 
+      funcionarioData.cargo?.toLowerCase().includes('gerente') ? 'gestor' : 'user',
+    newFuncionario.id,
+    true // First access
+  );
+  
+  return { funcionario: newFuncionario, login };
+}
+
+// Function to update an existing funcionario with full data
+export function updateFuncionario(id: string, funcionarioData: any) {
+  const funcionarios = getFuncionarios();
+  const funcionarioIndex = funcionarios.findIndex(f => f.id === id);
+  
+  if (funcionarioIndex !== -1) {
+    funcionarios[funcionarioIndex] = { 
+      ...funcionarios[funcionarioIndex],
+      ...funcionarioData,
+      id // Ensure ID is preserved
+    };
+    localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+    
+    // If email changed, update the user login
+    if (funcionarioData.email) {
+      const usuarios = getUsuariosLogin();
+      const usuario = usuarios.find(u => u.funcionarioId === id);
+      if (usuario) {
+        usuario.email = funcionarioData.email;
+        localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
+      }
+    }
+    
+    return true;
+  }
+  return false;
+}
+
+// Function to delete a funcionario - alias for deletarFuncionario
+export const deleteFuncionario = deletarFuncionario;
+
+// Function to filter funcionarios by setor
+export function filtrarFuncionariosPorSetor(setor: string) {
+  const funcionarios = getFuncionarios();
+  return funcionarios.filter(f => f.setor === setor);
+}
+
+// Function to get login activity logs
+export function getLoginLogs() {
+  const logs = localStorage.getItem('login-logs');
+  return logs ? JSON.parse(logs) : [];
+}
+
+// Function to add a new login log entry
+export function addLoginLog(userId: string, success: boolean, ip: string = '127.0.0.1') {
+  const logs = getLoginLogs();
+  const newLog = {
+    userId,
+    timestamp: new Date().toISOString(),
+    success,
+    ip
+  };
+  
+  logs.push(newLog);
+  localStorage.setItem('login-logs', JSON.stringify(logs));
+  return newLog;
 }
