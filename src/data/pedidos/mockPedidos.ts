@@ -1,5 +1,5 @@
 
-import { PedidoCompra, Item, Setor, PedidoStatus, WorkflowStep } from '@/types';
+import { PedidoCompra, Item, Setor, PedidoStatus } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { addDays, subDays } from 'date-fns';
 import { initializeWorkflow } from '@/utils/workflowHelpers';

@@ -1,134 +1,175 @@
 
 import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { obterTodosPedidos } from '@/data/mockData';
+import { PedidoCompra } from '@/types';
 import { useNavigate } from 'react-router-dom';
-import { obterPedidos } from '@/data/mockData';
-import { PedidoCompra, PedidoStatus } from '@/types';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-const NotificationMenu: React.FC = () => {
+// Definir interface para notificações
+interface Notification {
+  id: string;
+  title: string;
+  content: string;
+  timestamp: Date;
+  read: boolean;
+  type: 'novo' | 'aprovado' | 'atualizado' | 'info';
+  link?: string;
+}
+
+const NotificationMenu = () => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [hasUnread, setHasUnread] = useState(false);
   const navigate = useNavigate();
-  const [pendingNotifications, setPendingNotifications] = useState<PedidoCompra[]>([]);
-  const [loading, setLoading] = useState(false);
+  
+  // Função para gerar notificações com base nos pedidos
+  const generateNotifications = (pedidos: PedidoCompra[]): Notification[] => {
+    return pedidos.slice(0, 5).map((pedido, index) => {
+      const isNew = index < 2; // Primeiros dois pedidos são considerados novos
+      const timeOffset = index * 2 * 60 * 60 * 1000; // Cada notificação é 2 horas mais antiga
+      const timestamp = new Date(Date.now() - timeOffset);
+      
+      return {
+        id: pedido.id,
+        title: index === 0 ? "Novo DFD cadastrado" : 
+               index === 1 ? "DFD aprovado" :
+               index === 2 ? "Etapa atualizada" : 
+               "Informação sobre DFD",
+        content: index === 0 ? `DFD "${pedido.descricao}" foi cadastrado` : 
+                 index === 1 ? `DFD de ${pedido.descricao} foi aprovado` :
+                 index === 2 ? `Uma etapa do processo "${pedido.descricao}" foi atualizada` : 
+                 `Informação sobre o DFD "${pedido.descricao}"`,
+        timestamp: timestamp,
+        read: !isNew,
+        type: index === 0 ? 'novo' : 
+              index === 1 ? 'aprovado' : 
+              index === 2 ? 'atualizado' : 
+              'info',
+        link: `/pedidos/${pedido.id}`
+      };
+    });
+  };
 
-  // Load notifications on component mount
+  // Carregar notificações ao montar o componente
   useEffect(() => {
-    async function loadNotifications() {
-      setLoading(true);
-      try {
-        const pedidos = await obterPedidos();
-        // Filter for recent or important pedidos
-        const recentPedidos = pedidos
-          .filter(pedido => 
-            pedido.status === 'Pendente' || 
-            pedido.status === 'Aprovado' || 
-            pedido.status === 'Em Andamento'
-          )
-          .slice(0, 5); // Limit to 5 notifications
-        
-        setPendingNotifications(recentPedidos);
-      } catch (error) {
-        console.error("Error loading notifications:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
+    const pedidos = obterTodosPedidos();
+    const newNotifications = generateNotifications(pedidos);
+    setNotifications(newNotifications);
     
-    loadNotifications();
+    // Verificar se há notificações não lidas
+    setHasUnread(newNotifications.some(notification => !notification.read));
   }, []);
 
-  const handleClickNotification = (id: string) => {
-    navigate(`/pedidos/${id}`);
+  // Função para marcar notificação como lida
+  const markAsRead = (notificationId: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === notificationId 
+          ? { ...notification, read: true } 
+          : notification
+      )
+    );
+    
+    // Atualizar o estado de notificações não lidas
+    setHasUnread(notifications.some(notification => !notification.read && notification.id !== notificationId));
   };
 
-  const getNotificationTitle = (pedido: PedidoCompra) => {
-    switch (pedido.status) {
-      case 'Pendente':
-        return 'Nova DFD para aprovação';
-      case 'Aprovado':
-        return 'DFD aprovada recentemente';
-      case 'Em Andamento':
-        return 'Processo em andamento';
-      default:
-        return 'Atualização de DFD';
+  // Função para marcar todas como lidas
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
+    setHasUnread(false);
+  };
+
+  // Função para navegar até o DFD e marcar como lido
+  const handleNotificationClick = (notification: Notification) => {
+    if (notification.link) {
+      markAsRead(notification.id);
+      navigate(notification.link);
     }
   };
+
+  // Função para formatar a data relativa
+  const formatRelativeTime = (date: Date) => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Agora';
+    if (diffInMinutes < 60) return `${diffInMinutes}m atrás`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h atrás`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d atrás`;
+    
+    return format(date, 'dd/MM/yyyy', { locale: ptBR });
+  };
+
+  // Contador de notificações não lidas
+  const unreadCount = notifications.filter(notification => !notification.read).length;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
-          <Bell className="h-4 w-4" />
-          {pendingNotifications.length > 0 && (
-            <Badge 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500" 
-              variant="destructive"
-            >
-              {pendingNotifications.length}
-            </Badge>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {hasUnread && (
+            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive animate-pulse" />
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[300px]">
-        <DropdownMenuLabel>Notificações</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        
-        {loading && (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            Carregando notificações...
+      <DropdownMenuContent align="end" className="w-80 p-0 shadow-lg rounded-xl">
+        <DropdownMenuLabel className="px-4 py-3 border-b bg-primary/5">
+          <div className="flex justify-between items-center">
+            <span>Notificações</span>
+            {unreadCount > 0 && (
+              <span className="text-xs font-normal bg-primary/10 text-primary px-2 py-0.5 rounded-full">{unreadCount} novas</span>
+            )}
           </div>
-        )}
-        
-        {!loading && pendingNotifications.length === 0 && (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            Nenhuma notificação no momento
-          </div>
-        )}
-        
-        {!loading && pendingNotifications.map(pedido => (
-          <DropdownMenuItem 
-            key={pedido.id}
-            onClick={() => handleClickNotification(pedido.id)}
-            className="cursor-pointer p-3"
-          >
-            <div className="flex flex-col">
-              <span className="font-medium">{getNotificationTitle(pedido)}</span>
-              <span className="text-sm text-muted-foreground truncate max-w-[250px]">
-                {pedido.descricao}
-              </span>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-xs text-muted-foreground">{pedido.setor}</span>
-                <Badge 
-                  variant="outline" 
-                  className={
-                    pedido.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' : 
-                    pedido.status === 'Aprovado' ? 'bg-green-100 text-green-800' : 
-                    'bg-blue-100 text-blue-800'
-                  }
-                >
-                  {pedido.status}
-                </Badge>
-              </div>
+        </DropdownMenuLabel>
+        <div className="max-h-96 overflow-auto py-1">
+          {notifications.length > 0 ? (
+            notifications.map((notification) => (
+              <DropdownMenuItem 
+                key={notification.id} 
+                className={`cursor-pointer flex flex-col items-start p-3 hover:bg-muted focus:bg-muted ${
+                  !notification.read ? 'border-l-2 border-destructive' : ''
+                }`}
+                onClick={() => handleNotificationClick(notification)}
+              >
+                <div className="flex items-center w-full justify-between">
+                  <p className={`font-medium ${!notification.read ? 'text-primary-foreground' : ''}`}>
+                    {notification.title}
+                  </p>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    {formatRelativeTime(notification.timestamp)}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {notification.content}
+                </p>
+              </DropdownMenuItem>
+            ))
+          ) : (
+            <div className="p-4 text-center text-muted-foreground">
+              Nenhuma notificação no momento
             </div>
-          </DropdownMenuItem>
-        ))}
-        
-        <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={() => navigate('/pedidos')}
-          className="justify-center text-sm cursor-pointer"
-        >
-          Ver Todos
-        </DropdownMenuItem>
+          )}
+        </div>
+        <div className="border-t p-2 text-center">
+          <Button variant="ghost" size="sm" className="w-full text-sm text-primary" onClick={markAllAsRead}>
+            Marcar todas como lidas
+          </Button>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

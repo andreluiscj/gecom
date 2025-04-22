@@ -1,218 +1,406 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { PedidoCompra } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
+
+import { adicionarPedido } from '@/data/mockData';
+import { initializeWorkflow } from '@/utils/workflowHelpers';
+import ActionButtons from './Form/ActionButtons';
 import ItemsSection from './Form/ItemsSection';
 import TotalSection from './Form/TotalSection';
-import ActionButtons from './Form/ActionButtons';
-import { PedidoCompra, Item } from '@/types';
-import { adicionarPedido } from '@/services/dfdService';
-import { getUserNameSync, getUserRoleSync } from '@/utils/authHelpers';
-import { UserRole } from '@/types';
 
-export interface PedidoFormProps {
-  initialData?: PedidoCompra | null;
-  isEditing?: boolean;
-  onCancel: () => void;
-  onSubmit: (pedido: PedidoCompra) => void;
-}
+const fundosMonetarios = [
+  'Fundo Municipal de Saúde',
+  'Fundo Municipal de Educação',
+  'Fundo Municipal de Assistência Social',
+  'Fundo Municipal de Meio Ambiente',
+  'Recursos Próprios',
+  'Recursos Federais',
+  'Recursos Estaduais'
+];
 
-const PedidoForm: React.FC<PedidoFormProps> = ({ 
-  initialData, 
-  isEditing = false, 
-  onCancel = () => window.history.back(),
-  onSubmit = () => {},
-}) => {
-  const [descricao, setDescricao] = useState(initialData?.descricao || '');
-  const [justificativa, setJustificativa] = useState(initialData?.justificativa || '');
-  const [setor, setSetor] = useState(initialData?.setor || '');
-  const [localEntrega, setLocalEntrega] = useState(initialData?.localEntrega || '');
-  const [items, setItems] = useState<Item[]>(initialData?.items || [
-    { id: crypto.randomUUID(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 }
+const secretarias = [
+  'Saúde',
+  'Educação',
+  'Administrativo',
+  'Transporte',
+  'Assistência Social',
+  'Cultura',
+  'Meio Ambiente',
+  'Obras',
+  'Segurança Pública',
+  'Fazenda',
+  'Turismo',
+  'Esportes e Lazer',
+  'Planejamento',
+  'Comunicação',
+  'Ciência e Tecnologia'
+];
+
+const PedidoForm: React.FC = () => {
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [formData, setFormData] = useState<any>({});
+  const [itens, setItens] = useState([
+    { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 }
   ]);
-  const [total, setTotal] = useState(initialData?.valorTotal || 0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const userRole = getUserRoleSync();
-  const userName = getUserNameSync();
 
-  // Calculate total when items change
-  useEffect(() => {
-    const newTotal = items.reduce((sum, item) => sum + item.valorTotal, 0);
-    setTotal(newTotal);
-  }, [items]);
+  const form = useForm({
+    defaultValues: {
+      dataCompra: new Date().toISOString().split('T')[0],
+      setor: '',
+      fundoMonetario: '',
+      responsavel: '',
+      justificativa: '',
+      descricao: '',
+      localEntrega: '',
+      valorEstimado: ''
+    },
+    resolver: zodResolver(
+      currentStep === 1
+        ? firstStepSchema
+        : secondStepSchema
+    ),
+  });
 
-  const handleAddItem = () => {
-    setItems([...items, { 
-      id: crypto.randomUUID(), 
-      nome: '', 
-      quantidade: 1, 
-      valorUnitario: 0,
-      valorTotal: 0
-    }]);
+  const adicionarItem = () => {
+    setItens([
+      ...itens,
+      { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
+    ]);
   };
 
-  const handleRemoveItem = (index: number) => {
-    const newItems = [...items];
-    newItems.splice(index, 1);
-    setItems(newItems);
+  const removerItem = (index: number) => {
+    if (itens.length > 1) {
+      const novosItens = [...itens];
+      novosItens.splice(index, 1);
+      setItens(novosItens);
+    }
   };
 
-  const handleUpdateItem = (index: number, field: keyof Item, value: string | number) => {
-    const newItems = [...items];
-    newItems[index] = {
-      ...newItems[index],
-      [field]: value,
+  const atualizarItem = (index: number, campo: string, valor: string | number) => {
+    const novosItens = [...itens];
+    novosItens[index] = {
+      ...novosItens[index],
+      [campo]: valor,
     };
 
-    // Recalculate the total value
-    if (field === 'quantidade' || field === 'valorUnitario') {
-      const quantidade = field === 'quantidade' ? Number(value) : Number(newItems[index].quantidade);
-      const valorUnitario = field === 'valorUnitario' ? Number(value) : Number(newItems[index].valorUnitario);
-      newItems[index].valorTotal = quantidade * valorUnitario;
+    if (campo === 'quantidade' || campo === 'valorUnitario') {
+      novosItens[index].valorTotal =
+        Number(novosItens[index].quantidade) * Number(novosItens[index].valorUnitario);
     }
 
-    setItems(newItems);
+    setItens(novosItens);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const calcularValorTotal = () => {
+    return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
+  };
+
+  const total = calcularValorTotal();
+
+  const handleNextStep = async () => {
+    const isValid = await form.trigger([
+      'setor',
+      'fundoMonetario', 
+      'responsavel', 
+      'justificativa', 
+      'dataCompra', 
+      'descricao'
+    ]);
     
-    if (!descricao.trim()) {
-      toast.error('Por favor, adicione uma descrição para o pedido');
+    if (!isValid) return;
+    
+    const hasEmptyItems = itens.some(item => !item.nome);
+    if (hasEmptyItems) {
+      toast.error('Preencha todos os itens antes de continuar.');
       return;
     }
     
-    if (!setor) {
-      toast.error('Por favor, selecione um setor');
-      return;
-    }
-    
-    if (items.length === 0) {
-      toast.error('Por favor, adicione pelo menos um item ao pedido');
-      return;
-    }
-    
+    const step1Data = form.getValues();
+    setFormData({ ...step1Data, itens });
+    setCurrentStep(2);
+  };
+
+  const handlePreviousStep = () => {
+    setCurrentStep(1);
+  };
+
+  const handleSubmit = async (data: any) => {
     try {
-      setIsSubmitting(true);
-      
-      const newPedido: PedidoCompra = {
-        id: initialData?.id || crypto.randomUUID(),
-        descricao,
-        justificativa,
-        setor,
-        items,
-        valorTotal: total,
-        status: initialData?.status || 'Pendente',
-        dataCompra: initialData?.dataCompra || new Date(),
-        solicitante: userName || 'Usuário',
-        localEntrega,
+      const combinedData = {
+        ...formData,
+        localEntrega: data.localEntrega,
+        valorEstimado: parseFloat(data.valorEstimado) || total,
       };
-      
-      // For managers and users, auto-approve
-      if (userRole === 'gestor' || userRole === 'admin') {
-        newPedido.status = 'Aprovado';
-      }
-      
-      // If creating a new pedido
-      if (!isEditing) {
-        const savedPedido = await adicionarPedido(newPedido);
-        onSubmit(savedPedido);
-        toast.success('Pedido criado com sucesso!');
-      } 
-      // If editing existing pedido
-      else {
-        onSubmit(newPedido);
-        toast.success('Pedido atualizado com sucesso!');
-      }
+
+      const novoPedido: PedidoCompra = {
+        id: uuidv4(),
+        descricao: combinedData.descricao,
+        justificativa: combinedData.justificativa,
+        dataCompra: new Date(combinedData.dataCompra),
+        setor: combinedData.setor,
+        solicitante: combinedData.responsavel,
+        valorTotal: combinedData.valorEstimado || total,
+        itens: itens.map(item => ({
+          ...item,
+          valorTotal: item.quantidade * item.valorUnitario
+        })),
+        status: 'Pendente',
+        fundoMonetario: combinedData.fundoMonetario,
+        createdAt: new Date(),
+        observacoes: '',
+        workflow: initializeWorkflow(),
+        localEntrega: combinedData.localEntrega
+      };
+
+      const pedidoAdicionado = adicionarPedido(novoPedido);
+      toast.success('DFD cadastrada com sucesso! A DFD já está disponível na página da secretaria e nos relatórios do sistema.');
+      navigate(`/pedidos/${pedidoAdicionado.id}`);
     } catch (error) {
-      console.error('Erro ao salvar pedido:', error);
-      toast.error('Ocorreu um erro ao salvar o pedido. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
+      console.error('Erro ao submeter o formulário:', error);
+      toast.error('Erro ao cadastrar DFD. Tente novamente.');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Card className="p-6">
-        <div className="space-y-6">
-          <div className="space-y-1">
-            <Label htmlFor="descricao">Descrição do Pedido</Label>
-            <Textarea
-              id="descricao"
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              placeholder="Descreva o pedido de compra"
-              className="min-h-[80px]"
-            />
-          </div>
-          
-          <div className="space-y-1">
-            <Label htmlFor="justificativa">Justificativa</Label>
-            <Textarea
-              id="justificativa"
-              value={justificativa}
-              onChange={(e) => setJustificativa(e.target.value)}
-              placeholder="Justifique a necessidade desta compra"
-              className="min-h-[80px]"
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="setor">Setor/Secretaria</Label>
-              <Select
-                value={setor}
-                onValueChange={setSetor}
-              >
-                <SelectTrigger id="setor">
-                  <SelectValue placeholder="Selecione o setor" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Saúde">Saúde</SelectItem>
-                  <SelectItem value="Educação">Educação</SelectItem>
-                  <SelectItem value="Administrativo">Administrativo</SelectItem>
-                  <SelectItem value="Obras">Obras</SelectItem>
-                  <SelectItem value="Transporte">Transporte</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="localEntrega">Local de Entrega</Label>
-              <Input
-                id="localEntrega"
-                value={localEntrega}
-                onChange={(e) => setLocalEntrega(e.target.value)}
-                placeholder="Informe o local de entrega"
+    <Card className="p-6">
+      <Form {...form}>
+        <form onSubmit={
+          currentStep === 1 
+            ? (e) => { e.preventDefault(); handleNextStep(); }
+            : form.handleSubmit(handleSubmit)
+        } className="space-y-6">
+          {currentStep === 1 ? (
+            <>
+              <h2 className="text-lg font-semibold">Informações Básicas</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="setor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Identificação do Requisitante (Secretaria)</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a secretaria" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {secretarias.map(secretaria => (
+                            <SelectItem key={secretaria} value={secretaria}>
+                              {secretaria}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fundoMonetario"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unidade Administrativa Requisitante (Fundo)</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o fundo monetário" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {fundosMonetarios.map((fundo) => (
+                            <SelectItem key={fundo} value={fundo}>
+                              {fundo}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="responsavel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Responsável</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome do responsável pela solicitação" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dataCompra"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data do Pedido</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="justificativa"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Justificativa da Necessidade</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Justifique a necessidade deste pedido..."
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
-        </div>
-      </Card>
-      
-      <ItemsSection 
-        items={items} 
-        onAddItem={handleAddItem} 
-        onRemoveItem={handleRemoveItem}
-        onUpdateItem={handleUpdateItem}
-      />
-      
-      <TotalSection total={total} />
-      
-      <ActionButtons 
-        isSubmitting={isSubmitting} 
-        onCancel={onCancel} 
-        isEditing={isEditing}
-      />
-    </form>
+
+              <FormField
+                control={form.control}
+                name="descricao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição do Pedido</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Descreva o pedido de compra..."
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <ItemsSection
+                items={itens}
+                onAddItem={adicionarItem}
+                onRemoveItem={removerItem}
+                onUpdateItem={atualizarItem}
+              />
+
+              <div className="flex justify-end space-x-4">
+                <button 
+                  type="submit"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md"
+                >
+                  Próxima Etapa
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold">Informações Complementares</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="valorEstimado"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estimativa de Valor</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder={`Valor sugerido: ${total.toFixed(2)}`}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="localEntrega"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Local de Entrega</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Endereço completo para entrega" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <TotalSection total={total} />
+
+              <div className="flex justify-between">
+                <button
+                  type="button"
+                  className="border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md"
+                  onClick={handlePreviousStep}
+                >
+                  Voltar
+                </button>
+                <button 
+                  type="submit"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md"
+                >
+                  Finalizar Cadastro
+                </button>
+              </div>
+            </>
+          )}
+        </form>
+      </Form>
+    </Card>
   );
 };
+
+import * as z from 'zod';
+
+const firstStepSchema = z.object({
+  dataCompra: z.string().nonempty('Data do pedido é obrigatória'),
+  setor: z.string().nonempty('Secretaria solicitante é obrigatória'),
+  fundoMonetario: z.string().nonempty('Fundo monetário é obrigatório'),
+  responsavel: z.string().nonempty('Nome do responsável é obrigatório'),
+  descricao: z.string().min(5, 'Descrição deve ter pelo menos 5 caracteres'),
+  justificativa: z.string().min(5, 'Justificativa deve ter pelo menos 5 caracteres'),
+});
+
+const secondStepSchema = z.object({
+  valorEstimado: z.string().optional(),
+  localEntrega: z.string().nonempty('Local de entrega é obrigatório'),
+});
 
 export default PedidoForm;

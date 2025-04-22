@@ -1,16 +1,10 @@
 
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Dialog as UIDialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Key } from 'lucide-react';
 
 interface PasswordChangeDialogProps {
   open: boolean;
@@ -23,7 +17,7 @@ interface PasswordChangeDialogProps {
   isSubmitting: boolean;
 }
 
-export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
+export function PasswordChangeDialog({
   open,
   onOpenChange,
   newPassword,
@@ -31,66 +25,50 @@ export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
   setNewPassword,
   setConfirmPassword,
   onSubmit,
-  isSubmitting,
-}) => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newPassword || !confirmPassword) {
-      toast.error('Preencha todos os campos');
-      return;
-    }
-    
-    if (newPassword.length < 6) {
-      toast.error('A senha deve ter no mínimo 6 caracteres');
-      return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-      toast.error('As senhas não conferem');
-      return;
-    }
-    
-    onSubmit();
-  };
-
+  isSubmitting
+}: PasswordChangeDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <UIDialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Alterar senha</DialogTitle>
+          <DialogTitle>Primeiro acesso</DialogTitle>
           <DialogDescription>
-            Este é seu primeiro acesso. Por favor, defina uma nova senha.
+            Por favor, altere sua senha padrão para continuar.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Input
+        <div className="grid gap-4 py-4">
+          <div className="flex justify-center mb-2">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary">
+              <Key className="h-6 w-6" />
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="new-password">Nova senha</Label>
+            <Input 
+              id="new-password"
               type="password"
-              placeholder="Nova senha"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              disabled={isSubmitting}
-              required
+              placeholder="Digite sua nova senha"
             />
           </div>
-          <div className="space-y-2">
-            <Input
+          <div className="grid gap-2">
+            <Label htmlFor="confirm-password">Confirmar senha</Label>
+            <Input 
+              id="confirm-password"
               type="password"
-              placeholder="Confirme a nova senha"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={isSubmitting}
-              required
+              placeholder="Confirme sua nova senha"
             />
           </div>
-          <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Salvando...' : 'Salvar'}
-            </Button>
-          </DialogFooter>
-        </form>
+        </div>
+        <DialogFooter>
+          <Button onClick={onSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Alterando...' : 'Alterar senha e continuar'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </UIDialog>
   );
-};
+}

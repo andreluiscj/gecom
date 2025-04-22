@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PedidoCompra } from '@/types';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { Calendar as CalendarIcon, Eye, Search } from 'lucide-react';
+import { Calendar as CalendarIcon, Eye, FileText, Search } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -25,6 +25,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { fundosMonetarios } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 
 interface PedidosTableProps {
@@ -54,7 +55,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
       // Text search filter
       const textMatch = 
         pedido.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (pedido.fundoMonetario && pedido.fundoMonetario.toLowerCase().includes(searchTerm.toLowerCase()));
+        pedido.fundoMonetario.toLowerCase().includes(searchTerm.toLowerCase());
       
       // Status filter
       const statusMatch = statusFilter === 'todos' || pedido.status === statusFilter;
@@ -218,7 +219,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
                       {pedido.descricao}
                     </TableCell>
                     <TableCell>{formatCurrency(pedido.valorTotal)}</TableCell>
-                    <TableCell>{pedido.fundoMonetario || '-'}</TableCell>
+                    <TableCell>{pedido.fundoMonetario}</TableCell>
                     <TableCell>{pedido.setor}</TableCell>
                     <TableCell>
                       <span className={getStatusBadgeClass(pedido.status)}>

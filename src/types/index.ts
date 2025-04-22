@@ -1,145 +1,150 @@
 
-export interface Municipio {
+export type Role = "admin" | "editor" | null;
+
+export type Tarefa = {
   id: string;
-  nome: string;
-  estado: string;
-  populacao: number;
-  orcamento: number;
-  orcamentoAnual: number;
-  prefeito: string;
-}
+  title: string;
+  description: string;
+  status: "pendente" | "em_progresso" | "concluida";
+  priority: "alta" | "media" | "baixa";
+  dueDate: Date;
+  assignedTo: string;
+  comments: string[];
+  attachments: string[];
+  createdAt: Date;
+  updatedAt: Date;
+};
 
-export interface DadosDashboard {
-  resumoFinanceiro: ResumoFinanceiro;
-  cartoes: Cartao[];
-  orcamentoPrevisto: Record<string, number>;
-  gastosPorSetor: Record<string, number>;
-  valorContratadoTotal: number;
-  pedidosPorSetor: Record<string, number>;
-  indicadoresDesempenho: IndicadoresDesempenho;
-}
+export type Setor =
+  | "Saúde"
+  | "Educação"
+  | "Administrativo"
+  | "Transporte"
+  | "Assistência Social"
+  | "Cultura"
+  | "Meio Ambiente"
+  | "Obras"
+  | "Segurança Pública"
+  | "Fazenda"
+  | "Turismo"
+  | "Esportes e Lazer"
+  | "Planejamento"
+  | "Comunicação"
+  | "Ciência e Tecnologia";
 
-export interface ResumoFinanceiro {
-  estimativaDespesa: number;
-  valorContratadoTotal: number;
-  percentualUtilizado: number;
-  totalPedidos: number;
-}
-
-export interface Cartao {
-  titulo: string;
-  valor: number | string;
-  percentualMudanca: number;
-  icon: string;
-  classeCor: string;
-}
-
-export interface IndicadoresDesempenho {
-  tempoMedioConclusao: number;
-  percentualEconomia: number;
-}
-
-export interface PedidoCompra {
-  id: string;
-  descricao: string;
-  justificativa: string;
-  setor: string;
-  items: Item[];
-  valorTotal: number;
-  status: PedidoStatus;
-  dataCompra: Date;
-  solicitante: string;
-  localEntrega: string;
-  fundoMonetario?: string;
-  observacoes?: string;
-  workflow?: Workflow;
-  workflowSteps?: WorkflowStep[];
-  responsavel?: Responsavel;
-  createdAt?: Date;
-  fonteRecurso?: string;
-  anexos?: Anexo[];
-}
+export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
 
 export interface Item {
   id: string;
   nome: string;
   quantidade: number;
   valorUnitario: number;
+  valorTotal?: number;
+}
+
+export interface PedidoCompra {
+  id: string;
+  descricao: string;
+  dataCompra: Date;
+  setor: Setor;
+  itens: Item[];
   valorTotal: number;
+  status: PedidoStatus;
+  fundoMonetario: string;
+  createdAt: Date;
+  justificativa?: string;
+  solicitante?: string;
+  observacoes?: string;
+  workflow?: Workflow;
+  localEntrega?: string;
 }
 
-export interface Responsavel {
-  id: string;
-  nome: string;
-  email: string;
-  cargo: string;
-}
-
-export interface Anexo {
-  id: string;
-  nome: string;
-  tipo: string;
-  tamanho: number;
-  url: string;
-}
+export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído';
 
 export interface WorkflowStep {
   id: string;
   title: string;
   status: WorkflowStepStatus;
-  date: Date;
-  dataConclusao?: Date;
-  observacoes?: string;
-  responsavel?: string;
+  date?: Date;
+  dataConclusao?: Date;   // New field: completion date
+  responsavel?: string;   // New field: responsible person
 }
 
 export interface Workflow {
-  percentComplete: number;
   currentStep: number;
   totalSteps: number;
+  percentComplete: number;
   steps: WorkflowStep[];
 }
 
-export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído' | 'Aprovado' | 'Reprovado';
-
-// User role type
-export type UserRole = 'admin' | 'prefeito' | 'gestor' | 'servidor';
-
-export interface Usuario {
+export interface Municipio {
   id: string;
-  email: string;
   nome: string;
-  role: UserRole;
-  municipio_id?: string;
-  primeiro_acesso: boolean;
-  ativo?: boolean;
+  estado: string;
+  populacao: number;
+  logo?: string; // Added logo property as optional
+  orcamento: number;
+  orcamentoAnual: number;
+  prefeito: string;
 }
 
-// Add PedidoStatus type
-export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
+export interface DadosDashboard {
+  resumoFinanceiro: {
+    estimativaDespesa: number;
+    valorContratadoTotal: number;
+    percentualUtilizado: number;
+    totalPedidos: number;
+    orcamentoAnual?: number; // Added orcamentoAnual as optional to match usage
+  };
+  cartoes: Array<{
+    titulo: string;
+    valor: string | number;
+    percentualMudanca: number;
+    icon: string;
+    classeCor: string;
+  }>;
+  orcamentoPrevisto: Record<string, number>;
+  gastosPorSetor: Record<string, number>;
+  valorContratadoTotal: number;
+  pedidosPorSetor: Record<string, number>;
+  indicadoresDesempenho: {
+    tempoMedioConclusao: number;
+    percentualEconomia: number;
+  };
+}
 
-// Add missing types for Funcionario and Setor
-export type Setor = string;
+export type UserRole = 'admin' | 'user' | 'manager';
 
 export interface Funcionario {
   id: string;
   nome: string;
-  cpf?: string;
+  cpf: string;
+  dataNascimento: Date;
   email: string;
   cargo: string;
   setor: Setor;
-  dataNascimento?: Date;
-  dataContratacao?: Date;
+  setoresAdicionais?: Setor[];
+  dataContratacao: Date;
   ativo: boolean;
+  senha?: string; // Only used for creation/update, not stored in state
   permissaoEtapa?: string;
+  username?: string; // Username for login
+  telefone?: string; // Added the missing telefone property
+}
+
+export interface LoginLog {
+  userId: string;
+  timestamp: string;
+  success: boolean;
+  ip: string;
 }
 
 export interface UsuarioLogin {
+  id: string;
   username: string;
-  password: string;
+  senha: string;
+  funcionarioId: string;
   role: UserRole;
+  ativo: boolean;
+  primeiroAcesso?: boolean;
 }
-
-// Add for Supabase
-export type DbPedidoStatus = 'pendente' | 'em_analise' | 'aprovado' | 'em_andamento' | 'concluido' | 'rejeitado';
-export type WorkflowStatus = 'pendente' | 'em_andamento' | 'concluido';

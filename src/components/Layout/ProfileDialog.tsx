@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -13,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { DeleteAccountDialog } from './DeleteAccountDialog';
-import { getUserIdSync } from '@/utils/auth';
+import { getUserId } from '@/utils/authHelpers';
 import { toast } from 'sonner';
 import { updateFuncionario, getUserById } from '@/data/funcionarios/mockFuncionarios';
 import { ProfilePhotoUpload } from './ProfilePhotoUpload';
@@ -47,6 +48,7 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
     profilePhoto: null as string | null,
   });
 
+  // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setFormData({
@@ -79,7 +81,7 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
   };
 
   const handleSaveChanges = () => {
-    const userId = getUserIdSync();
+    const userId = getUserId();
     if (!userId) {
       toast.error("Não foi possível identificar o usuário");
       return;
@@ -96,6 +98,7 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
       email: formData.email,
     });
 
+    // Save additional info to localStorage
     localStorage.setItem('user-phone', formData.phone);
     localStorage.setItem('user-address', formData.address);
     localStorage.setItem('user-city', formData.city);
@@ -110,13 +113,16 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
     toast.success("Perfil atualizado com sucesso!");
     setIsEditing(false);
     
+    // Call the update callback if provided
     if (onProfileUpdate) {
       onProfileUpdate();
     }
   };
 
   const handleCloseDialog = () => {
+    // Reset any editing state
     setIsEditing(false);
+    // Close the dialog using the provided callback
     onOpenChange(false);
   };
 
@@ -141,6 +147,7 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
     cancel: "Cancelar",
   };
 
+  // Use Sheet component for mobile devices
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   
   const ProfileContent = () => (
@@ -327,6 +334,7 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
     </>
   );
 
+  // Return Sheet for mobile, Dialog for desktop
   return (
     <>
       {isMobile ? (
@@ -345,6 +353,7 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
         <Dialog
           open={open}
           onOpenChange={(value) => {
+            // Only allow closing if not in editing mode
             if (!value && isEditing) {
               return;
             }
@@ -352,6 +361,7 @@ export function ProfileDialog({ open, onOpenChange, userInfo, onProfileUpdate }:
           }}
         >
           <DialogContent className="sm:max-w-[500px]" onInteractOutside={(e) => {
+            // Prevent outside clicks from closing if editing
             if (isEditing) {
               e.preventDefault();
             }

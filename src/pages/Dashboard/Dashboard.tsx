@@ -9,8 +9,8 @@ import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
 import { DadosDashboard, Municipio } from '@/types';
 import { toast } from 'sonner';
 import { exportDashboardAsPDF } from '@/utils/pdfGenerator';
-import { getUserRoleSync, getUserSetorSync, shouldFilterByUserSetorSync } from '@/utils/authHelpers';
 
+// Default municipality object
 const defaultMunicipio: Municipio = {
   id: 'pai-pedro',
   nome: 'Pai Pedro',
@@ -21,6 +21,7 @@ const defaultMunicipio: Municipio = {
   prefeito: 'Maria Silva',
 };
 
+// Sample dashboard data
 const dadosDashboard: DadosDashboard = {
   resumoFinanceiro: {
     estimativaDespesa: 28500000,
@@ -67,6 +68,7 @@ const dadosDashboard: DadosDashboard = {
   },
 };
 
+// Data for monthly charts
 const monthlyData = [
   { name: 'Jan', planejado: 240000, executado: 220000 },
   { name: 'Fev', planejado: 300000, executado: 320000 },
@@ -82,6 +84,7 @@ const monthlyData = [
   { name: 'Dez', planejado: 520000, executado: 500000 },
 ];
 
+// Data for department analysis
 const departmentData = [
   { name: 'Saúde', valor: 1850000, percent: 28 },
   { name: 'Educação', valor: 1520000, percent: 23 },
@@ -93,7 +96,7 @@ const departmentData = [
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('grafico');
-  const [language, setLanguage] = useState('pt');
+  const [language, setLanguage] = useState('pt'); // Default language is Portuguese
   const [municipio, setMunicipio] = useState<Municipio>(defaultMunicipio);
   const [filteredData, setFilteredData] = useState(monthlyData);
   const [filteredDeptData, setFilteredDeptData] = useState(departmentData);
@@ -105,12 +108,7 @@ const Dashboard: React.FC = () => {
     department: 'Todos'
   });
 
-  const userRole = getUserRoleSync();
-  const userSetor = getUserSetorSync();
-  const shouldFilter = shouldFilterByUserSetorSync();
-
-  const [filteredDashboardData, setFilteredDashboardData] = useState(dadosDashboard);
-
+  // Effect to load selected municipality
   useEffect(() => {
     const municipioId = localStorage.getItem('municipio-selecionado');
     if (municipioId === 'janauba') {
@@ -126,39 +124,16 @@ const Dashboard: React.FC = () => {
     }
   }, []);
 
+  // Effect to apply filters
   useEffect(() => {
     applyFilters();
-  }, [period, filters, userSetor, shouldFilter]);
-
-  useEffect(() => {
-    if (shouldFilter && userSetor) {
-      const filteredData = filterDashboardDataBySetor(dadosDashboard, userSetor);
-      setFilteredDashboardData(filteredData);
-      setFilters(prev => ({...prev, department: userSetor}));
-    } else {
-      setFilteredDashboardData(dadosDashboard);
-    }
-  }, [userSetor, shouldFilter]);
-
-  const filterDashboardDataBySetor = (data: DadosDashboard, setor: string): DadosDashboard => {
-    const filtered = {...data};
-    const filteredGastos: Record<string, number> = {};
-    if (data.gastosPorSetor[setor]) {
-      filteredGastos[setor] = data.gastosPorSetor[setor];
-    }
-    const filteredPedidos: Record<string, number> = {};
-    if (data.pedidosPorSetor[setor]) {
-      filteredPedidos[setor] = data.pedidosPorSetor[setor];
-    }
-    filtered.gastosPorSetor = filteredGastos;
-    filtered.pedidosPorSetor = filteredPedidos;
-    filtered.valorContratadoTotal = filteredGastos[setor] || 0;
-    return filtered;
-  };
+  }, [period, filters]);
 
   const applyFilters = () => {
+    // Apply period filter
     let periodFilteredData = [...monthlyData];
     if (period === 'mensal') {
+      // Filter to show only current month (using the selected month from filters)
       const monthIndex = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
                         .findIndex(m => m === filters.month);
@@ -168,9 +143,10 @@ const Dashboard: React.FC = () => {
                                 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         periodFilteredData = monthlyData.filter(data => data.name === monthShortNames[monthIndex]);
       } else {
-        periodFilteredData = monthlyData.slice(0, 1);
+        periodFilteredData = monthlyData.slice(0, 1); // Default to first month if not found
       }
     } else if (period === 'trimestral') {
+      // Filter by quarter
       let quarterMonths: string[] = [];
       switch(filters.quarter) {
         case 'Q1':
@@ -189,41 +165,23 @@ const Dashboard: React.FC = () => {
       periodFilteredData = monthlyData.filter(data => quarterMonths.includes(data.name));
     }
     
+    // Apply department filter
     let deptFilteredData = [...departmentData];
-    const selectedDepartment = shouldFilter && userSetor ? userSetor : filters.department;
-    
-    if (selectedDepartment !== 'Todos') {
-      deptFilteredData = departmentData.filter(dept => dept.name === selectedDepartment);
+    if (filters.department !== 'Todos') {
+      deptFilteredData = departmentData.filter(dept => dept.name === filters.department);
     }
-    
-    deptFilteredData = deptFilteredData.map(item => ({
-      ...item,
-      percent: item.percent / 100
-    }));
     
     setFilteredData(periodFilteredData);
     setFilteredDeptData(deptFilteredData);
   };
 
-  const calculateTotalPedidos = () => {
-    if (shouldFilter && userSetor) {
-      return filteredDashboardData.pedidosPorSetor[userSetor] || 0;
-    }
-    return 587;
-  };
+  // Valores para os cards de estatísticas
+  const totalPedidos = 587;
+  const orcamentoExecutado = municipio.id === 'janauba' ? 12000000 : 2400000;
+  const pedidosAprovados = 432;
+  const secretarias = 15;
 
-  const calculateOrcamentoExecutado = () => {
-    if (shouldFilter && userSetor) {
-      return filteredDashboardData.gastosPorSetor[userSetor] || 0;
-    }
-    return municipio.id === 'janauba' ? 12000000 : 2400000;
-  };
-
-  const totalPedidos = calculateTotalPedidos();
-  const orcamentoExecutado = calculateOrcamentoExecutado();
-  const pedidosAprovados = shouldFilter && userSetor ? Math.floor(totalPedidos * 0.75) : 432;
-  const secretarias = shouldFilter ? 1 : 15;
-
+  // Handle data export from dashboard
   const handleExportDashboard = () => {
     toast.success('Exportando relatório PDF...');
     
@@ -238,14 +196,17 @@ const Dashboard: React.FC = () => {
         data: new Date().toLocaleDateString('pt-BR')
       };
       
+      // Use the PDF export function with the current active tab
       exportDashboardAsPDF(dashboardData, activeTab === 'grafico' ? 'orcamento' : 'secretarias', filteredData, filteredDeptData);
     }, 500);
   };
 
   return (
     <div className="space-y-6 animate-fade-in dashboard-view">
+      {/* Cabeçalho com informações do município */}
       <DashboardHeader municipio={municipio} language={language} />
       
+      {/* Cards de estatísticas */}
       <DashboardStatCards 
         totalPedidos={totalPedidos}
         orcamentoExecutado={orcamentoExecutado}
@@ -253,11 +214,12 @@ const Dashboard: React.FC = () => {
         secretarias={secretarias}
       />
 
+      {/* Tabs para alternar entre gráficos e resumo */}
       <DashboardTabs
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         handleExportDashboard={handleExportDashboard}
-        dadosDashboard={filteredDashboardData}
+        dadosDashboard={dadosDashboard}
         municipio={municipio}
         language={language}
         filteredData={filteredData}
@@ -266,8 +228,6 @@ const Dashboard: React.FC = () => {
         setPeriod={setPeriod}
         filters={filters}
         setFilters={setFilters}
-        shouldFilter={shouldFilter}
-        userSetor={userSetor}
       />
     </div>
   );
@@ -333,8 +293,6 @@ interface DashboardTabsProps {
   setPeriod: (period: string) => void;
   filters: any;
   setFilters: (filters: any) => void;
-  shouldFilter?: boolean;
-  userSetor?: string | null;
 }
 
 function DashboardTabs({
@@ -349,9 +307,7 @@ function DashboardTabs({
   period,
   setPeriod,
   filters,
-  setFilters,
-  shouldFilter,
-  userSetor
+  setFilters
 }: DashboardTabsProps) {
   return (
     <Tabs 

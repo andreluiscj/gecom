@@ -3,76 +3,100 @@ import React from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Shield, ShieldCheck } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface GDPRConsentDialogProps {
   open: boolean;
-  onClose: () => void;
+  onAccept: () => void;
+  onOpenChange: (open: boolean) => void;
 }
 
-const GDPRConsentDialog: React.FC<GDPRConsentDialogProps> = ({ open, onClose }) => {
+export function GDPRConsentDialog({ open, onAccept, onOpenChange }: GDPRConsentDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Política de Privacidade e Cookies</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            Política de Privacidade e Termos de Uso
+          </DialogTitle>
           <DialogDescription>
-            Leia com atenção nossa política de privacidade e cookies.
+            Por favor, leia e aceite os termos para continuar.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 text-sm">
-          <section>
-            <h3 className="font-semibold text-base mb-2">1. Informações Coletadas</h3>
-            <p>
-              Coletamos informações necessárias para o funcionamento do sistema GECOM, 
-              incluindo dados pessoais como nome, email e cargo, além de informações 
-              sobre o uso do sistema.
-            </p>
-          </section>
-          
-          <section>
-            <h3 className="font-semibold text-base mb-2">2. Uso das Informações</h3>
-            <p>
-              Utilizamos seus dados para gerenciar o sistema de compras públicas, 
-              incluindo autenticação, autorização e auditoria de operações realizadas.
-              Seus dados serão armazenados somente durante o período necessário para 
-              cumprir as finalidades para as quais foram coletados.
-            </p>
-          </section>
-          
-          <section>
-            <h3 className="font-semibold text-base mb-2">3. Cookies</h3>
-            <p>
-              Utilizamos cookies para manter sua sessão ativa e armazenar preferências 
-              de uso. Cookies são pequenos arquivos que seu navegador armazena em seu 
-              dispositivo para melhorar sua experiência.
-            </p>
-          </section>
-          
-          <section>
-            <h3 className="font-semibold text-base mb-2">4. Direitos do Usuário</h3>
-            <p>
-              Você tem direito a acessar, corrigir, portar, eliminar seus dados, além 
-              de revogar o consentimento a qualquer momento, conforme previsto na 
-              Lei Geral de Proteção de Dados (LGPD).
-            </p>
-          </section>
-        </div>
+        <ScrollArea className="h-[300px] rounded-md border p-4">
+          <div className="space-y-4">
+            <h3 className="font-semibold">Política de Privacidade</h3>
+            
+            <p>A presente Política de Privacidade tem por finalidade demonstrar o nosso compromisso com a privacidade e a proteção dos seus dados pessoais, em conformidade com a Lei Geral de Proteção de Dados (LGPD).</p>
+            
+            <h4 className="font-medium mt-4">1. Dados Coletados</h4>
+            <p>Coletamos os seguintes dados pessoais:</p>
+            <ul className="list-disc pl-5">
+              <li>Nome completo</li>
+              <li>E-mail profissional</li>
+              <li>Cargo</li>
+              <li>Setor</li>
+              <li>Data de acesso</li>
+              <li>Ações realizadas no sistema</li>
+            </ul>
+            
+            <h4 className="font-medium mt-4">2. Finalidade do Tratamento</h4>
+            <p>Os dados pessoais coletados serão utilizados para:</p>
+            <ul className="list-disc pl-5">
+              <li>Autenticação e controle de acesso ao sistema</li>
+              <li>Auditoria de ações realizadas</li>
+              <li>Registro de histórico de aprovações em processos</li>
+              <li>Comunicações relacionadas ao uso do sistema</li>
+              <li>Melhoria contínua da plataforma</li>
+            </ul>
+            
+            <h4 className="font-medium mt-4">3. Direitos do Titular</h4>
+            <p>Conforme a LGPD, você possui os seguintes direitos:</p>
+            <ul className="list-disc pl-5">
+              <li>Acesso aos seus dados pessoais</li>
+              <li>Correção de dados incompletos ou desatualizados</li>
+              <li>Portabilidade dos dados</li>
+              <li>Informações sobre compartilhamento dos dados</li>
+              <li>Revogação do consentimento</li>
+            </ul>
+            
+            <h4 className="font-medium mt-4">4. Compartilhamento de Dados</h4>
+            <p>Os dados poderão ser compartilhados com:</p>
+            <ul className="list-disc pl-5">
+              <li>Órgãos públicos com finalidade de auditoria</li>
+              <li>Fornecedores de tecnologia para manutenção do sistema</li>
+            </ul>
+            
+            <h4 className="font-medium mt-4">5. Segurança dos Dados</h4>
+            <p>Implementamos medidas técnicas e organizacionais para proteger seus dados pessoais contra acessos não autorizados, destruição ou perda acidental.</p>
+            
+            <h4 className="font-medium mt-4">6. Período de Retenção</h4>
+            <p>Seus dados serão mantidos pelo período necessário para atender às finalidades apresentadas, observando os prazos legais aplicáveis.</p>
+            
+            <h4 className="font-medium mt-4">7. Contato</h4>
+            <p>Para exercer seus direitos ou esclarecer dúvidas, entre em contato com nosso Encarregado de Proteção de Dados pelo email: dpo@gecom.gov.br</p>
+          </div>
+        </ScrollArea>
         
-        <DialogFooter>
-          <Button variant="secondary" onClick={onClose}>
-            Entendi e Concordo
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            Recusar
+          </Button>
+          <Button onClick={onAccept} className="gap-2">
+            <Shield className="h-4 w-4" />
+            Aceitar termos e continuar
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-};
-
-export default GDPRConsentDialog;
+}

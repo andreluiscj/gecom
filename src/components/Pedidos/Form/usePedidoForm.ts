@@ -4,15 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Item, PedidoCompra, PedidoStatus } from '@/types';
+import { Item, PedidoCompra, Setor } from '@/types';
+import { adicionarPedido, gerarId } from '@/data/mockData';
 import { toast } from 'sonner';
-import { adicionarPedido } from '@/services/dfdService';
-import { initializeWorkflow } from '@/utils/workflowHelpers';
-
-// Helper function to generate ID
-function gerarId(): string {
-  return crypto.randomUUID();
-}
 
 // Schema for form validation
 const pedidoSchema = z.object({
@@ -20,7 +14,7 @@ const pedidoSchema = z.object({
   descricao: z.string().min(5, 'Descrição deve ter pelo menos 5 caracteres'),
   fundoMonetario: z.string().nonempty('Fundo monetário é obrigatório'),
   setor: z.string().nonempty('Setor é obrigatório'),
-  items: z.array(
+  itens: z.array(
     z.object({
       nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
       quantidade: z.number().min(1, 'Quantidade deve ser pelo menos 1'),
@@ -33,7 +27,7 @@ export type PedidoFormValues = z.infer<typeof pedidoSchema>;
 
 export const usePedidoForm = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState<Item[]>([
+  const [itens, setItens] = useState<Item[]>([
     { id: gerarId(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
   ]);
 
@@ -44,58 +38,58 @@ export const usePedidoForm = () => {
       descricao: '',
       fundoMonetario: '',
       setor: '',
-      items: [{ nome: '', quantidade: 1, valorUnitario: 0 }],
+      itens: [{ nome: '', quantidade: 1, valorUnitario: 0 }],
     },
   });
 
   const adicionarItem = () => {
-    setItems([
-      ...items,
+    setItens([
+      ...itens,
       { id: gerarId(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
     ]);
   };
 
   const removerItem = (index: number) => {
-    if (items.length > 1) {
-      const novosItems = [...items];
-      novosItems.splice(index, 1);
-      setItems(novosItems);
+    if (itens.length > 1) {
+      const novosItens = [...itens];
+      novosItens.splice(index, 1);
+      setItens(novosItens);
     }
   };
 
   const atualizarItem = (index: number, campo: keyof Item, valor: string | number) => {
-    const novosItems = [...items];
-    novosItems[index] = {
-      ...novosItems[index],
+    const novosItens = [...itens];
+    novosItens[index] = {
+      ...novosItens[index],
       [campo]: valor,
     };
 
     // Recalcular valor total
     if (campo === 'quantidade' || campo === 'valorUnitario') {
-      novosItems[index].valorTotal =
-        Number(novosItems[index].quantidade) * Number(novosItems[index].valorUnitario);
+      novosItens[index].valorTotal =
+        Number(novosItens[index].quantidade) * Number(novosItens[index].valorUnitario);
     }
 
-    setItems(novosItems);
+    setItens(novosItens);
     
     // Atualiza os valores no formulário também
-    const formItems = form.getValues().items || [];
-    formItems[index] = {
-      nome: novosItems[index].nome,
-      quantidade: Number(novosItems[index].quantidade),
-      valorUnitario: Number(novosItems[index].valorUnitario),
+    const formItens = form.getValues().itens || [];
+    formItens[index] = {
+      nome: novosItens[index].nome,
+      quantidade: Number(novosItens[index].quantidade),
+      valorUnitario: Number(novosItens[index].valorUnitario),
     };
-    form.setValue('items', formItems);
+    form.setValue('itens', formItens);
   };
 
   const calcularValorTotal = () => {
-    return items.reduce((total, item) => total + (item.valorTotal || 0), 0);
+    return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
   };
 
-  const onSubmit = async (data: PedidoFormValues) => {
+  const onSubmit = (data: PedidoFormValues) => {
     try {
-      // Garantir que os items tenham valores corretos
-      const itemsCompletos = items.map((item) => ({
+      // Garantir que os itens tenham valores corretos
+      const itensCompletos = itens.map((item) => ({
         id: item.id,
         nome: item.nome,
         quantidade: Number(item.quantidade),
@@ -107,30 +101,18 @@ export const usePedidoForm = () => {
         id: gerarId(),
         dataCompra: new Date(data.dataCompra),
         descricao: data.descricao,
-        items: itemsCompletos,
+        itens: itensCompletos,
         valorTotal: calcularValorTotal(),
         fundoMonetario: data.fundoMonetario,
-        setor: data.setor,
-        status: 'Pendente' as PedidoStatus,
-        solicitante: '',
-        localEntrega: '',
-        justificativa: '',
+        setor: data.setor as Setor,
+        status: 'Pendente',
+        createdAt: new Date(),
       };
 
-      if (initializeWorkflow) {
-        novoPedido.workflow = initializeWorkflow();
-      }
-
       console.log("Salvando pedido:", novoPedido);
-      
-      const result = await adicionarPedido(novoPedido);
-      
-      if (result) {
-        toast.success('Pedido de compra cadastrado com sucesso!');
-        navigate('/pedidos');
-      } else {
-        toast.error('Erro ao cadastrar pedido. Verifique os dados e tente novamente.');
-      }
+      adicionarPedido(novoPedido);
+      toast.success('Pedido de compra cadastrado com sucesso!');
+      navigate('/pedidos');
     } catch (error) {
       console.error("Erro ao salvar pedido:", error);
       toast.error('Erro ao cadastrar pedido. Verifique os dados e tente novamente.');
@@ -139,12 +121,11 @@ export const usePedidoForm = () => {
 
   return {
     form,
-    items,
+    itens,
     adicionarItem,
     removerItem,
     atualizarItem,
     calcularValorTotal,
     onSubmit,
-    gerarId
   };
 };

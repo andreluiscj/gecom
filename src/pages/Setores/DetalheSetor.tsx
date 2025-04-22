@@ -1,3 +1,4 @@
+
 import React, { useMemo, useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,30 +26,15 @@ const DetalheSetor: React.FC = () => {
   // Fix: Use id parameter instead of setor
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const dadosDashboard = obterDadosDashboard();
   
   // Use state to store pedidos so we can update it when data changes
   const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
-  const [loading, setLoading] = useState(true);
   
-  // Fetch data when component mounts
+  // Fetch pedidos whenever component mounts or whenever a new DFD might have been added
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      try {
-        const allPedidos = await obterPedidos();
-        setPedidos(allPedidos);
-        
-        const data = await obterDadosDashboard();
-        setDashboardData(data);
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    fetchData();
+    const allPedidos = obterPedidos();
+    setPedidos(allPedidos);
   }, []);
   
   interface SetorDefinition {
@@ -154,14 +140,6 @@ const DetalheSetor: React.FC = () => {
   // Fix: find setor by id parameter
   const setorConfig = useMemo(() => SETORES_CONFIG.find(s => s.id === id), [id]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   if (!setorConfig) {
     return <div>Setor não encontrado</div>;
   }
@@ -171,8 +149,8 @@ const DetalheSetor: React.FC = () => {
   const totalPedidos = setorPedidos.length;
 
   // Only calculate budget data if there are pedidos for this setor
-  const orcamentoPrevisto = dashboardData?.orcamentoPrevisto?.[setorConfig.titulo] || 0;
-  const totalGasto = dashboardData?.gastosPorSetor?.[setorConfig.titulo] || 0;
+  const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto?.[setorConfig.titulo] || 0;
+  const totalGasto = dadosDashboard.gastosPorSetor?.[setorConfig.titulo] || 0;
   const percentualGasto = calcularPorcentagem(totalGasto, orcamentoPrevisto);
   
   // Calculate status distribution for pedidos

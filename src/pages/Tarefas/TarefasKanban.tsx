@@ -78,22 +78,10 @@ const TarefasKanban = () => {
   const [tab, setTab] = useState('todos');
   const [secretariaSelecionada, setSecretariaSelecionada] = useState<string | null>(null);
   const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
-  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    async function loadPedidos() {
-      setLoading(true);
-      try {
-        const todosPedidos = await obterPedidos();
-        setPedidos(todosPedidos);
-      } catch (error) {
-        console.error('Error loading pedidos:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    loadPedidos();
+    const todosPedidos = obterPedidos();
+    setPedidos(todosPedidos);
   }, []);
 
   const pedidosFiltrados = pedidos.filter(p => {
@@ -137,14 +125,6 @@ const TarefasKanban = () => {
       setSecretariaSelecionada(value as Setor);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4 animate-fade-in">
