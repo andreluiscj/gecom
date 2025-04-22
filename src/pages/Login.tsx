@@ -8,18 +8,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import GecomLogo from "@/assets/GecomLogo";
 import { signIn } from "@/services/authService";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate("/dashboard");
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error("Erro ao verificar autenticação:", error);
       }
     };
     
@@ -28,12 +33,20 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Por favor, preencha todos os campos");
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
-      const { success, data, error } = await signIn({ email: username, password });
+      const { success, data, error } = await signIn({ email, password });
 
       if (success && data.session) {
+        toast.success("Login realizado com sucesso!");
+        
         const userProfile = data.user?.user_metadata;
         const role = userProfile?.role || 'servidor';
 
@@ -46,10 +59,13 @@ const Login: React.FC = () => {
         } else {
           navigate('/pedidos');
         }
+      } else {
+        toast.error(error?.message || "Credenciais inválidas");
+        setIsSubmitting(false);
       }
     } catch (error: any) {
-      console.error("Login error:", error);
-    } finally {
+      console.error("Erro ao fazer login:", error);
+      toast.error(error.message || "Erro ao fazer login");
       setIsSubmitting(false);
     }
   };
@@ -66,13 +82,13 @@ const Login: React.FC = () => {
           <CardContent className="pt-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
+                  id="email"
                   type="email"
                   placeholder="Seu email"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isSubmitting}
                 />
