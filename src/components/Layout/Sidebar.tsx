@@ -31,7 +31,7 @@ import {
   LogOut,
   Users,
   UserPlus,
-  City
+  Building
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -87,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
     {
       title: 'Municípios',
       path: '/admin/municipios',
-      icon: <City className="h-5 w-5" />,
+      icon: <Building className="h-5 w-5" />,
       roles: ['admin'],
       visible: userRole === 'admin'
     },

@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Building2, City } from "lucide-react";
+import { Plus, Building2, Building } from "lucide-react";  // Use Building2 or Building
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -81,7 +80,7 @@ const MunicipiosAdmin = () => {
      {municipalities.map((m) => (
       <Card key={m.id}>
        <CardHeader className="flex flex-row items-center gap-2">
-        <City className="h-5 w-5 text-blue-600" />
+        <Building className="h-5 w-5 text-blue-600" />
         <CardTitle>{m.name}</CardTitle>
        </CardHeader>
        <CardContent>
@@ -102,7 +101,7 @@ const MunicipiosAdmin = () => {
     <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center" style={{ backdropFilter: "blur(2px)" }}>
      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg">
       <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-       <City className="w-5 h-5 text-blue-700" />
+       <Building className="w-5 h-5 text-blue-700" />
        Cadastrar novo Município
       </h3>
       <form className="space-y-3" onSubmit={handleCreate}>
