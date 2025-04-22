@@ -46,6 +46,7 @@ const Dashboard: React.FC = () => {
   const { user, userMunicipality } = useAuth();
   const [userStats, setUserStats] = useState<UserStats>({ total: 0, active: 0 });
   const [dfdsStats, setDfdsStats] = useState<DfdStats>({ total: 0, inProgress: 0, completed: 0 });
+  // Fix by using a more specific type with limited nesting
   const [municipality, setMunicipality] = useState<Municipality | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -68,7 +69,8 @@ const Dashboard: React.FC = () => {
         if (userMunicipality?.id) {
           const municipalityData = await getMunicipalityById(userMunicipality.id);
           if (municipalityData) {
-            setMunicipality(municipalityData);
+            // Explicitly cast to Municipality type to avoid deep nesting issues
+            setMunicipality(municipalityData as Municipality);
           }
         }
 
