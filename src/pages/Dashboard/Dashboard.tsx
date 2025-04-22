@@ -10,6 +10,7 @@ import StatCard from "@/components/Dashboard/StatCard";
 import { MonthlyBudgetChart, DepartmentPieChart, DepartmentBarChart } from "@/components/Dashboard/ChartComponents";
 import DashboardHeader from "@/components/Dashboard/DashboardHeader";
 import DashboardFilters from "@/components/Dashboard/DashboardFilters";
+import { Municipality } from "@/types";
 
 // Define explicit types for our dashboard stats
 interface UserStats {
@@ -45,7 +46,7 @@ const Dashboard: React.FC = () => {
   const { user, userMunicipality } = useAuth();
   const [userStats, setUserStats] = useState<UserStats>({ total: 0, active: 0 });
   const [dfdsStats, setDfdsStats] = useState<DfdStats>({ total: 0, inProgress: 0, completed: 0 });
-  const [municipality, setMunicipality] = useState<any>(null);
+  const [municipality, setMunicipality] = useState<Municipality | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Filter states
