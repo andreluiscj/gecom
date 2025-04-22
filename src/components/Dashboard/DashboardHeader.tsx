@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { Municipio } from '@/types';
 
 interface DashboardHeaderProps {
-  municipio: Municipio;
+  municipio: {
+    name?: string;
+    state?: string;
+  };
   language?: string;
 }
 
@@ -29,6 +31,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ municipio, language =
       <p className="text-muted-foreground text-sm">
         {getTranslation('overview', language)}
       </p>
+      {municipio?.name && municipio.name !== "Não definido" && (
+        <div className="mt-2">
+          <span className="text-blue-600 font-medium">{municipio.name}</span>
+          {municipio.state && <span className="text-muted-foreground"> - {municipio.state}</span>}
+        </div>
+      )}
     </div>
   );
 };
