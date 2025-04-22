@@ -14,6 +14,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,6 +34,7 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(null);
     
     if (!email || !password) {
       toast.error("Por favor, preencha todos os campos");
@@ -42,13 +44,19 @@ const Login: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      console.log("Iniciando login com:", { email });
+      
       const { success, data, error } = await signIn({ email, password });
+      console.log("Resposta do login:", { success, data, error });
 
       if (success && data.session) {
         toast.success("Login realizado com sucesso!");
         
         const userProfile = data.user?.user_metadata;
         const role = userProfile?.role || 'servidor';
+        
+        console.log("Perfil do usuário:", userProfile);
+        console.log("Role:", role);
 
         if (role === 'admin') {
           navigate('/admin');
@@ -60,11 +68,13 @@ const Login: React.FC = () => {
           navigate('/pedidos');
         }
       } else {
+        setLoginError(error?.message || "Credenciais inválidas");
         toast.error(error?.message || "Credenciais inválidas");
         setIsSubmitting(false);
       }
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
+      setLoginError(error.message || "Erro ao fazer login");
       toast.error(error.message || "Erro ao fazer login");
       setIsSubmitting(false);
     }
@@ -105,6 +115,11 @@ const Login: React.FC = () => {
                   disabled={isSubmitting}
                 />
               </div>
+              {loginError && (
+                <div className="text-red-500 text-sm mt-2">
+                  {loginError}
+                </div>
+              )}
               <Button
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700"

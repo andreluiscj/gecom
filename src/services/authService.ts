@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -17,26 +16,27 @@ export type SignUpCredentials = {
 
 export async function signIn({ email, password }: SignInCredentials) {
   try {
+    console.log("Tentando login com:", email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
+      console.error("Erro de autenticação:", error);
       throw error;
     }
 
+    console.log("Login bem-sucedido:", data);
     return { success: true, data };
   } catch (error: any) {
-    console.error("Error signing in:", error.message);
-    toast.error(error.message || "Erro ao fazer login");
+    console.error("Erro no serviço de login:", error.message);
     return { success: false, error };
   }
 }
 
 export async function signUp({ email, password, name, cpf, birthdate }: SignUpCredentials) {
   try {
-    // 1. Create auth user
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -51,7 +51,6 @@ export async function signUp({ email, password, name, cpf, birthdate }: SignUpCr
       throw error;
     }
 
-    // 2. Update profile with additional data
     if (data.user) {
       const { error: profileError } = await supabase
         .from("profiles")
@@ -90,19 +89,14 @@ export async function signOut() {
 }
 
 export async function validateCpf(cpf: string): Promise<boolean> {
-  // Basic validation
   if (!cpf) return false;
   
-  // Remove non-digits
   cpf = cpf.replace(/\D/g, '');
   
-  // Check if it has 11 digits
   if (cpf.length !== 11) return false;
   
-  // Check if all digits are the same
   if (/^(\d)\1+$/.test(cpf)) return false;
   
-  // Check if CPF already exists in database
   const { data, error } = await supabase
     .from("profiles")
     .select("cpf")
@@ -113,12 +107,10 @@ export async function validateCpf(cpf: string): Promise<boolean> {
     return false;
   }
   
-  // If data exists and has length > 0, CPF is already in use
   if (data && data.length > 0) {
     return false;
   }
   
-  // Validate CPF algorithm
   let sum = 0;
   for (let i = 0; i < 9; i++) {
     sum += parseInt(cpf.charAt(i)) * (10 - i);
@@ -145,7 +137,6 @@ export async function getCurrentUser() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return null;
     
-    // Get user profile
     const { data } = await supabase
       .from("profiles")
       .select("*")
