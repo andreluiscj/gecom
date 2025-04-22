@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { users, userPlus, users as usersIcon } from "lucide-react";
+import { Users, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,7 +38,7 @@ const Usuarios = () => {
 
   async function carregarUsuarios() {
     setLoading(true);
-    // Pega perfis e roles dos usuários
+    // Pega perfis dos usuários
     const { data: profiles, error: profError } = await supabase
       .from("profiles")
       .select("*");
@@ -47,20 +47,13 @@ const Usuarios = () => {
       toast.error("Erro ao buscar perfis.");
       return;
     }
-    const { data: roles, error: roleError } = await supabase
-      .from("user_roles")
-      .select("user_id, role");
-    if (roleError) {
-      setLoading(false);
-      toast.error("Erro ao buscar papéis.");
-      return;
-    }
+    
+    // Como não temos a tabela 'user_roles', vamos usar o campo 'role' direto da tabela profiles
     // Junta as informações
     const usuariosList = profiles.map(profile => {
-      const roleObj = roles.find(r => r.user_id === profile.id);
       return {
         ...profile,
-        papel: roleObj ? roleObj.role : "servidor"
+        papel: profile.role || "servidor"
       };
     });
 
@@ -96,7 +89,7 @@ const Usuarios = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Card className="flex flex-row items-center gap-3 bg-blue-100">
               <div className="bg-blue-500 text-white rounded-full p-3 flex items-center justify-center mr-4">
-                <usersIcon className="h-6 w-6" />
+                <Users className="h-6 w-6" />
               </div>
               <div>
                 <span className="text-lg font-bold">
@@ -107,7 +100,7 @@ const Usuarios = () => {
             </Card>
             <Card className="flex flex-row items-center gap-3 bg-blue-100">
               <div className="bg-blue-500 text-white rounded-full p-3 flex items-center justify-center mr-4">
-                <userPlus className="h-6 w-6" />
+                <UserPlus className="h-6 w-6" />
               </div>
               <div>
                 <span className="text-lg font-bold">
