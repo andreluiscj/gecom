@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -8,24 +7,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import GecomLogo from "@/assets/GecomLogo";
 import { signIn } from "@/services/authService";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          navigate("/dashboard");
-        }
-      } catch (error) {
-        console.error("Erro ao verificar autenticação:", error);
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate("/dashboard");
       }
     };
     
@@ -34,29 +27,14 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError(null);
-    
-    if (!email || !password) {
-      toast.error("Por favor, preencha todos os campos");
-      return;
-    }
-    
     setIsSubmitting(true);
 
     try {
-      console.log("Iniciando login com:", { email });
-      
-      const { success, data, error } = await signIn({ email, password });
-      console.log("Resposta do login:", { success, data, error });
+      const { success, data, error } = await signIn({ email: username, password });
 
       if (success && data.session) {
-        toast.success("Login realizado com sucesso!");
-        
         const userProfile = data.user?.user_metadata;
         const role = userProfile?.role || 'servidor';
-        
-        console.log("Perfil do usuário:", userProfile);
-        console.log("Role:", role);
 
         if (role === 'admin') {
           navigate('/admin');
@@ -67,15 +45,10 @@ const Login: React.FC = () => {
         } else {
           navigate('/pedidos');
         }
-      } else {
-        setLoginError(error?.message || "Credenciais inválidas");
-        toast.error(error?.message || "Credenciais inválidas");
-        setIsSubmitting(false);
       }
     } catch (error: any) {
-      console.error("Erro ao fazer login:", error);
-      setLoginError(error.message || "Erro ao fazer login");
-      toast.error(error.message || "Erro ao fazer login");
+      console.error("Login error:", error);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -92,13 +65,13 @@ const Login: React.FC = () => {
           <CardContent className="pt-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Email</Label>
                 <Input
-                  id="email"
+                  id="username"
                   type="email"
                   placeholder="Seu email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   disabled={isSubmitting}
                 />
@@ -115,11 +88,6 @@ const Login: React.FC = () => {
                   disabled={isSubmitting}
                 />
               </div>
-              {loginError && (
-                <div className="text-red-500 text-sm mt-2">
-                  {loginError}
-                </div>
-              )}
               <Button
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700"
