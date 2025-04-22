@@ -13,7 +13,7 @@ import { GDPRConsentDialog } from "@/components/Auth/GDPRConsentDialog";
 import { supabase } from "@/integrations/supabase/client";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -38,11 +38,10 @@ const Login: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    console.info("Iniciando login com:", { email });
-    console.info("Tentando login com:", email);
+    console.info("Iniciando login com:", { usuario });
 
     try {
-      const { success, data, error } = await signIn({ email, password });
+      const { success, data, error } = await signIn({ email: usuario, password });
 
       if (success && data.session) {
         // Check if it's first login
@@ -99,13 +98,13 @@ const Login: React.FC = () => {
           <CardContent className="pt-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="usuario">Usuário</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="Seu email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="usuario"
+                  type="text"
+                  placeholder="Seu usuário"
+                  value={usuario}
+                  onChange={(e) => setUsuario(e.target.value)}
                   required
                   disabled={isSubmitting}
                 />
