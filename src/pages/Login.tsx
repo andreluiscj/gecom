@@ -6,53 +6,89 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import GecomLogo from "@/assets/GecomLogo";
-import { signIn } from "@/services/authService";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Check if user is already logged in
   useEffect(() => {
+    // Check if user is already logged in
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate("/dashboard");
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          redirectBasedOnRole(data.session.user?.user_metadata?.role || 'servidor');
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
       }
     };
     
     checkAuth();
   }, [navigate]);
 
+  const redirectBasedOnRole = (role: string) => {
+    // Redirect based on role
+    console.log("Redirecting based on role:", role);
+    
+    if (role === 'admin') {
+      navigate('/admin');
+    } else if (role === 'prefeito') {
+      navigate('/dashboard');
+    } else if (role === 'gestor') {
+      navigate('/dashboard');
+    } else {
+      navigate('/pedidos');
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Por favor, preencha todos os campos");
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
-      const { success, data, error } = await signIn({ email: username, password });
+      console.log("Iniciando login com:", { email });
+      console.log("Tentando login com:", email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      if (success && data.session) {
-        // Regular login
+      if (error) {
+        console.error("Login error:", error);
+        toast.error(error.message || "Erro ao fazer login");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (data?.session) {
+        console.log("Login successful:", data.session);
+        toast.success("Login realizado com sucesso");
+        
+        // Get user profile and additional data if needed
         const userProfile = data.user?.user_metadata;
         const role = userProfile?.role || 'servidor';
-
-        // Redirect based on role
-        if (role === 'admin') {
-          navigate('/admin');
-        } else if (role === 'prefeito') {
-          navigate('/dashboard');
-        } else if (role === 'gestor') {
-          navigate('/dashboard');
-        } else {
-          navigate('/pedidos');
-        }
+        
+        redirectBasedOnRole(role);
+      } else {
+        console.error("No session data returned");
+        toast.error("Erro ao fazer login: sessão não iniciada");
+        setIsSubmitting(false);
       }
     } catch (error: any) {
-      console.error("Login error:", error);
-    } finally {
+      console.error("Login exception:", error);
+      toast.error(error.message || "Erro inesperado ao fazer login");
       setIsSubmitting(false);
     }
   };
@@ -70,13 +106,13 @@ const Login: React.FC = () => {
           <CardContent className="pt-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
+                  id="email"
                   type="email"
                   placeholder="Seu email"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isSubmitting}
                 />
