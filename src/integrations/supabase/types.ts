@@ -195,6 +195,7 @@ export type Database = {
           cpf: string
           created_at: string | null
           district: string
+          email: string | null
           id: string
           name: string
           role: string
@@ -209,6 +210,7 @@ export type Database = {
           cpf: string
           created_at?: string | null
           district: string
+          email?: string | null
           id: string
           name: string
           role: string
@@ -223,6 +225,7 @@ export type Database = {
           cpf?: string
           created_at?: string | null
           district?: string
+          email?: string | null
           id?: string
           name?: string
           role?: string
@@ -323,13 +326,6 @@ export type Database = {
             columns: ["sector_id"]
             isOneToOne: false
             referencedRelation: "sectors"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_sectors_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

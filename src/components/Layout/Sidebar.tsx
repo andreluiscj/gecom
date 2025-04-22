@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -75,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       path: '/dashboard',
       icon: <Home className="h-5 w-5" />,
       roles: ['admin', 'prefeito', 'manager'],
-      visible: hasDashboardAccess
+      visible: false
     },
     {
       title: 'Pedidos de Compras',
@@ -97,34 +96,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       icon: <CheckSquare className="h-5 w-5" />,
       roles: ['admin', 'prefeito', 'gerente', 'user', 'manager'],
       visible: true
-    },
-    {
-      title: 'Administração',
-      path: '/admin',
-      icon: <Building2 className="h-5 w-5" />,
-      roles: ['admin'],
-      visible: userRole === 'admin'
-    },
-    {
-      title: 'Cadastro de Gestor',
-      path: '/admin/gerentes',
-      icon: <UserPlus className="h-5 w-5" />,
-      roles: ['admin', 'prefeito'],
-      visible: userRole === 'admin' || userRole === 'prefeito'
-    },
-    {
-      title: 'Gerenciamento de Servidores',
-      path: '/gerenciamento/funcionarios',
-      icon: <Users className="h-5 w-5" />,
-      roles: ['admin', 'prefeito'],
-      visible: userRole === 'admin' || userRole === 'prefeito'
-    },
-    {
-      title: 'Área do Prefeito',
-      path: '/prefeito',
-      icon: <Building2 />,
-      roles: ['admin', 'prefeito'],
-      visible: userRole === 'admin' || userRole === 'prefeito'
     },
     {
       title: 'Usuários',
