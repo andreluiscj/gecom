@@ -6,15 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import GecomLogo from "@/assets/GecomLogo";
-import { signIn } from "@/services/authService";
+import { supabase } from "@/integrations/supabase/client";
 import { ForgotPasswordDialog } from "@/components/Auth/ForgotPasswordDialog";
 import { PasswordChangeDialog } from "@/components/Auth/PasswordChangeDialog";
 import { GDPRConsentDialog } from "@/components/Auth/GDPRConsentDialog";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Login: React.FC = () => {
-  const [usuario, setUsuario] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -25,12 +24,17 @@ const Login: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
-  // Check if user is already logged in
+  // Verifica se o usuário já está logado apenas uma vez na inicialização
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate("/dashboard");
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          // Usuário já está logado, redirecionar para dashboard
+          navigate("/dashboard", { replace: true });
+        }
+      } catch (error) {
+        console.error("Erro ao verificar autenticação:", error);
       }
     };
     
@@ -39,119 +43,150 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
-    console.info("Iniciando login com:", { usuario });
-
-    try {
-      // Usando o email do usuário para autenticar
-      const { success, data, error } = await signIn({ email: usuario, password });
-
-      if (!success || !data) {
-        console.error("Login error:", error);
-        toast.error(error?.message || "Erro ao fazer login. Verifique suas credenciais.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (data.session) {
-        // Check if it's first login
-        if (data.user?.user_metadata?.primeiroAcesso) {
-          setCurrentUserId(data.user.id);
-          setShowPasswordChangeDialog(true);
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Check if GDPR consent is needed
-        const gdprAccepted = localStorage.getItem(`gdpr-accepted-${data.user.id}`);
-        if (!gdprAccepted) {
-          setCurrentUserId(data.user.id);
-          setShowGDPRDialog(true);
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Regular login
-        const userProfile = data.user?.user_metadata;
-        const role = userProfile?.role || 'servidor';
-        
-        toast.success("Login realizado com sucesso!");
-
-        // Redirect based on role
-        if (role === 'admin') {
-          navigate('/admin');
-        } else if (role === 'prefeito') {
-          navigate('/dashboard');
-        } else if (role === 'gestor') {
-          navigate('/dashboard');
-        } else {
-          navigate('/pedidos');
-        }
-      }
-    } catch (error: any) {
-      console.error("Login error:", error);
-      toast.error("Ocorreu um erro durante o login. Por favor, tente novamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  // Handle password change for first-time login
-  const handlePasswordChange = async (newPassword: string, confirmPassword: string) => {
-    if (!currentUserId || newPassword !== confirmPassword) {
-      toast.error("As senhas não coincidem");
+    if (!email || !password) {
+      toast.error("Por favor, preencha todos os campos");
       return;
     }
     
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      setIsSubmitting(true);
+      console.info("Iniciando login com:", { email });
+      
+      // Autenticação com Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
       if (error) {
-        toast.error("Erro ao atualizar senha: " + error.message);
+        console.error("Erro no login:", error.message);
+        toast.error(error.message || "Erro ao fazer login. Verifique suas credenciais.");
+        setIsSubmitting(false);
         return;
       }
       
-      // Update user metadata to remove first login flag
+      if (!data.session) {
+        toast.error("Não foi possível iniciar sessão");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Verificar se é primeiro acesso
+      const userMetadata = data.user?.user_metadata;
+      if (userMetadata?.primeiroAcesso) {
+        setCurrentUserId(data.user.id);
+        setShowPasswordChangeDialog(true);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Verificar se precisa aceitar GDPR
+      const gdprAccepted = localStorage.getItem(`gdpr-accepted-${data.user.id}`);
+      if (!gdprAccepted) {
+        setCurrentUserId(data.user.id);
+        setShowGDPRDialog(true);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Login normal (sem primeiro acesso e GDPR já aceito)
+      const role = userMetadata?.role || 'servidor';
+      toast.success("Login realizado com sucesso!");
+
+      // IMPORTANTE: Redirecionar DEPOIS de todas as verificações
+      // Usar replace: true para evitar retornos indesejados
+      if (role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (role === 'prefeito' || role === 'gestor') {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/pedidos', { replace: true });
+      }
+    } catch (error: any) {
+      console.error("Erro inesperado no login:", error);
+      toast.error("Ocorreu um erro durante o login. Por favor, tente novamente.");
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Troca de senha para primeiro login
+  const handlePasswordChange = async () => {
+    if (!currentUserId) {
+      toast.error("Erro ao identificar usuário");
+      return;
+    }
+    
+    if (!newPassword || newPassword.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast.error("As senhas não coincidem");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Atualiza a senha no Supabase
+      const { error } = await supabase.auth.updateUser({ 
+        password: newPassword 
+      });
+      
+      if (error) {
+        toast.error("Erro ao atualizar senha: " + error.message);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Atualiza os metadados para remover a flag de primeiro acesso
       await supabase.auth.updateUser({
         data: { primeiroAcesso: false }
       });
       
       toast.success("Senha alterada com sucesso!");
       setShowPasswordChangeDialog(false);
+      
+      // Depois de mudar a senha, exibir o diálogo de GDPR
       setShowGDPRDialog(true);
-    } catch (error) {
-      console.error("Error updating password:", error);
+    } catch (error: any) {
+      console.error("Erro ao atualizar a senha:", error);
       toast.error("Ocorreu um erro ao atualizar a senha");
+      setIsSubmitting(false);
     }
   };
 
-  // Handle submitting the password change form
-  const handleSubmitPasswordChange = () => {
-    handlePasswordChange(newPassword, confirmPassword);
-  };
-
-  // Handle GDPR consent
+  // Aceitar os termos de GDPR
   const handleGDPRConsent = async () => {
-    localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
-    
-    // Get user profile data
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const userProfile = user.user_metadata;
-      const role = userProfile?.role || 'servidor';
+    try {
+      // Salva o consentimento no localStorage
+      localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
       
-      // Redirect based on role
-      if (role === 'admin') {
-        navigate('/admin');
-      } else if (role === 'prefeito' || role === 'gestor') {
-        navigate('/dashboard');
-      } else {
-        navigate('/pedidos');
+      // Busca dados do usuário para redirecionar
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        toast.error("Erro ao identificar usuário");
+        return;
       }
-    } else {
-      // Fallback if user data is not available
-      navigate('/pedidos');
+      
+      const role = data.user.user_metadata?.role || 'servidor';
+      toast.success("Termos aceitos. Redirecionando...");
+      
+      // Redirecionar baseado no papel do usuário
+      if (role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (role === 'prefeito' || role === 'gestor') {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/pedidos', { replace: true });
+      }
+    } catch (error) {
+      console.error("Erro ao processar consentimento GDPR:", error);
+      toast.error("Ocorreu um erro ao processar o consentimento");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -170,13 +205,13 @@ const Login: React.FC = () => {
           <CardContent className="pt-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="usuario">Usuário</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="usuario"
-                  type="text"
-                  placeholder="Seu usuário"
-                  value={usuario}
-                  onChange={(e) => setUsuario(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="Seu email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isSubmitting}
                 />
@@ -227,7 +262,7 @@ const Login: React.FC = () => {
           confirmPassword={confirmPassword}
           setNewPassword={setNewPassword}
           setConfirmPassword={setConfirmPassword}
-          onSubmit={handleSubmitPasswordChange}
+          onSubmit={handlePasswordChange}
           isSubmitting={isSubmitting}
         />
         

@@ -24,38 +24,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener first
+    // IMPORTANTE: Primeiro configurar o listener de mudanças de autenticação
+    // antes de buscar a sessão atual
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("Auth state change:", event, session?.user?.id);
         
         if (session) {
-          try {
-            const userProfile = await getCurrentUser();
-            setUser(userProfile);
-            setUserRole(userProfile?.role || null);
-            
-            // Load user municipalities
-            const municipalities = await getUserMunicipalities(session.user.id);
-            setUserMunicipalities(municipalities);
-            
-            // Set default municipality if available
-            const selectedMunicipality = localStorage.getItem('municipio-selecionado');
-            if (selectedMunicipality) {
-              const parsedMunicipality = JSON.parse(selectedMunicipality);
-              setUserMunicipality(parsedMunicipality);
-            } else if (municipalities && municipalities.length > 0) {
-              setUserMunicipality(municipalities[0]);
-              localStorage.setItem('municipio-selecionado', JSON.stringify(municipalities[0]));
+          // Usar setTimeout(0) para evitar ciclos de promessas dentro de listeners de eventos
+          // que podem causar deadlock nas chamadas do Supabase
+          setTimeout(async () => {
+            try {
+              const userProfile = await getCurrentUser();
+              setUser(userProfile);
+              setUserRole(userProfile?.role || null);
+              
+              // Carregar municípios do usuário
+              const municipalities = await getUserMunicipalities(session.user.id);
+              setUserMunicipalities(municipalities);
+              
+              // Definir município padrão se disponível
+              const selectedMunicipality = localStorage.getItem('municipio-selecionado');
+              if (selectedMunicipality) {
+                try {
+                  const parsedMunicipality = JSON.parse(selectedMunicipality);
+                  setUserMunicipality(parsedMunicipality);
+                } catch (e) {
+                  console.error("Error parsing municipality from localStorage", e);
+                  if (municipalities && municipalities.length > 0) {
+                    setUserMunicipality(municipalities[0]);
+                    localStorage.setItem('municipio-selecionado', JSON.stringify(municipalities[0]));
+                  }
+                }
+              } else if (municipalities && municipalities.length > 0) {
+                setUserMunicipality(municipalities[0]);
+                localStorage.setItem('municipio-selecionado', JSON.stringify(municipalities[0]));
+              }
+              
+              // Carregar setores do usuário
+              const sectors = await getUserSectors(session.user.id);
+              setUserSectors(sectors);
+            } catch (error) {
+              console.error("Error loading user data:", error);
+              toast.error("Erro ao carregar dados do usuário");
+            } finally {
+              setLoading(false);
             }
-            
-            // Load user sectors
-            const sectors = await getUserSectors(session.user.id);
-            setUserSectors(sectors);
-          } catch (error) {
-            console.error("Error loading user data:", error);
-            toast.error("Erro ao carregar dados do usuário");
-          }
+          }, 0);
         } else {
           setUser(null);
           setUserRole(null);
@@ -63,13 +78,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUserMunicipalities([]);
           setUserSectors([]);
           localStorage.removeItem('municipio-selecionado');
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
-    // Then check for existing session
+    // DEPOIS verificar sessão atual
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -79,21 +93,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(userProfile);
           setUserRole(userProfile?.role || null);
           
-          // Load user municipalities
+          // Carregar municípios do usuário
           const municipalities = await getUserMunicipalities(session.user.id);
           setUserMunicipalities(municipalities);
           
-          // Set default municipality if available
+          // Definir município padrão se disponível
           const selectedMunicipality = localStorage.getItem('municipio-selecionado');
           if (selectedMunicipality) {
-            const parsedMunicipality = JSON.parse(selectedMunicipality);
-            setUserMunicipality(parsedMunicipality);
+            try {
+              const parsedMunicipality = JSON.parse(selectedMunicipality);
+              setUserMunicipality(parsedMunicipality);
+            } catch (e) {
+              if (municipalities && municipalities.length > 0) {
+                setUserMunicipality(municipalities[0]);
+                localStorage.setItem('municipio-selecionado', JSON.stringify(municipalities[0]));
+              }
+            }
           } else if (municipalities && municipalities.length > 0) {
             setUserMunicipality(municipalities[0]);
             localStorage.setItem('municipio-selecionado', JSON.stringify(municipalities[0]));
           }
           
-          // Load user sectors
+          // Carregar setores do usuário
           const sectors = await getUserSectors(session.user.id);
           setUserSectors(sectors);
         }

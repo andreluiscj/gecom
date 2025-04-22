@@ -2,7 +2,6 @@
 // Serviços de autenticação Supabase
 
 import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "@/types";
 
 // Login usando email como usuário
 export const signIn = async ({ email, password }: { email: string; password: string }) => {
@@ -56,6 +55,7 @@ export const signUp = async ({ email, password, name, cpf, birthdate }: {
           cpf,
           birthdate,
           role: 'servidor', // padrão
+          primeiroAcesso: true // Marca como primeiro acesso para exigir troca de senha
         }
       }
     });
@@ -171,5 +171,43 @@ export const getUserSectors = async (userId: string) => {
   } catch (err) {
     console.error('Unexpected error fetching user sectors:', err);
     return [];
+  }
+};
+
+// Atualiza senha
+export const updatePassword = async (newPassword: string) => {
+  try {
+    const { error } = await supabase.auth.updateUser({ 
+      password: newPassword 
+    });
+    
+    if (error) {
+      console.error('Error updating password:', error);
+      return { success: false, error };
+    }
+    
+    return { success: true, error: null };
+  } catch (err) {
+    console.error('Unexpected error updating password:', err);
+    return { success: false, error: err };
+  }
+};
+
+// Reset de senha (envio do email)
+export const resetPassword = async (email: string) => {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password'
+    });
+    
+    if (error) {
+      console.error('Error sending password reset email:', error);
+      return { success: false, error };
+    }
+    
+    return { success: true, error: null };
+  } catch (err) {
+    console.error('Unexpected error sending password reset email:', err);
+    return { success: false, error: err };
   }
 };
