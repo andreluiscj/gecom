@@ -30,7 +30,8 @@ import {
   PieChart as PieChartIcon,
   LogOut,
   Users,
-  UserPlus
+  UserPlus,
+  City
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -74,7 +75,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       path: '/dashboard',
       icon: <Home className="h-5 w-5" />,
       roles: ['admin', 'prefeito', 'manager'],
-      visible: false
+      visible: true
+    },
+    {
+      title: 'Administração',
+      path: '/admin/administracao',
+      icon: <Building2 className="h-5 w-5" />,
+      roles: ['admin'],
+      visible: userRole === 'admin'
+    },
+    {
+      title: 'Municípios',
+      path: '/admin/municipios',
+      icon: <City className="h-5 w-5" />,
+      roles: ['admin'],
+      visible: userRole === 'admin'
     },
     {
       title: 'Pedidos de Compras',
@@ -117,12 +132,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       title: 'Educação',
       path: '/setores/educacao',
       icon: <BookOpen className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Administração',
-      path: '/setores/administrativo',
-      icon: <Building2 className="h-5 w-5" />,
       color: 'text-white',
     },
     {

@@ -24,6 +24,8 @@ const CadastroGerente = lazy(() => import("./pages/Admin/CadastroGerente"));
 const PrefeitoPage = lazy(() => import("./pages/Prefeito/PrefeitoPage"));
 const PrefeitoDashboard = lazy(() => import("./pages/Prefeito/PrefeitoDashboard"));
 const Usuarios = lazy(() => import("./pages/Usuarios/Usuarios"));
+const Administracao = lazy(() => import("./pages/Admin/Administracao"));
+const MunicipiosAdmin = lazy(() => import("./pages/Admin/MunicipiosAdmin"));
 
 // Loading component
 const LoadingFallback = () => (
@@ -56,9 +58,14 @@ function App() {
             <Admin />
           </ProtectedRoute>
         } />
+        <Route path="/admin/administracao" element={
+          <ProtectedRoute>
+            <Administracao />
+          </ProtectedRoute>
+        } />
         <Route path="/admin/municipios" element={
           <ProtectedRoute>
-            <MunicipioSelection />
+            <MunicipiosAdmin />
           </ProtectedRoute>
         } />
 
