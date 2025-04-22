@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -34,23 +35,6 @@ const Login: React.FC = () => {
       const { success, data, error } = await signIn({ email: username, password });
 
       if (success && data.session) {
-        // Check if it's first login
-        if (data.user?.user_metadata?.primeiroAcesso) {
-          setCurrentUserId(data.user.id);
-          setShowPasswordChangeDialog(true);
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Check if GDPR consent is needed
-        const gdprAccepted = localStorage.getItem(`gdpr-accepted-${data.user.id}`);
-        if (!gdprAccepted) {
-          setCurrentUserId(data.user.id);
-          setShowGDPRDialog(true);
-          setIsSubmitting(false);
-          return;
-        }
-
         // Regular login
         const userProfile = data.user?.user_metadata;
         const role = userProfile?.role || 'servidor';
