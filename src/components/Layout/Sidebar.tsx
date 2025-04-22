@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -35,38 +35,20 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { 
-  canAccessUserManagement, 
-  canAccessDashboard, 
-  getUserSetor, 
-  shouldFilterByUserSetor,
-  hasSetorAccess 
-} from '@/utils/authHelpers';
+import { canAccessUserManagement, canAccessDashboard, getUserSetor, shouldFilterByUserSetor } from '@/utils/authHelpers';
 
 interface SidebarProps {
   isOpen: boolean;
   userRole?: string | null;
   userMunicipality?: string | null;
-  userSetor?: string | null;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality, userSetor }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [secretariasOpen, setSecretariasOpen] = useState(false);
+  const userSetor = getUserSetor();
   const showOnlyUserSetor = shouldFilterByUserSetor();
-
-  // Automatically expand Secretarias section if user is in a setor page
-  useEffect(() => {
-    if (location.pathname.includes('/setores/')) {
-      setSecretariasOpen(true);
-    }
-    
-    // Auto-expand when user is a regular server
-    if (userRole === 'user' && userSetor) {
-      setSecretariasOpen(true);
-    }
-  }, [location.pathname, userRole, userSetor]);
 
   const toggleSecretarias = () => {
     setSecretariasOpen(!secretariasOpen);
@@ -128,14 +110,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       path: '/admin/gerentes',
       icon: <UserPlus className="h-5 w-5" />,
       roles: ['admin', 'prefeito'],
-      visible: hasUserManagementAccess
+      visible: userRole === 'admin' || userRole === 'prefeito'
     },
     {
       title: 'Gerenciamento de Servidores',
       path: '/gerenciamento/funcionarios',
       icon: <Users className="h-5 w-5" />,
       roles: ['admin', 'prefeito'],
-      visible: hasUserManagementAccess
+      visible: userRole === 'admin' || userRole === 'prefeito'
     },
     {
       title: 'Área do Prefeito',
@@ -152,116 +134,96 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       path: '/setores/saude',
       icon: <HeartPulse className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Saúde'
     },
     {
       title: 'Educação',
       path: '/setores/educacao',
       icon: <BookOpen className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Educação'
     },
     {
       title: 'Administração',
       path: '/setores/administrativo',
       icon: <Building2 className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Administrativo'
     },
     {
       title: 'Transporte',
       path: '/setores/transporte',
       icon: <Bus className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Transporte'
     },
     {
       title: 'Obras',
       path: '/setores/obras',
       icon: <Briefcase className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Obras'
     },
     {
       title: 'Segurança Pública',
       path: '/setores/seguranca',
       icon: <Shield className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Segurança Pública'
     },
     {
       title: 'Assistência Social',
       path: '/setores/social',
       icon: <Heart className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Assistência Social'
     },
     {
       title: 'Meio Ambiente',
       path: '/setores/ambiente',
       icon: <Leaf className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Meio Ambiente'
     },
     {
       title: 'Fazenda',
       path: '/setores/fazenda',
       icon: <Coins className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Fazenda'
     },
     {
       title: 'Turismo',
       path: '/setores/turismo',
       icon: <Globe className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Turismo'
     },
     {
       title: 'Cultura',
       path: '/setores/cultura',
       icon: <Music className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Cultura'
     },
     {
       title: 'Esportes e Lazer',
       path: '/setores/esportes',
       icon: <Award className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Esportes e Lazer'
     },
     {
       title: 'Planejamento',
       path: '/setores/planejamento',
       icon: <PieChartIcon className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Planejamento'
     },
     {
       title: 'Comunicação',
       path: '/setores/comunicacao',
       icon: <Radio className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Comunicação'
     },
     {
       title: 'Ciência e Tecnologia',
       path: '/setores/ciencia',
       icon: <MapPin className="h-5 w-5" />,
       color: 'text-white',
-      id: 'Ciência e Tecnologia'
     },
   ];
 
-  // Filter secretarias based on user access
-  const filteredSecretarias = secretariasItems.filter(item => {
-    if (showOnlyUserSetor && userSetor) {
-      // Only show the current user's setor AND any additional sectors they have access to
-      return hasSetorAccess(item.id);
-    }
-    return true; // Admin/prefeito see all
-  });
+  const filteredSecretarias = showOnlyUserSetor 
+    ? secretariasItems.filter(item => item.title === userSetor)
+    : secretariasItems;
 
   const filteredMenuItems = menuItems.filter(
     (item) => item.visible && ((item.roles && userRole && item.roles.includes(userRole)))
@@ -326,28 +288,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
               
               {secretariasOpen && (
                 <div className="mt-1 space-y-1 pl-10 pr-3 max-h-64 overflow-y-auto">
-                  {filteredSecretarias.map((subItem, subIdx) => {
-                    // Highlight user's current setor
-                    const isUserSetor = userSetor === subItem.id;
-                    
-                    return (
-                      <Link
-                        key={subIdx}
-                        to={subItem.path}
-                        className={cn(
-                          'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 text-white',
-                          location.pathname === subItem.path || isUserSetor
-                            ? 'bg-sidebar-primary shadow-md'
-                            : 'hover:bg-sidebar-accent hover:shadow-sm'
-                        )}
-                      >
-                        <div className="mr-2.5">
-                          {subItem.icon}
-                        </div>
-                        <span>{subItem.title}{isUserSetor ? ' ✓' : ''}</span>
-                      </Link>
-                    );
-                  })}
+                  {filteredSecretarias.map((subItem, subIdx) => (
+                    <Link
+                      key={subIdx}
+                      to={subItem.path}
+                      className={cn(
+                        'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 text-white',
+                        location.pathname === subItem.path
+                          ? 'bg-sidebar-primary shadow-md'
+                          : 'hover:bg-sidebar-accent hover:shadow-sm'
+                      )}
+                    >
+                      <div className="mr-2.5">
+                        {subItem.icon}
+                      </div>
+                      <span>{subItem.title}</span>
+                    </Link>
+                  ))}
                 </div>
               )}
             </div>

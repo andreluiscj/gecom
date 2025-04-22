@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { exportDashboardAsPDF } from '@/utils/pdfGenerator';
 import { getUserRole, getUserSetor, shouldFilterByUserSetor } from '@/utils/authHelpers';
 
+// Default municipality object
 const defaultMunicipio: Municipio = {
   id: 'pai-pedro',
   nome: 'Pai Pedro',
@@ -21,6 +22,7 @@ const defaultMunicipio: Municipio = {
   prefeito: 'Maria Silva',
 };
 
+// Sample dashboard data
 const dadosDashboard: DadosDashboard = {
   resumoFinanceiro: {
     estimativaDespesa: 28500000,
@@ -67,6 +69,7 @@ const dadosDashboard: DadosDashboard = {
   },
 };
 
+// Data for monthly charts
 const monthlyData = [
   { name: 'Jan', planejado: 240000, executado: 220000 },
   { name: 'Fev', planejado: 300000, executado: 320000 },
@@ -82,6 +85,7 @@ const monthlyData = [
   { name: 'Dez', planejado: 520000, executado: 500000 },
 ];
 
+// Data for department analysis
 const departmentData = [
   { name: 'Saúde', valor: 1850000, percent: 28 },
   { name: 'Educação', valor: 1520000, percent: 23 },
@@ -93,7 +97,7 @@ const departmentData = [
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('grafico');
-  const [language, setLanguage] = useState('pt');
+  const [language, setLanguage] = useState('pt'); // Default language is Portuguese
   const [municipio, setMunicipio] = useState<Municipio>(defaultMunicipio);
   const [filteredData, setFilteredData] = useState(monthlyData);
   const [filteredDeptData, setFilteredDeptData] = useState(departmentData);
@@ -104,13 +108,16 @@ const Dashboard: React.FC = () => {
     month: 'Junho',
     department: 'Todos'
   });
-
+  
+  // Get user information for filtering
   const userRole = getUserRole();
   const userSetor = getUserSetor();
   const shouldFilter = shouldFilterByUserSetor();
-
+  
+  // Filtered dashboard data based on user's secretaria
   const [filteredDashboardData, setFilteredDashboardData] = useState(dadosDashboard);
 
+  // Effect to load selected municipality
   useEffect(() => {
     const municipioId = localStorage.getItem('municipio-selecionado');
     if (municipioId === 'janauba') {
@@ -126,39 +133,58 @@ const Dashboard: React.FC = () => {
     }
   }, []);
 
+  // Effect to apply filters
   useEffect(() => {
     applyFilters();
   }, [period, filters, userSetor, shouldFilter]);
-
+  
+  // Effect to filter dashboard data by user's department
   useEffect(() => {
     if (shouldFilter && userSetor) {
+      // If user should only see their department data
       const filteredData = filterDashboardDataBySetor(dadosDashboard, userSetor);
       setFilteredDashboardData(filteredData);
+      
+      // Force department filter to user's department
       setFilters(prev => ({...prev, department: userSetor}));
     } else {
+      // Admin and prefeito see all data
       setFilteredDashboardData(dadosDashboard);
     }
   }, [userSetor, shouldFilter]);
 
+  // Function to filter dashboard data by secretaria/department
   const filterDashboardDataBySetor = (data: DadosDashboard, setor: string): DadosDashboard => {
+    // Create a copy to not modify the original
     const filtered = {...data};
+    
+    // Filter gastosPorSetor to only include user's department
     const filteredGastos: Record<string, number> = {};
     if (data.gastosPorSetor[setor]) {
       filteredGastos[setor] = data.gastosPorSetor[setor];
     }
+    
+    // Filter pedidosPorSetor to only include user's department
     const filteredPedidos: Record<string, number> = {};
     if (data.pedidosPorSetor[setor]) {
       filteredPedidos[setor] = data.pedidosPorSetor[setor];
     }
+    
+    // Update the data
     filtered.gastosPorSetor = filteredGastos;
     filtered.pedidosPorSetor = filteredPedidos;
+    
+    // Also update total contracted value to reflect only this department
     filtered.valorContratadoTotal = filteredGastos[setor] || 0;
+    
     return filtered;
   };
 
   const applyFilters = () => {
+    // Apply period filter
     let periodFilteredData = [...monthlyData];
     if (period === 'mensal') {
+      // Filter to show only current month (using the selected month from filters)
       const monthIndex = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
                         .findIndex(m => m === filters.month);
@@ -168,9 +194,10 @@ const Dashboard: React.FC = () => {
                                 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         periodFilteredData = monthlyData.filter(data => data.name === monthShortNames[monthIndex]);
       } else {
-        periodFilteredData = monthlyData.slice(0, 1);
+        periodFilteredData = monthlyData.slice(0, 1); // Default to first month if not found
       }
     } else if (period === 'trimestral') {
+      // Filter by quarter
       let quarterMonths: string[] = [];
       switch(filters.quarter) {
         case 'Q1':
@@ -189,6 +216,7 @@ const Dashboard: React.FC = () => {
       periodFilteredData = monthlyData.filter(data => quarterMonths.includes(data.name));
     }
     
+    // Apply department filter (if regular user, force to their department)
     let deptFilteredData = [...departmentData];
     const selectedDepartment = shouldFilter && userSetor ? userSetor : filters.department;
     
@@ -196,20 +224,16 @@ const Dashboard: React.FC = () => {
       deptFilteredData = departmentData.filter(dept => dept.name === selectedDepartment);
     }
     
-    deptFilteredData = deptFilteredData.map(item => ({
-      ...item,
-      percent: item.percent / 100
-    }));
-    
     setFilteredData(periodFilteredData);
     setFilteredDeptData(deptFilteredData);
   };
 
+  // Calculate values for the stats cards based on filtered data if needed
   const calculateTotalPedidos = () => {
     if (shouldFilter && userSetor) {
       return filteredDashboardData.pedidosPorSetor[userSetor] || 0;
     }
-    return 587;
+    return 587; // Default total
   };
 
   const calculateOrcamentoExecutado = () => {
@@ -219,11 +243,13 @@ const Dashboard: React.FC = () => {
     return municipio.id === 'janauba' ? 12000000 : 2400000;
   };
 
+  // Values for the stats cards
   const totalPedidos = calculateTotalPedidos();
   const orcamentoExecutado = calculateOrcamentoExecutado();
-  const pedidosAprovados = shouldFilter && userSetor ? Math.floor(totalPedidos * 0.75) : 432;
+  const pedidosAprovados = shouldFilter && userSetor ? Math.floor(totalPedidos * 0.75) : 432; // approx 75% of total
   const secretarias = shouldFilter ? 1 : 15;
 
+  // Handle data export from dashboard
   const handleExportDashboard = () => {
     toast.success('Exportando relatório PDF...');
     
@@ -238,14 +264,17 @@ const Dashboard: React.FC = () => {
         data: new Date().toLocaleDateString('pt-BR')
       };
       
+      // Use the PDF export function with the current active tab
       exportDashboardAsPDF(dashboardData, activeTab === 'grafico' ? 'orcamento' : 'secretarias', filteredData, filteredDeptData);
     }, 500);
   };
 
   return (
     <div className="space-y-6 animate-fade-in dashboard-view">
+      {/* Cabeçalho com informações do município */}
       <DashboardHeader municipio={municipio} language={language} />
       
+      {/* Cards de estatísticas */}
       <DashboardStatCards 
         totalPedidos={totalPedidos}
         orcamentoExecutado={orcamentoExecutado}
@@ -253,6 +282,7 @@ const Dashboard: React.FC = () => {
         secretarias={secretarias}
       />
 
+      {/* Tabs para alternar entre gráficos e resumo */}
       <DashboardTabs
         activeTab={activeTab}
         setActiveTab={setActiveTab}

@@ -2,132 +2,165 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { autenticarUsuario, atualizarSenhaUsuario } from '@/data/funcionarios/mockFuncionarios';
 
 export function useAuth() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
   const [showGDPRDialog, setShowGDPRDialog] = useState(false);
 
-  const handleLogin = async (email: string, password: string) => {
+  const handleLogin = (username: string, password: string) => {
     setIsSubmitting(true);
 
-    try {
-      // Autenticar no Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+    // Basic validation
+    if (!username || !password) {
+      toast.error('Por favor, preencha todos os campos.');
+      setIsSubmitting(false);
+      return;
+    }
 
-      if (error) {
-        toast.error(error.message);
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!data.user) {
-        toast.error('Usuário não encontrado');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Buscar informações do usuário na tabela usuarios
-      const { data: usuarioData, error: usuarioError } = await supabase
-        .from('usuarios')
-        .select('*, usuario_secretarias(secretaria_id)')
-        .eq('id', data.user.id)
-        .single();
-
-      if (usuarioError || !usuarioData) {
-        toast.error('Erro ao buscar dados do usuário');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Verificar primeiro acesso
-      if (usuarioData.primeiro_acesso) {
+    // Try to authenticate user
+    const result = autenticarUsuario(username, password);
+    if (result.authenticated) {
+      // Check if it's first login, if so show password change dialog
+      if (result.primeiroAcesso) {
         setShowChangePasswordDialog(true);
+        setCurrentUserId(result.userId);
         setIsSubmitting(false);
-        return;
+      } else {
+        // Check if GDPR consent is needed
+        const gdprAccepted = localStorage.getItem(`gdpr-accepted-${result.userId}`);
+        if (!gdprAccepted) {
+          setCurrentUserId(result.userId);
+          setShowGDPRDialog(true);
+          setIsSubmitting(false);
+        } else {
+          loginSuccess(
+            result.role, 
+            'São Paulo', 
+            result.funcionario.nome, 
+            undefined, 
+            result.userId, 
+            result.funcionario.id,
+            result.funcionario.setor
+          );
+        }
       }
-
-      // Salvar informações no localStorage
-      localStorage.setItem('user-authenticated', 'true');
-      localStorage.setItem('user-role', usuarioData.role);
-      localStorage.setItem('user-municipality', usuarioData.municipio_id);
-      localStorage.setItem('user-name', usuarioData.nome);
-      localStorage.setItem('funcionario-id', data.user.id);
-
-      // Preparar lista de secretarias
-      const secretarias = usuarioData.usuario_secretarias.map(
-        (us: { secretaria_id: string }) => us.secretaria_id
-      );
-      
-      localStorage.setItem('user-secretarias', JSON.stringify(secretarias));
-
-      // Redirecionar baseado na role
-      switch (usuarioData.role) {
-        case 'admin':
-          navigate('/admin');
-          break;
-        case 'prefeito':
-          navigate('/dashboard');
-          break;
-        case 'gestor':
-          navigate(`/setores/${secretarias[0]}`);
-          break;
-        case 'servidor':
-          navigate(`/setores/${secretarias[0]}`);
-          break;
-      }
-
-      toast.success('Login realizado com sucesso!');
-    } catch (error) {
-      toast.error('Erro no login. Tente novamente.');
-    } finally {
+    } else {
+      toast.error('Credenciais inválidas. Tente novamente.');
       setIsSubmitting(false);
     }
   };
 
-  const handlePasswordChange = async (newPassword: string) => {
+  const handlePasswordChange = (newPassword: string, confirmPassword: string) => {
+    // Validate passwords
+    if (!newPassword || newPassword.length < 3) {
+      toast.error('A nova senha deve ter pelo menos 3 caracteres.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error('As senhas não coincidem.');
+      return;
+    }
+
     setIsSubmitting(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
 
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
-      // Atualizar flag de primeiro acesso
-      const { error: updateError } = await supabase
-        .from('usuarios')
-        .update({ primeiro_acesso: false })
-        .eq('id', (await supabase.auth.getUser()).data.user?.id);
-
-      if (updateError) {
-        toast.error(updateError.message);
-        return;
-      }
-
+    // Update password
+    if (atualizarSenhaUsuario(currentUserId, newPassword)) {
       toast.success('Senha alterada com sucesso!');
-      setShowChangePasswordDialog(false);
       
-      // Redirecionar para o dashboard
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error('Erro ao alterar senha');
-    } finally {
+      // Login after password change - show GDPR dialog
+      setShowChangePasswordDialog(false);
+      setShowGDPRDialog(true);
+    } else {
+      toast.error('Erro ao alterar senha. Tente novamente.');
       setIsSubmitting(false);
     }
   };
 
-  // Adicionar função para lidar com o consentimento GDPR
   const handleGDPRConsent = () => {
+    // Save GDPR consent
+    localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
     setShowGDPRDialog(false);
-    // Aqui você pode adicionar lógica para salvar o consentimento no banco de dados
-    toast.success('Termos aceitos com sucesso!');
+    
+    // Complete login process with existing credentials
+    const userData = getUserById(currentUserId);
+    
+    if (userData) {
+      loginSuccess(
+        userData.usuario.role, 
+        'São Paulo', 
+        userData.funcionario.nome, 
+        undefined, 
+        userData.usuario.id,
+        userData.funcionario.id,
+        userData.funcionario.setor
+      );
+    } else {
+      toast.error('Erro ao concluir o login. Por favor, tente novamente.');
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Helper function to get user data by ID
+  const getUserById = (userId: string) => {
+    const usuarios = JSON.parse(localStorage.getItem('usuarios-login') || '[]');
+    const user = usuarios.find((u: any) => u.id === userId);
+    
+    if (user) {
+      const funcionarios = JSON.parse(localStorage.getItem('funcionarios') || '[]');
+      const funcionario = funcionarios.find((f: any) => f.id === user.funcionarioId);
+      
+      if (funcionario) {
+        return { usuario: user, funcionario };
+      }
+    }
+    
+    return null;
+  };
+
+  const loginSuccess = (
+    role: string, 
+    municipality: string = 'all', 
+    name: string = '', 
+    permittedStep: string = '',
+    userId: string = '',
+    funcionarioId: string = '',
+    setor: string = ''
+  ) => {
+    // Set authenticated state in localStorage
+    localStorage.setItem('user-authenticated', 'true');
+    localStorage.setItem('user-role', role);
+    localStorage.setItem('user-municipality', municipality);
+    localStorage.setItem('user-id', userId);
+    localStorage.setItem('funcionario-id', funcionarioId);
+    localStorage.setItem('user-setor', setor);
+    
+    if (name) {
+      localStorage.setItem('user-name', name);
+    }
+    if (permittedStep) {
+      localStorage.setItem('user-permitted-step', permittedStep);
+    }
+
+    toast.success('Login realizado com sucesso!');
+    setIsSubmitting(false);
+    
+    // Direct users according to their access level
+    if (role === 'admin') {
+      navigate('/admin');
+    } else if (role === 'prefeito') {
+      // Prefeito can access dashboard like manager
+      navigate('/dashboard');
+    } else if (role === 'manager') {
+      navigate('/dashboard');
+    } else {
+      // Regular users (servidores) go directly to the order list
+      navigate('/pedidos');
+    }
   };
 
   return {
@@ -136,6 +169,7 @@ export function useAuth() {
     setShowChangePasswordDialog,
     showGDPRDialog,
     setShowGDPRDialog,
+    currentUserId,
     handleLogin,
     handlePasswordChange,
     handleGDPRConsent
