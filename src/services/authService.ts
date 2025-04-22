@@ -17,22 +17,18 @@ export type SignUpCredentials = {
 
 export async function signIn({ email, password }: SignInCredentials) {
   try {
-    console.log("signIn service called with:", email);
-    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      console.error("Error in signIn service:", error.message);
       throw error;
     }
 
-    console.log("signIn service success:", data);
     return { success: true, data };
   } catch (error: any) {
-    console.error("Exception in signIn service:", error.message);
+    console.error("Error signing in:", error.message);
     toast.error(error.message || "Erro ao fazer login");
     return { success: false, error };
   }
@@ -150,17 +146,12 @@ export async function getCurrentUser() {
     if (!session) return null;
     
     // Get user profile
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", session.user.id)
       .single();
       
-    if (error) {
-      console.error("Error getting user profile:", error);
-      return null;
-    }
-    
     return data;
   } catch (error) {
     console.error("Error getting current user:", error);

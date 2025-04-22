@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
+import { FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Item } from '@/types';
@@ -11,7 +11,7 @@ interface ItemFormProps {
   index: number;
   canRemove: boolean;
   onRemove: (index: number) => void;
-  onUpdate: (index: number, field: string, value: string | number) => void;
+  onUpdate: (index: number, field: keyof Item, value: string | number) => void;
 }
 
 const ItemForm: React.FC<ItemFormProps> = ({
@@ -24,9 +24,9 @@ const ItemForm: React.FC<ItemFormProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-md">
       <div className="md:col-span-2">
-        <Label htmlFor={`item-${index}-nome`}>
+        <FormLabel htmlFor={`item-${index}-nome`}>
           Nome do Item
-        </Label>
+        </FormLabel>
         <Input
           id={`item-${index}-nome`}
           value={item.nome}
@@ -37,9 +37,9 @@ const ItemForm: React.FC<ItemFormProps> = ({
         />
       </div>
       <div>
-        <Label htmlFor={`item-${index}-quantidade`}>
+        <FormLabel htmlFor={`item-${index}-quantidade`}>
           Quantidade
-        </Label>
+        </FormLabel>
         <Input
           id={`item-${index}-quantidade`}
           type="number"
@@ -55,9 +55,9 @@ const ItemForm: React.FC<ItemFormProps> = ({
         />
       </div>
       <div>
-        <Label htmlFor={`item-${index}-valor`}>
+        <FormLabel htmlFor={`item-${index}-valor`}>
           Valor Unitário
-        </Label>
+        </FormLabel>
         <Input
           id={`item-${index}-valor`}
           type="number"
