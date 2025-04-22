@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { PedidoCompra, PedidoStatus, Item, WorkflowStepStatus } from '@/types';
+import { PedidoCompra, PedidoStatus, Item, WorkflowStepStatus, WorkflowStep } from '@/types';
 import { toast } from 'sonner';
 import { DbPedidoStatus } from '@/types/supabase';
 
@@ -28,6 +28,176 @@ const mapUiStatusToDbStatus = (uiStatus: PedidoStatus): DbPedidoStatus => {
     'Rejeitado': 'rejeitado'
   };
   return statusMap[uiStatus] || 'pendente';
+};
+
+// Function to get a specific pedido by ID - implementing the missing function
+export const getPedido = async (id: string): Promise<PedidoCompra | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('dfds')
+      .select(`
+        id, 
+        descricao, 
+        valor_estimado, 
+        data_pedido, 
+        status, 
+        secretaria_id,
+        justificativa,
+        local_entrega,
+        secretarias(nome),
+        solicitante_id
+      `)
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching pedido details:', error);
+      toast.error('Erro ao buscar detalhes do pedido');
+      return null;
+    }
+    
+    // Transform data to match PedidoCompra type
+    const pedido: PedidoCompra = {
+      id: data.id,
+      descricao: data.descricao,
+      justificativa: data.justificativa || '',
+      setor: data.secretarias?.nome || 'Outro',
+      items: [],
+      valorTotal: data.valor_estimado || 0,
+      status: mapDbStatusToUiStatus(data.status as DbPedidoStatus),
+      dataCompra: new Date(data.data_pedido || new Date()),
+      solicitante: '', // Will be fetched separately
+      localEntrega: data.local_entrega || '',
+      observacoes: data.justificativa || '',
+      workflowSteps: [] // Will be populated below
+    };
+    
+    // Fetch solicitante (user) details
+    const { data: userData } = await supabase
+      .from('usuarios')
+      .select('nome')
+      .eq('id', data.solicitante_id)
+      .single();
+      
+    if (userData) {
+      pedido.solicitante = userData.nome;
+    }
+    
+    // Fetch workflow information
+    const { data: workflowData } = await supabase
+      .from('dfd_workflows')
+      .select('id')
+      .eq('dfd_id', data.id)
+      .single();
+      
+    // Fetch workflow steps if workflow exists
+    if (workflowData) {
+      const { data: stepsData } = await supabase
+        .from('workflow_etapas_dfd')
+        .select(`
+          id,
+          status,
+          data_inicio,
+          data_conclusao,
+          observacoes,
+          workflow_etapa_id,
+          workflow_etapas(titulo, ordem)
+        `)
+        .eq('dfd_workflow_id', workflowData.id)
+        .order('workflow_etapas.ordem');
+      
+      if (stepsData && stepsData.length > 0) {
+        pedido.workflowSteps = stepsData.map(step => ({
+          id: step.id,
+          title: step.workflow_etapas.titulo,
+          status: mapDbStatusToUiStatus(step.status as DbPedidoStatus) as WorkflowStepStatus,
+          date: step.data_inicio ? new Date(step.data_inicio) : new Date(),
+          dataConclusao: step.data_conclusao ? new Date(step.data_conclusao) : undefined,
+          observacoes: step.observacoes
+        }));
+      }
+    }
+    
+    // Fetch items
+    const { data: itemsData } = await supabase
+      .from('dfd_itens')
+      .select('*')
+      .eq('dfd_id', data.id);
+    
+    if (itemsData && itemsData.length > 0) {
+      pedido.items = itemsData.map(item => ({
+        id: item.id,
+        nome: item.nome,
+        quantidade: item.quantidade,
+        valorUnitario: item.valor_unitario,
+        valorTotal: item.quantidade * item.valor_unitario
+      }));
+    }
+    
+    return pedido;
+  } catch (err) {
+    console.error('Error in getPedido:', err);
+    toast.error('Erro ao buscar pedido');
+    return null;
+  }
+};
+
+// Function to update a pedido
+export const updatePedido = async (pedido: PedidoCompra): Promise<PedidoCompra | null> => {
+  try {
+    // Update the main DFD record
+    const { error } = await supabase
+      .from('dfds')
+      .update({
+        descricao: pedido.descricao,
+        justificativa: pedido.justificativa || pedido.observacoes,
+        status: mapUiStatusToDbStatus(pedido.status as PedidoStatus),
+        valor_estimado: pedido.valorTotal,
+        local_entrega: pedido.localEntrega
+      })
+      .eq('id', pedido.id);
+    
+    if (error) {
+      console.error('Error updating pedido:', error);
+      toast.error('Erro ao atualizar pedido');
+      return null;
+    }
+    
+    // Update workflow steps if they exist
+    if (pedido.workflowSteps && pedido.workflowSteps.length > 0) {
+      // Get the workflow ID
+      const { data: workflowData } = await supabase
+        .from('dfd_workflows')
+        .select('id')
+        .eq('dfd_id', pedido.id)
+        .single();
+      
+      if (workflowData) {
+        // Update each workflow step
+        for (const step of pedido.workflowSteps) {
+          const { error: stepError } = await supabase
+            .from('workflow_etapas_dfd')
+            .update({
+              status: mapUiStatusToDbStatus(step.status as PedidoStatus),
+              data_conclusao: step.dataConclusao?.toISOString(),
+              observacoes: step.observacoes
+            })
+            .eq('id', step.id);
+          
+          if (stepError) {
+            console.error(`Error updating workflow step ${step.id}:`, stepError);
+          }
+        }
+      }
+    }
+    
+    toast.success('Pedido atualizado com sucesso');
+    return pedido;
+  } catch (err) {
+    console.error('Error in updatePedido:', err);
+    toast.error('Erro ao atualizar pedido');
+    return null;
+  }
 };
 
 // Function to get all DFDs

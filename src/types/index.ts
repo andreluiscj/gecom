@@ -1,3 +1,4 @@
+
 export interface Municipio {
   id: string;
   nome: string;
@@ -50,6 +51,7 @@ export interface PedidoCompra {
   solicitante: string;
   localEntrega: string;
   observacoes?: string;
+  workflowSteps?: WorkflowStep[]; // Add this property
 }
 
 export interface Item {
@@ -66,7 +68,7 @@ export interface WorkflowStep {
   status: WorkflowStepStatus;
   date: Date;
   dataConclusao?: Date;
-  observacoes?: string; // Add this property
+  observacoes?: string;
 }
 
 export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído' | 'Aprovado' | 'Reprovado';
@@ -82,3 +84,6 @@ export interface Usuario {
   municipio_id?: string;
   primeiro_acesso: boolean;
 }
+
+// Add PedidoStatus type
+export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
