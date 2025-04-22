@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 import { createDfd } from "@/services/dfdService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { Form } from "@/components/ui/form";
 
 export interface PedidoFormProps {
   onSubmit?: (data: any) => void;
@@ -29,6 +31,17 @@ const PedidoForm: React.FC<PedidoFormProps> = ({
 }) => {
   const { user, userMunicipality, userSectors } = useAuth();
   const navigate = useNavigate();
+  const form = useForm({
+    defaultValues: {
+      dataCompra: initialData?.dataCompra || new Date().toISOString().split("T")[0],
+      descricao: initialData?.descricao || "",
+      fundoMonetario: initialData?.fundoMonetario || "",
+      setor: initialData?.setor || (userSectors?.[0]?.sector_id || ""),
+      observacoes: initialData?.observacoes || "",
+      localEntrega: initialData?.localEntrega || "",
+    }
+  });
+
   const [formData, setFormData] = useState({
     dataCompra: initialData?.dataCompra || new Date().toISOString().split("T")[0],
     descricao: initialData?.descricao || "",
@@ -167,118 +180,121 @@ const PedidoForm: React.FC<PedidoFormProps> = ({
     }
   };
 
+  // Wrap the entire form in Form component for proper context
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardContent className="p-6">
-              <div className="space-y-6">
-                <h2 className="text-xl font-semibold">Informações Básicas</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Form {...form}>
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold">Informações Básicas</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="dataCompra">Data da Compra</Label>
+                      <Input
+                        id="dataCompra"
+                        name="dataCompra"
+                        type="date"
+                        value={formData.dataCompra}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="setor">Setor / Secretaria</Label>
+                      <Select
+                        value={formData.setor}
+                        onValueChange={(value) => handleSelectChange("setor", value)}
+                        required
+                      >
+                        <SelectTrigger id="setor">
+                          <SelectValue placeholder="Selecione o setor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {userSectors?.map((sectorItem) => (
+                            <SelectItem key={sectorItem.sector_id} value={sectorItem.sector_id}>
+                              {sectorItem.sectors.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="dataCompra">Data da Compra</Label>
-                    <Input
-                      id="dataCompra"
-                      name="dataCompra"
-                      type="date"
-                      value={formData.dataCompra}
+                    <Label htmlFor="descricao">Descrição da Demanda</Label>
+                    <Textarea
+                      id="descricao"
+                      name="descricao"
+                      value={formData.descricao}
                       onChange={handleInputChange}
+                      rows={3}
                       required
+                      placeholder="Descreva o propósito desta compra"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="setor">Setor / Secretaria</Label>
-                    <Select
-                      value={formData.setor}
-                      onValueChange={(value) => handleSelectChange("setor", value)}
-                      required
-                    >
-                      <SelectTrigger id="setor">
-                        <SelectValue placeholder="Selecione o setor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {userSectors?.map((sectorItem) => (
-                          <SelectItem key={sectorItem.sector_id} value={sectorItem.sector_id}>
-                            {sectorItem.sectors.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="descricao">Descrição da Demanda</Label>
-                  <Textarea
-                    id="descricao"
-                    name="descricao"
-                    value={formData.descricao}
-                    onChange={handleInputChange}
-                    rows={3}
-                    required
-                    placeholder="Descreva o propósito desta compra"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fundoMonetario">Fundo Monetário</Label>
-                    <Input
-                      id="fundoMonetario"
-                      name="fundoMonetario"
-                      value={formData.fundoMonetario}
-                      onChange={handleInputChange}
-                      placeholder="Ex: Fundo Municipal de Saúde"
-                      required
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fundoMonetario">Fundo Monetário</Label>
+                      <Input
+                        id="fundoMonetario"
+                        name="fundoMonetario"
+                        value={formData.fundoMonetario}
+                        onChange={handleInputChange}
+                        placeholder="Ex: Fundo Municipal de Saúde"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="localEntrega">Local de Entrega</Label>
+                      <Input
+                        id="localEntrega"
+                        name="localEntrega"
+                        value={formData.localEntrega}
+                        onChange={handleInputChange}
+                        placeholder="Local de entrega dos itens"
+                      />
+                    </div>
                   </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="localEntrega">Local de Entrega</Label>
-                    <Input
-                      id="localEntrega"
-                      name="localEntrega"
-                      value={formData.localEntrega}
+                    <Label htmlFor="observacoes">Observações</Label>
+                    <Textarea
+                      id="observacoes"
+                      name="observacoes"
+                      value={formData.observacoes}
                       onChange={handleInputChange}
-                      placeholder="Local de entrega dos itens"
+                      rows={2}
+                      placeholder="Alguma observação adicional? (opcional)"
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="space-y-2">
-                  <Label htmlFor="observacoes">Observações</Label>
-                  <Textarea
-                    id="observacoes"
-                    name="observacoes"
-                    value={formData.observacoes}
-                    onChange={handleInputChange}
-                    rows={2}
-                    placeholder="Alguma observação adicional? (opcional)"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <div className="mt-6">
+              <ItemsSection
+                items={itens}
+                onUpdateItem={atualizarItem}
+                onAddItem={adicionarItem}
+                onRemoveItem={removerItem}
+              />
+            </div>
+          </div>
 
-          <div className="mt-6">
-            <ItemsSection
-              items={itens}
-              onUpdateItem={atualizarItem}
-              onAddItem={adicionarItem}
-              onRemoveItem={removerItem}
+          <div>
+            <TotalSection total={calcularValorTotal()} />
+
+            <ActionButtons
+              isSubmitting={isSubmitting}
             />
           </div>
         </div>
-
-        <div>
-          <TotalSection total={calcularValorTotal()} />
-
-          <ActionButtons
-            isSubmitting={isSubmitting}
-          />
-        </div>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 };
 

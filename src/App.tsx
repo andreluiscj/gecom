@@ -2,6 +2,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { getFuncionarios, getUsuariosLogin } from "./data/funcionarios/mockFuncionarios";
+import { useAuth } from "./contexts/AuthContext";
 
 // Lazy load components for better performance
 const AppLayout = lazy(() => import("./components/Layout/AppLayout"));
@@ -35,8 +36,13 @@ const LoadingFallback = () => (
 
 // Auth guard for protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <LoadingFallback />;
+  }
+  
+  return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
 function App() {

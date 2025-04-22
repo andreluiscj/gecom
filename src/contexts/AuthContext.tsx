@@ -24,18 +24,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.info("AuthProvider initialized");
+    
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setLoading(true);
-        
-        if (session) {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.info("Auth state changed:", event, session?.user?.id);
+      
+      if (session) {
+        try {
           const userProfile = await getCurrentUser();
+          console.log("User profile loaded:", userProfile);
+          
           setUser(userProfile);
           setUserRole(userProfile?.role || null);
           
           // Load user municipalities
           const municipalities = await getUserMunicipalities(session.user.id);
+          console.log("User municipalities loaded:", municipalities);
           setUserMunicipalities(municipalities);
           
           // Set default municipality if available
@@ -50,51 +55,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           // Load user sectors
           const sectors = await getUserSectors(session.user.id);
+          console.log("User sectors loaded:", sectors);
           setUserSectors(sectors);
-        } else {
-          setUser(null);
-          setUserRole(null);
-          setUserMunicipality(null);
-          setUserMunicipalities([]);
-          setUserSectors([]);
-          localStorage.removeItem('municipio-selecionado');
+        } catch (error) {
+          console.error("Error loading user data:", error);
+          toast.error("Erro ao carregar dados do usuário");
+        } finally {
+          setLoading(false);
         }
-        
+      } else {
+        setUser(null);
+        setUserRole(null);
+        setUserMunicipality(null);
+        setUserMunicipalities([]);
+        setUserSectors([]);
+        localStorage.removeItem('municipio-selecionado');
         setLoading(false);
       }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const userProfile = await getCurrentUser();
-        setUser(userProfile);
-        setUserRole(userProfile?.role || null);
-        
-        // Load user municipalities
-        const municipalities = await getUserMunicipalities(session.user.id);
-        setUserMunicipalities(municipalities);
-        
-        // Set default municipality if available
-        const selectedMunicipality = localStorage.getItem('municipio-selecionado');
-        if (selectedMunicipality) {
-          const parsedMunicipality = JSON.parse(selectedMunicipality);
-          setUserMunicipality(parsedMunicipality);
-        } else if (municipalities && municipalities.length > 0) {
-          setUserMunicipality(municipalities[0]);
-          localStorage.setItem('municipio-selecionado', JSON.stringify(municipalities[0]));
-        }
-        
-        // Load user sectors
-        const sectors = await getUserSectors(session.user.id);
-        setUserSectors(sectors);
-      }
-      
-      setLoading(false);
     });
 
+    // Check for existing session
+    const initializeAuth = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data.session) {
+          console.log("Initial session found:", data.session.user.id);
+          // Auth state change listener will handle setting the user
+        } else {
+          console.log("No initial session found");
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
     return () => {
-      subscription.unsubscribe();
+      authListener.subscription.unsubscribe();
     };
   }, []);
 
