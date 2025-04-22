@@ -9,7 +9,7 @@ interface ItemsSectionProps {
   items: Item[];
   onAddItem: () => void;
   onRemoveItem: (index: number) => void;
-  onUpdateItem: (index: number, field: keyof Item, value: string | number) => void;
+  onUpdateItem: (index: number, field: string, value: string | number) => void;
 }
 
 const ItemsSection: React.FC<ItemsSectionProps> = ({

@@ -33,7 +33,7 @@ const PedidoForm: React.FC<PedidoFormProps> = ({
     dataCompra: initialData?.dataCompra || new Date().toISOString().split("T")[0],
     descricao: initialData?.descricao || "",
     fundoMonetario: initialData?.fundoMonetario || "",
-    setor: initialData?.setor || (userSectors?.[0]?.sectors?.id || ""),
+    setor: initialData?.setor || (userSectors?.[0]?.sector_id || ""),
     observacoes: initialData?.observacoes || "",
     localEntrega: initialData?.localEntrega || "",
   });
@@ -262,21 +262,19 @@ const PedidoForm: React.FC<PedidoFormProps> = ({
 
           <div className="mt-6">
             <ItemsSection
-              itens={itens}
-              atualizarItem={atualizarItem}
-              adicionarItem={adicionarItem}
-              removerItem={removerItem}
+              items={itens}
+              onUpdateItem={atualizarItem}
+              onAddItem={adicionarItem}
+              onRemoveItem={removerItem}
             />
           </div>
         </div>
 
         <div>
-          <TotalSection valorTotal={calcularValorTotal()} />
+          <TotalSection total={calcularValorTotal()} />
 
           <ActionButtons
             isSubmitting={isSubmitting}
-            onCancel={handleCancel}
-            isEditing={isEditing}
           />
         </div>
       </div>

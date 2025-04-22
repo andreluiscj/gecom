@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { Funcionario, UsuarioLogin, UserRole } from '@/types';
 
@@ -109,9 +110,9 @@ export const addFuncionario = (funcionario: Omit<Funcionario, 'id'>) => {
   const username = generateUsername(funcionario.nome);
   
   // Define role based on position with explicit type casting
-  let role: UserRole = 'user';
+  let role: UserRole = 'servidor';
   if (funcionario.cargo.toLowerCase().includes('gerente') || funcionario.cargo.toLowerCase().includes('secretário')) {
-    role = 'manager';
+    role = 'gestor';
   } else if (funcionario.cargo.toLowerCase().includes('prefeito')) {
     role = 'prefeito';
   } else if (funcionario.cargo.toLowerCase().includes('admin')) {
