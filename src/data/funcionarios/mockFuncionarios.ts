@@ -1,61 +1,25 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { Funcionario, UsuarioLogin, UserRole } from '@/types';
 
-// Removing original admin and prefeito mock data
-// Only keeping empty arrays for initialization
-
-// Empty employees data
+// Dados de mock agora sempre iniciam em branco
 export const mockFuncionarios: Funcionario[] = [];
-
-// Login users data store - empty 
 export const mockUsuariosLogin: UsuarioLogin[] = [];
-
-// Login logs storage
 export const mockLoginLogs: any[] = [];
-
-// Password reset tokens storage
 export const mockPasswordResetTokens: Record<string, { token: string, expires: Date, userId: string }> = {};
 
-// Get all employees
+// Todas as funções envolvidas agora trabalham com dados vazios se localStorage ainda não estiver preenchido
 export const getFuncionarios = () => {
-  // Get from localStorage if available, otherwise use mockFuncionarios
-  const storedFuncionarios = localStorage.getItem('funcionarios');
-  if (storedFuncionarios) {
-    const parsed = JSON.parse(storedFuncionarios);
-    // Convert string dates back to Date objects
-    return parsed.map((func: any) => ({
-      ...func,
-      dataContratacao: func.dataContratacao ? new Date(func.dataContratacao) : new Date(),
-      dataNascimento: func.dataNascimento ? new Date(func.dataNascimento) : new Date()
-    }));
-  }
-  
-  // Initialize localStorage with empty array if it doesn't exist
-  localStorage.setItem('funcionarios', JSON.stringify(mockFuncionarios));
-  return mockFuncionarios;
+  // Sempre iniciar array vazio
+  localStorage.setItem('funcionarios', JSON.stringify([]));
+  return [];
 };
-
-// Get all login users
 export const getUsuariosLogin = () => {
-  const storedUsuarios = localStorage.getItem('usuarios-login');
-  if (storedUsuarios) {
-    return JSON.parse(storedUsuarios);
-  }
-  
-  localStorage.setItem('usuarios-login', JSON.stringify(mockUsuariosLogin));
-  return mockUsuariosLogin;
+  localStorage.setItem('usuarios-login', JSON.stringify([]));
+  return [];
 };
-
-// Get login logs
 export const getLoginLogs = () => {
-  const storedLogs = localStorage.getItem('login-logs');
-  if (storedLogs) {
-    return JSON.parse(storedLogs);
-  }
-  
-  localStorage.setItem('login-logs', JSON.stringify(mockLoginLogs));
-  return mockLoginLogs;
+  localStorage.setItem('login-logs', JSON.stringify([]));
+  return [];
 };
 
 // Add login log
