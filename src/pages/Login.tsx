@@ -21,6 +21,8 @@ const Login: React.FC = () => {
   const [showPasswordChangeDialog, setShowPasswordChangeDialog] = useState(false);
   const [showGDPRDialog, setShowGDPRDialog] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
   // Check if user is already logged in
@@ -124,6 +126,11 @@ const Login: React.FC = () => {
     }
   };
 
+  // Handle submitting the password change form
+  const handleSubmitPasswordChange = () => {
+    handlePasswordChange(newPassword, confirmPassword);
+  };
+
   // Handle GDPR consent
   const handleGDPRConsent = async () => {
     localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
@@ -216,12 +223,12 @@ const Login: React.FC = () => {
         <PasswordChangeDialog
           open={showPasswordChangeDialog}
           onOpenChange={setShowPasswordChangeDialog}
-          newPassword=""
-          confirmPassword=""
-          setNewPassword={() => {}}
-          setConfirmPassword={() => {}}
-          onSubmit={handlePasswordChange}
-          isSubmitting={false}
+          newPassword={newPassword}
+          confirmPassword={confirmPassword}
+          setNewPassword={setNewPassword}
+          setConfirmPassword={setConfirmPassword}
+          onSubmit={handleSubmitPasswordChange}
+          isSubmitting={isSubmitting}
         />
         
         <GDPRConsentDialog
