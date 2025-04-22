@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ForgotPasswordDialog } from '@/components/Auth/ForgotPasswordDialog';
-import { GDPRConsentDialog } from '@/components/Auth/GDPRConsentDialog';
+import ForgotPasswordDialog from '@/components/Auth/ForgotPasswordDialog';
+import GDPRConsentDialog from '@/components/Auth/GDPRConsentDialog';
 import { toast } from 'sonner';
 
 const loginSchema = z.object({
