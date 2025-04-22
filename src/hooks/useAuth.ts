@@ -11,18 +11,18 @@ export function useAuth() {
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
   const [showGDPRDialog, setShowGDPRDialog] = useState(false);
 
-  const handleLogin = (username: string, password: string) => {
+  const handleLogin = (email: string, password: string) => {
     setIsSubmitting(true);
 
     // Basic validation
-    if (!username || !password) {
+    if (!email || !password) {
       toast.error('Por favor, preencha todos os campos.');
       setIsSubmitting(false);
       return;
     }
 
     // Try to authenticate user
-    const result = autenticarUsuario(username, password);
+    const result = autenticarUsuario(email, password);
     if (result.authenticated) {
       // Check if it's first login, if so show password change dialog
       if (result.primeiroAcesso) {
@@ -171,7 +171,7 @@ export function useAuth() {
     setShowGDPRDialog,
     currentUserId,
     handleLogin,
-    handlePasswordChange,
-    handleGDPRConsent
+    handlePasswordChange: handlePasswordChange,
+    handleGDPRConsent: handleGDPRConsent
   };
 }
