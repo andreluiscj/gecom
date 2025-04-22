@@ -24,10 +24,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setLoading(true);
+        console.log("Auth state change:", event, session?.user?.id);
+        
+        if (session) {
+          try {
+            const userProfile = await getCurrentUser();
+            setUser(userProfile);
+            setUserRole(userProfile?.role || null);
+            
+            // Load user municipalities
+            const municipalities = await getUserMunicipalities(session.user.id);
+            setUserMunicipalities(municipalities);
+            
+            // Set default municipality if available
+            const selectedMunicipality = localStorage.getItem('municipio-selecionado');
+            if (selectedMunicipality) {
+              const parsedMunicipality = JSON.parse(selectedMunicipality);
+              setUserMunicipality(parsedMunicipality);
+            } else if (municipalities && municipalities.length > 0) {
+              setUserMunicipality(municipalities[0]);
+              localStorage.setItem('municipio-selecionado', JSON.stringify(municipalities[0]));
+            }
+            
+            // Load user sectors
+            const sectors = await getUserSectors(session.user.id);
+            setUserSectors(sectors);
+          } catch (error) {
+            console.error("Error loading user data:", error);
+            toast.error("Erro ao carregar dados do usuário");
+          }
+        } else {
+          setUser(null);
+          setUserRole(null);
+          setUserMunicipality(null);
+          setUserMunicipalities([]);
+          setUserSectors([]);
+          localStorage.removeItem('municipio-selecionado');
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Then check for existing session
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
           const userProfile = await getCurrentUser();
@@ -51,47 +96,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Load user sectors
           const sectors = await getUserSectors(session.user.id);
           setUserSectors(sectors);
-        } else {
-          setUser(null);
-          setUserRole(null);
-          setUserMunicipality(null);
-          setUserMunicipalities([]);
-          setUserSectors([]);
-          localStorage.removeItem('municipio-selecionado');
         }
-        
+      } catch (error) {
+        console.error("Error checking session:", error);
+      } finally {
         setLoading(false);
       }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const userProfile = await getCurrentUser();
-        setUser(userProfile);
-        setUserRole(userProfile?.role || null);
-        
-        // Load user municipalities
-        const municipalities = await getUserMunicipalities(session.user.id);
-        setUserMunicipalities(municipalities);
-        
-        // Set default municipality if available
-        const selectedMunicipality = localStorage.getItem('municipio-selecionado');
-        if (selectedMunicipality) {
-          const parsedMunicipality = JSON.parse(selectedMunicipality);
-          setUserMunicipality(parsedMunicipality);
-        } else if (municipalities && municipalities.length > 0) {
-          setUserMunicipality(municipalities[0]);
-          localStorage.setItem('municipio-selecionado', JSON.stringify(municipalities[0]));
-        }
-        
-        // Load user sectors
-        const sectors = await getUserSectors(session.user.id);
-        setUserSectors(sectors);
-      }
-      
-      setLoading(false);
-    });
+    };
+    
+    checkSession();
 
     return () => {
       subscription.unsubscribe();
