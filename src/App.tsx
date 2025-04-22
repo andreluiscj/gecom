@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { getFuncionarios, getUsuariosLogin } from "./data/funcionarios/mockFuncionarios";
@@ -24,6 +25,8 @@ const CadastroGerente = lazy(() => import("./pages/Admin/CadastroGerente"));
 const PrefeitoPage = lazy(() => import("./pages/Prefeito/PrefeitoPage"));
 const PrefeitoDashboard = lazy(() => import("./pages/Prefeito/PrefeitoDashboard"));
 const Usuarios = lazy(() => import("./pages/Usuarios/Usuarios"));
+const AdminDashboard = lazy(() => import("./pages/Admin/AdminDashboard"));
+const MunicipioForm = lazy(() => import("./pages/Admin/MunicipioForm"));
 
 // Loading component
 const LoadingFallback = () => (
@@ -59,6 +62,16 @@ function App() {
         <Route path="/admin/municipios" element={
           <ProtectedRoute>
             <MunicipioSelection />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/municipios/novo" element={
+          <ProtectedRoute>
+            <MunicipioForm />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/dashboard" element={
+          <ProtectedRoute>
+            <AdminDashboard />
           </ProtectedRoute>
         } />
 

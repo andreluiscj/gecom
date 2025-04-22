@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -30,7 +31,8 @@ import {
   PieChart as PieChartIcon,
   LogOut,
   Users,
-  UserPlus
+  UserPlus,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -67,6 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
 
   const hasUserManagementAccess = canAccessUserManagement();
   const hasDashboardAccess = canAccessDashboard();
+  const isAdmin = userRole === 'admin';
 
   const menuItems = [
     {
@@ -74,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       path: '/dashboard',
       icon: <Home className="h-5 w-5" />,
       roles: ['admin', 'prefeito', 'manager'],
-      visible: false
+      visible: hasDashboardAccess
     },
     {
       title: 'Pedidos de Compras',
@@ -103,6 +106,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       icon: <Users className="h-5 w-5" />,
       roles: ['admin', 'prefeito', 'gestor'],
       visible: userRole === 'admin' || userRole === 'prefeito' || userRole === 'gestor'
+    },
+    {
+      title: 'Administração',
+      path: '/admin/dashboard',
+      icon: <Settings className="h-5 w-5" />,
+      roles: ['admin'],
+      visible: isAdmin
     },
   ];
 
@@ -233,7 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
                 to={item.path}
                 className={cn(
                   'flex items-center rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 text-white',
-                  location.pathname === item.path
+                  location.pathname === item.path || (item.path === "/admin/dashboard" && location.pathname.startsWith("/admin"))
                     ? 'bg-sidebar-primary shadow-md'
                     : 'hover:bg-sidebar-accent hover:shadow-sm'
                 )}

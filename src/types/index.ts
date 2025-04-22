@@ -1,3 +1,4 @@
+
 export type Role = "admin" | "editor" | null;
 
 export type Tarefa = {
@@ -175,6 +176,10 @@ export interface Profile {
   active: boolean;
   created_at: string;
   updated_at: string;
+  street_number?: string;
+  city?: string;
+  municipality_id?: number;
+  position_title?: string;
 }
 
 export interface Municipality {
@@ -242,4 +247,22 @@ export interface PurchaseOrder {
   status: PedidoStatus;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserProfile {
+  name: string;
+  cpf: string;
+  birthdate: string | Date;
+  email: string;
+  role: UserRole;
+  position_title?: string;
+  sectors?: number[];
+  zip_code?: string; 
+  address?: string;
+  street_number?: string;
+  district?: string;
+  city?: string;
+  complement?: string;
+  active?: boolean;
+  municipality_id?: number;
 }

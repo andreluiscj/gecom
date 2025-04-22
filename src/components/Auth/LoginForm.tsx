@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ForgotPasswordDialog } from "@/components/Auth/ForgotPasswordDialog";
 import { PasswordChangeDialog } from "@/components/Auth/PasswordChangeDialog";
 import { GDPRConsentDialog } from "@/components/Auth/GDPRConsentDialog";
 
@@ -14,7 +13,6 @@ export const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showPasswordChangeDialog, setShowPasswordChangeDialog] = useState(false);
   const [showGDPRDialog, setShowGDPRDialog] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -173,16 +171,7 @@ export const LoginForm = () => {
           />
         </div>
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Label htmlFor="password">Senha</Label>
-            <button
-              type="button"
-              onClick={() => setShowForgotPassword(true)}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Esqueceu sua senha?
-            </button>
-          </div>
+          <Label htmlFor="password">Senha</Label>
           <Input
             id="password"
             type="password"
@@ -201,10 +190,6 @@ export const LoginForm = () => {
           {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
       </form>
-      <ForgotPasswordDialog
-        open={showForgotPassword}
-        onOpenChange={setShowForgotPassword}
-      />
       <PasswordChangeDialog
         open={showPasswordChangeDialog}
         onOpenChange={setShowPasswordChangeDialog}

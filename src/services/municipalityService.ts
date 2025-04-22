@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Municipality } from "@/types";
 
 export async function getMunicipalities() {
   try {
@@ -34,8 +35,9 @@ export async function getMunicipalityById(id: number) {
   }
 }
 
-export async function createMunicipality(municipalityData: any) {
+export async function createMunicipality(municipalityData: Partial<Municipality>) {
   try {
+    // Create the municipality first
     const { data, error } = await supabase
       .from("municipalities")
       .insert(municipalityData)
@@ -43,6 +45,8 @@ export async function createMunicipality(municipalityData: any) {
       .single();
       
     if (error) throw error;
+
+    // Success! Default sectors are created automatically via database trigger
     return { success: true, data };
   } catch (error: any) {
     console.error("Error creating municipality:", error);
@@ -63,6 +67,22 @@ export async function updateMunicipality(id: number, municipalityData: any) {
   } catch (error: any) {
     console.error("Error updating municipality:", error);
     toast.error("Erro ao atualizar município");
+    return { success: false, error };
+  }
+}
+
+export async function deleteMunicipality(id: number) {
+  try {
+    const { error } = await supabase
+      .from("municipalities")
+      .delete()
+      .eq("id", id);
+      
+    if (error) throw error;
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting municipality:", error);
+    toast.error("Erro ao excluir município");
     return { success: false, error };
   }
 }
