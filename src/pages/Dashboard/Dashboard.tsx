@@ -1,165 +1,227 @@
 
-// Painel de Gestão atualizado: exibe perfis (usuários) e informações detalhadas do banco de dados
-
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, User, Building2 } from "lucide-react";
+import { AlertCircle, BarChart3, DollarSign } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { formatCurrency } from "@/utils/formatters";
 
 const Dashboard = () => {
- const [loading, setLoading] = useState(true);
- const [error, setError] = useState(null);
- const [profiles, setProfiles] = useState([]);
- const [municipality, setMunicipality] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dashboardData, setDashboardData] = useState({
+    totalPedidos: 0,
+    valorTotal: 0,
+    orcamentoAnual: 2500000, // Default budget if not set in municipality
+    orcamentoRestante: 0,
+    gastosPorSetor: {} as Record<string, number>
+  });
+  
+  const navigate = useNavigate();
 
- useEffect(() => {
-  async function fetchData() {
-   setLoading(true);
-   try {
-    // pelo menos um município como referência
-    const municipioId = JSON.parse(localStorage.getItem("municipio-selecionado") || "{}")?.id || null;
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Get DFDs to calculate total value and count
+        const { data: dfdsData, error: dfdsError } = await supabase
+          .from("dfds")
+          .select(`
+            id, 
+            total_value,
+            sector:sector_id(id, name)
+          `);
+          
+        if (dfdsError) throw dfdsError;
 
-    // Busca profiles e município do usuário
-    const [{ data: profilesData, error: profilesError }, { data: municipalityData, error: municipalityError }] = await Promise.all([
-     supabase.from("profiles").select("*"),
-     municipioId
-      ? supabase.from("municipalities").select("*").eq("id", municipioId).single()
-      : { data: null, error: null }
-    ]);
+        // Get municipality data for budget info
+        const { data: municipalityData, error: municipalityError } = await supabase
+          .from("municipalities")
+          .select("budget")
+          .limit(1);
+          
+        if (municipalityError) throw municipalityError;
 
-    if (profilesError) throw profilesError;
-    if (municipalityError) throw municipalityError;
+        // Process the data
+        const totalPedidos = dfdsData?.length || 0;
+        const valorTotal = dfdsData?.reduce((sum, dfd) => sum + (dfd.total_value || 0), 0) || 0;
+        const orcamentoAnual = municipalityData?.[0]?.budget || 2500000;
+        const orcamentoRestante = orcamentoAnual - valorTotal;
+        
+        // Calculate expenses by sector
+        const gastosPorSetor: Record<string, number> = {};
+        dfdsData?.forEach(dfd => {
+          const setorName = dfd.sector?.name || "Não especificado";
+          if (!gastosPorSetor[setorName]) {
+            gastosPorSetor[setorName] = 0;
+          }
+          gastosPorSetor[setorName] += dfd.total_value || 0;
+        });
 
-    setProfiles(profilesData || []);
-    setMunicipality(municipalityData || null);
-    setError(null);
-   } catch (err) {
-    setError("Falha ao carregar os dados do painel");
-   } finally {
-    setLoading(false);
-   }
-  }
-  fetchData();
- }, []);
+        setDashboardData({
+          totalPedidos,
+          valorTotal,
+          orcamentoAnual,
+          orcamentoRestante,
+          gastosPorSetor
+        });
+        
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+        setError("Falha ao carregar dados do painel");
+      } finally {
+        setLoading(false);
+      }
+    };
 
- if (loading) {
-  return (
-   <div className="p-6 space-y-6">
-    <h2 className="text-2xl font-bold">Painel de Gestão</h2>
-    <Skeleton className="h-32" />
-    <Skeleton className="h-32" />
-    <Skeleton className="h-32" />
-   </div>
-  );
- }
+    fetchDashboardData();
+  }, []);
 
- if (error) {
-  return (
-   <div className="p-6">
-    <Alert variant="destructive">
-     <AlertCircle className="h-4 w-4" />
-     <AlertTitle>Erro</AlertTitle>
-     <AlertDescription>
-      {error}. Recarregue a página ou contate o suporte.
-     </AlertDescription>
-    </Alert>
-   </div>
-  );
- }
-
- return (
-  <div className="p-6 space-y-6">
-   <h2 className="text-2xl font-bold mb-6">Painel de Gestão</h2>
-
-   {municipality && (
-    <Card className="mb-4">
-     <CardHeader>
-      <div className="flex items-center gap-3">
-       <Building2 className="h-5 w-5 text-blue-600" />
-       <div>
-        <CardTitle>{municipality.name}</CardTitle>
-        <CardDescription>{municipality.state} — População: {municipality.population || 'N/I'}</CardDescription>
-       </div>
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6">
+        <h2 className="text-2xl font-bold">Painel de Gestão</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
       </div>
-     </CardHeader>
-     <CardContent>
-      <span>Prefeito(a): {municipality.mayor || '-'}</span>
-     </CardContent>
-    </Card>
-   )}
+    );
+  }
 
-   <Card>
-    <CardHeader>
-     <div className="flex items-center gap-3">
-      <User className="h-5 w-5 text-blue-600" />
-      <CardTitle>Usuários do Município</CardTitle>
-     </div>
-    </CardHeader>
-    <CardContent>
-     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-blue-100">
-       <thead>
-        <tr>
-         <th className="px-3 py-2 text-left font-semibold">Nome</th>
-         <th className="px-3 py-2 text-left font-semibold">CPF</th>
-         <th className="px-3 py-2 text-left font-semibold">E-mail</th>
-         <th className="px-3 py-2 text-left font-semibold">Data de Nascimento</th>
-         <th className="px-3 py-2 text-left font-semibold">Cargo</th>
-         <th className="px-3 py-2 text-left font-semibold">Secretaria(s)</th>
-         <th className="px-3 py-2 text-left font-semibold">CEP</th>
-         <th className="px-3 py-2 text-left font-semibold">Endereço</th>
-         <th className="px-3 py-2 text-left font-semibold">Número</th>
-         <th className="px-3 py-2 text-left font-semibold">Bairro</th>
-        </tr>
-       </thead>
-       <tbody>
-        {profiles.map((u, idx) => (
-         <tr key={u.id} className={idx % 2 === 0 ? "bg-blue-50" : ""}>
-          <td className="px-3 py-2">{u.name}</td>
-          <td className="px-3 py-2">{u.cpf}</td>
-          <td className="px-3 py-2">{u.email || "-"}</td>
-          <td className="px-3 py-2">{u.birthdate ? new Date(u.birthdate).toLocaleDateString() : "-"}</td>
-          <td className="px-3 py-2 capitalize">{u.role || "-"}</td>
-          <td className="px-3 py-2">
-           {/* Secretaria(s): chama setores relacionados ao usuário */}
-           <UserSectorsDisplay userId={u.id} />
-          </td>
-          <td className="px-3 py-2">{u.zip_code}</td>
-          <td className="px-3 py-2">{u.address}</td>
-          <td className="px-3 py-2">{u.street_number || '-'}</td>
-          <td className="px-3 py-2">{u.district}</td>
-         </tr>
-        ))}
-        {profiles.length === 0 && (
-         <tr>
-          <td colSpan={10} className="text-center py-6 text-muted-foreground">Nenhum usuário encontrado.</td>
-         </tr>
-        )}
-       </tbody>
-      </table>
-     </div>
-    </CardContent>
-   </Card>
-  </div>
- );
+  if (error) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro</AlertTitle>
+          <AlertDescription>
+            {error}. Por favor, recarregue a página ou entre em contato com o suporte.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // If no data or very limited data
+  if (dashboardData.totalPedidos === 0) {
+    return (
+      <div className="p-6">
+        <h2 className="text-2xl font-bold mb-6">Painel de Gestão</h2>
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Sem dados</AlertTitle>
+          <AlertDescription>
+            Não há pedidos de compras registrados no sistema. O painel será atualizado quando novos pedidos forem criados.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Painel de Gestão</h2>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">
+              Resumo Financeiro
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Orçamento Anual:</span>
+                <span className="font-medium">{formatCurrency(dashboardData.orcamentoAnual)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Valor Utilizado:</span>
+                <span className="font-medium">{formatCurrency(dashboardData.valorTotal)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Orçamento Restante:</span>
+                <span className="font-medium text-green-600">
+                  {formatCurrency(dashboardData.orcamentoRestante)}
+                </span>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-500 rounded-full"
+                  style={{ 
+                    width: `${Math.min(100, (dashboardData.valorTotal / dashboardData.orcamentoAnual) * 100)}%` 
+                  }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">
+              Visão Geral
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total de Pedidos</p>
+                  <p className="font-medium">{dashboardData.totalPedidos}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Valor Total</p>
+                  <p className="font-medium">{formatCurrency(dashboardData.valorTotal)}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">
+              Gastos por Secretaria
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(dashboardData.gastosPorSetor).length > 0 ? (
+              <div className="space-y-4">
+                {Object.entries(dashboardData.gastosPorSetor).map(([setor, valor]) => (
+                  <div key={setor} className="flex justify-between items-center">
+                    <span className="text-muted-foreground">{setor}:</span>
+                    <span className="font-medium">{formatCurrency(valor)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground py-4">
+                Não há dados de gastos por secretaria disponíveis.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 };
-
-// Mostra as secretarias do usuário (setores vinculados)
-function UserSectorsDisplay({ userId }) {
- const [sectors, setSectors] = React.useState([]);
- React.useEffect(() => {
-  async function load() {
-   const { data, error } = await supabase
-    .from("user_sectors")
-    .select("sectors(name)")
-    .eq("user_id", userId);
-   if (!error && data) setSectors(data.map(s => s.sectors?.name).filter(Boolean));
-  };
-  load();
- }, [userId]);
- return <span>{sectors.length > 0 ? sectors.join(", ") : "—"}</span>;
-}
 
 export default Dashboard;

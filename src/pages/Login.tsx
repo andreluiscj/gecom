@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ const Login: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
@@ -33,9 +35,11 @@ const Login: React.FC = () => {
       const { success, data, error } = await signIn({ email: username, password });
 
       if (success && data.session) {
+        // Regular login
         const userProfile = data.user?.user_metadata;
         const role = userProfile?.role || 'servidor';
 
+        // Redirect based on role
         if (role === 'admin') {
           navigate('/admin');
         } else if (role === 'prefeito') {
@@ -61,6 +65,7 @@ const Login: React.FC = () => {
             <GecomLogo className="w-64 h-auto" />
           </div>
         </div>
+
         <Card className="shadow-lg border-0">
           <CardContent className="pt-6">
             <form onSubmit={handleLogin} className="space-y-4">
@@ -76,6 +81,7 @@ const Login: React.FC = () => {
                   disabled={isSubmitting}
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <Input
@@ -88,6 +94,7 @@ const Login: React.FC = () => {
                   disabled={isSubmitting}
                 />
               </div>
+
               <Button
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700"
