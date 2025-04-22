@@ -105,10 +105,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "dfds_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "user_details"
+            referencedColumns: ["municipality_id"]
+          },
+          {
             foreignKeyName: "dfds_requester_id_fkey"
             columns: ["requester_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dfds_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "user_details"
             referencedColumns: ["id"]
           },
           {
@@ -178,10 +192,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "municipality_users_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "user_details"
+            referencedColumns: ["municipality_id"]
+          },
+          {
             foreignKeyName: "municipality_users_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "municipality_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_details"
             referencedColumns: ["id"]
           },
         ]
@@ -198,6 +226,7 @@ export type Database = {
           district: string
           email: string | null
           id: string
+          municipality_id: number | null
           name: string
           position_title: string | null
           role: string
@@ -216,6 +245,7 @@ export type Database = {
           district: string
           email?: string | null
           id: string
+          municipality_id?: number | null
           name: string
           position_title?: string | null
           role: string
@@ -234,6 +264,7 @@ export type Database = {
           district?: string
           email?: string | null
           id?: string
+          municipality_id?: number | null
           name?: string
           position_title?: string | null
           role?: string
@@ -241,7 +272,22 @@ export type Database = {
           updated_at?: string | null
           zip_code?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "user_details"
+            referencedColumns: ["municipality_id"]
+          },
+        ]
       }
       purchase_orders: {
         Row: {
@@ -307,6 +353,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipalities"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sectors_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "user_details"
+            referencedColumns: ["municipality_id"]
           },
         ]
       }
@@ -388,11 +441,38 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "workflow_steps_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "user_details"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      user_details: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          birthdate: string | null
+          city: string | null
+          cpf: string | null
+          district: string | null
+          email: string | null
+          id: string | null
+          municipality_id: number | null
+          municipality_name: string | null
+          municipality_state: string | null
+          name: string | null
+          position_title: string | null
+          role: string | null
+          street_number: string | null
+          zip_code: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

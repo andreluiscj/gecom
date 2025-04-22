@@ -12,8 +12,6 @@ const Login: React.FC = () => {
           <div className="flex justify-center mb-4">
             <GecomLogo className="w-64 h-auto" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Bem-vindo ao GECOM</h1>
-          <p className="text-gray-600">Sistema de Gestão de Compras Municipal</p>
         </div>
         <Card className="shadow-lg border-0">
           <CardContent className="pt-6">

@@ -107,10 +107,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       roles: ['admin', 'prefeito', 'gestor'],
       visible: userRole === 'admin' || userRole === 'prefeito' || userRole === 'gestor'
     },
+    // ABA DE ADMINISTRAÇÃO para admin apenas
     {
       title: 'Administração',
       path: '/admin/dashboard',
       icon: <Settings className="h-5 w-5" />,
+      roles: ['admin'],
+      visible: isAdmin
+    },
+    // MUNICÍPIOS SÓ PARA ADMIN
+    {
+      title: 'Municípios',
+      path: '/admin/municipios',
+      icon: <Building2 className="h-5 w-5" />,
       roles: ['admin'],
       visible: isAdmin
     },
