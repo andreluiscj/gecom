@@ -80,7 +80,7 @@ export interface Workflow {
 }
 
 export interface Municipio {
-  id: string;
+  id: string | number;
   nome: string;
   estado: string;
   populacao: number;
@@ -115,7 +115,7 @@ export interface DadosDashboard {
   };
 }
 
-export type UserRole = 'admin' | 'user' | 'manager' | 'prefeito';
+export type UserRole = 'admin' | 'gestor' | 'prefeito' | 'servidor';
 
 export interface Funcionario {
   id: string;
@@ -160,4 +160,87 @@ export interface PrefeitoData {
   partido: string;
   email: string;
   telefone: string;
+}
+
+// Types for Supabase database tables
+export interface Profile {
+  id: string;
+  name: string;
+  cpf: string;
+  birthdate: Date | string;
+  zip_code: string;
+  address: string;
+  district: string;
+  complement?: string;
+  role: UserRole;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Municipality {
+  id: number;
+  name: string;
+  state: string;
+  population?: number;
+  budget?: number;
+  mayor?: string;
+  logo?: string;
+  created_at: string;
+}
+
+export interface Sector {
+  id: number;
+  name: string;
+  municipality_id?: number;
+  created_at: string;
+}
+
+export interface DFD {
+  id: string;
+  description: string;
+  purchase_date: string | Date;
+  sector_id: number;
+  total_value: number;
+  status: PedidoStatus;
+  monetary_fund: string;
+  created_at: string;
+  updated_at: string;
+  justification?: string;
+  requester_id?: string;
+  observations?: string;
+  delivery_location?: string;
+  municipality_id: number;
+}
+
+export interface DFDItem {
+  id: string;
+  dfd_id: string;
+  name: string;
+  quantity: number;
+  unit_value: number;
+  total_value: number;
+  created_at: string;
+}
+
+export interface WorkflowStepDB {
+  id: string;
+  dfd_id: string;
+  title: string;
+  status: WorkflowStepStatus;
+  step_order: number;
+  responsible_id?: string;
+  start_date?: string;
+  completion_date?: string;
+  created_at: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  dfd_id: string;
+  homologated_value?: number;
+  homologation_date?: string | Date;
+  status: PedidoStatus;
+  created_at: string;
+  updated_at: string;
 }

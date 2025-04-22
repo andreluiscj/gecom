@@ -9,7 +9,382 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      dfd_items: {
+        Row: {
+          created_at: string | null
+          dfd_id: string
+          id: string
+          name: string
+          quantity: number
+          total_value: number
+          unit_value: number
+        }
+        Insert: {
+          created_at?: string | null
+          dfd_id: string
+          id?: string
+          name: string
+          quantity: number
+          total_value: number
+          unit_value: number
+        }
+        Update: {
+          created_at?: string | null
+          dfd_id?: string
+          id?: string
+          name?: string
+          quantity?: number
+          total_value?: number
+          unit_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dfd_items_dfd_id_fkey"
+            columns: ["dfd_id"]
+            isOneToOne: false
+            referencedRelation: "dfds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dfds: {
+        Row: {
+          created_at: string | null
+          delivery_location: string | null
+          description: string
+          id: string
+          justification: string | null
+          monetary_fund: string
+          municipality_id: number
+          observations: string | null
+          purchase_date: string
+          requester_id: string | null
+          sector_id: number | null
+          status: string
+          total_value: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_location?: string | null
+          description: string
+          id?: string
+          justification?: string | null
+          monetary_fund: string
+          municipality_id: number
+          observations?: string | null
+          purchase_date: string
+          requester_id?: string | null
+          sector_id?: number | null
+          status: string
+          total_value: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivery_location?: string | null
+          description?: string
+          id?: string
+          justification?: string | null
+          monetary_fund?: string
+          municipality_id?: number
+          observations?: string | null
+          purchase_date?: string
+          requester_id?: string | null
+          sector_id?: number | null
+          status?: string
+          total_value?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dfds_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dfds_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dfds_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      municipalities: {
+        Row: {
+          budget: number | null
+          created_at: string | null
+          id: number
+          logo: string | null
+          mayor: string | null
+          name: string
+          population: number | null
+          state: string
+        }
+        Insert: {
+          budget?: number | null
+          created_at?: string | null
+          id?: number
+          logo?: string | null
+          mayor?: string | null
+          name: string
+          population?: number | null
+          state: string
+        }
+        Update: {
+          budget?: number | null
+          created_at?: string | null
+          id?: number
+          logo?: string | null
+          mayor?: string | null
+          name?: string
+          population?: number | null
+          state?: string
+        }
+        Relationships: []
+      }
+      municipality_users: {
+        Row: {
+          id: number
+          municipality_id: number | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: number
+          municipality_id?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: number
+          municipality_id?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "municipality_users_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "municipality_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          active: boolean | null
+          address: string
+          birthdate: string
+          complement: string | null
+          cpf: string
+          created_at: string | null
+          district: string
+          id: string
+          name: string
+          role: string
+          updated_at: string | null
+          zip_code: string
+        }
+        Insert: {
+          active?: boolean | null
+          address: string
+          birthdate: string
+          complement?: string | null
+          cpf: string
+          created_at?: string | null
+          district: string
+          id: string
+          name: string
+          role: string
+          updated_at?: string | null
+          zip_code: string
+        }
+        Update: {
+          active?: boolean | null
+          address?: string
+          birthdate?: string
+          complement?: string | null
+          cpf?: string
+          created_at?: string | null
+          district?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string | null
+          dfd_id: string
+          homologated_value: number | null
+          homologation_date: string | null
+          id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dfd_id: string
+          homologated_value?: number | null
+          homologation_date?: string | null
+          id?: string
+          status: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dfd_id?: string
+          homologated_value?: number | null
+          homologation_date?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_dfd_id_fkey"
+            columns: ["dfd_id"]
+            isOneToOne: false
+            referencedRelation: "dfds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sectors: {
+        Row: {
+          created_at: string | null
+          id: number
+          municipality_id: number | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          municipality_id?: number | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          municipality_id?: number | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sectors_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sectors: {
+        Row: {
+          id: number
+          is_primary: boolean | null
+          sector_id: number | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: number
+          is_primary?: boolean | null
+          sector_id?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: number
+          is_primary?: boolean | null
+          sector_id?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sectors_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_sectors_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_steps: {
+        Row: {
+          completion_date: string | null
+          created_at: string | null
+          dfd_id: string
+          id: string
+          responsible_id: string | null
+          start_date: string | null
+          status: string
+          step_order: number
+          title: string
+        }
+        Insert: {
+          completion_date?: string | null
+          created_at?: string | null
+          dfd_id: string
+          id?: string
+          responsible_id?: string | null
+          start_date?: string | null
+          status: string
+          step_order: number
+          title: string
+        }
+        Update: {
+          completion_date?: string | null
+          created_at?: string | null
+          dfd_id?: string
+          id?: string
+          responsible_id?: string | null
+          start_date?: string | null
+          status?: string
+          step_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_steps_dfd_id_fkey"
+            columns: ["dfd_id"]
+            isOneToOne: false
+            referencedRelation: "dfds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_steps_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
