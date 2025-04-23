@@ -1,3 +1,4 @@
+
 import { PedidoCompra, PedidoStatus, Item, Workflow, WorkflowStep } from '@/types';
 
 // Mock data for items
@@ -66,7 +67,7 @@ const pedido: PedidoCompra = {
   itens: [novoItem],
   fundo_monetario: "Fundo Administrativo",
   created_at: new Date(),
-  updated_at: new Date(), // Add missing property
+  updated_at: new Date(),
   observacoes: "Observação teste",
   solicitante: "João Silva",
   workflow: workflowPedido,
@@ -86,7 +87,7 @@ export const listaPedidos: PedidoCompra[] = [
     itens: [novoItem],
     fundo_monetario: "Fundo de Desenvolvimento",
     created_at: new Date(),
-    updated_at: new Date(), // Add missing property
+    updated_at: new Date(),
     observacoes: "Urgente",
     solicitante: "Maria Souza",
     workflow: workflowPedido,
@@ -102,9 +103,14 @@ export const listaPedidos: PedidoCompra[] = [
     itens: [novoItem],
     fundo_monetario: "Fundo de Inovação",
     created_at: new Date(),
-    updated_at: new Date(), // Add missing property
+    updated_at: new Date(),
     observacoes: "Prioridade alta",
     solicitante: "Carlos Ferreira",
     workflow: workflowPedido,
   },
 ];
+
+// Add the missing export
+export const obterPedidosFicticios = () => {
+  return listaPedidos;
+};

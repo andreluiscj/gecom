@@ -59,3 +59,8 @@ export function getUserId(): string {
 export function getPermittedWorkflowStep(): string {
   return localStorage.getItem('user-permitted-step') || '';
 }
+
+// Add a synchronous version for comparative operations
+export function getUserRoleSync(): string {
+  return localStorage.getItem('user-role') || 'user';
+}

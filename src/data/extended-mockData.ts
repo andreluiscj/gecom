@@ -1,8 +1,9 @@
 
 // Re-exporting just the function for the mock orders
-export { obterPedidosFicticios } from './pedidos/mockPedidos';
-import { obterPedidosFicticios } from './pedidos/mockPedidos';
+import { obterPedidosFicticios, listaPedidos } from './pedidos/mockPedidos';
 import { Setor } from '@/types';
+
+export { obterPedidosFicticios } from './pedidos/mockPedidos';
 
 // Function to calculate dashboard data based on actual pedidos
 export function calcularDadosDashboard() {

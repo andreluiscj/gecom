@@ -23,7 +23,11 @@ export const municipioService = {
       return [];
     }
     
-    return data as Municipio[];
+    return data.map(municipio => ({
+      ...municipio,
+      created_at: new Date(municipio.created_at),
+      updated_at: new Date(municipio.updated_at)
+    })) as Municipio[];
   },
   
   async getById(id: string): Promise<Municipio | null> {
@@ -38,13 +42,23 @@ export const municipioService = {
       return null;
     }
     
-    return data as Municipio;
+    return {
+      ...data,
+      created_at: new Date(data.created_at),
+      updated_at: new Date(data.updated_at)
+    } as Municipio;
   },
   
   async create(municipio: Omit<Municipio, 'id'>): Promise<Municipio | null> {
+    const municipioForDb = {
+      ...municipio,
+      created_at: municipio.created_at.toISOString(),
+      updated_at: municipio.updated_at.toISOString()
+    };
+    
     const { data, error } = await supabase
       .from('municipios')
-      .insert(municipio)
+      .insert(municipioForDb)
       .select()
       .single();
     
@@ -53,13 +67,25 @@ export const municipioService = {
       return null;
     }
     
-    return data as Municipio;
+    return {
+      ...data,
+      created_at: new Date(data.created_at),
+      updated_at: new Date(data.updated_at)
+    } as Municipio;
   },
   
   async update(id: string, municipio: Partial<Municipio>): Promise<Municipio | null> {
+    const municipioForDb = { ...municipio };
+    if (municipioForDb.created_at) {
+      municipioForDb.created_at = municipioForDb.created_at.toISOString();
+    }
+    if (municipioForDb.updated_at) {
+      municipioForDb.updated_at = municipioForDb.updated_at.toISOString();
+    }
+    
     const { data, error } = await supabase
       .from('municipios')
-      .update(municipio)
+      .update(municipioForDb)
       .eq('id', id)
       .select()
       .single();
@@ -69,7 +95,11 @@ export const municipioService = {
       return null;
     }
     
-    return data as Municipio;
+    return {
+      ...data,
+      created_at: new Date(data.created_at),
+      updated_at: new Date(data.updated_at)
+    } as Municipio;
   },
   
   async delete(id: string): Promise<boolean> {
@@ -219,7 +249,6 @@ export const funcionarioService = {
 // Serviço de Pedidos de Compra
 export const pedidoService = {
   async getAll(): Promise<PedidoCompra[]> {
-    // Primeiro, buscamos todos os pedidos de compra
     const { data: pedidos, error: pedidosError } = await supabase
       .from('pedidos_compra')
       .select(`
@@ -233,7 +262,6 @@ export const pedidoService = {
       return [];
     }
     
-    // Para cada pedido, buscamos os itens correspondentes
     const pedidosCompletos = await Promise.all(pedidos.map(async (pedido) => {
       const { data: itens, error: itensError } = await supabase
         .from('itens_pedido')
@@ -248,11 +276,11 @@ export const pedidoService = {
           solicitante: pedido.solicitante?.nome,
           data_compra: new Date(pedido.data_compra),
           created_at: new Date(pedido.created_at),
+          updated_at: new Date(pedido.updated_at),
           itens: []
         };
       }
       
-      // Também buscamos o workflow do pedido
       const { data: workflow, error: workflowError } = await supabase
         .from('workflow_pedidos')
         .select('*')
@@ -290,6 +318,7 @@ export const pedidoService = {
         solicitante: pedido.solicitante?.nome,
         data_compra: new Date(pedido.data_compra),
         created_at: new Date(pedido.created_at),
+        updated_at: new Date(pedido.updated_at),
         itens: itens || [],
         workflow: workflowCompleto
       };
@@ -299,7 +328,6 @@ export const pedidoService = {
   },
   
   async getById(id: string): Promise<PedidoCompra | null> {
-    // Buscamos o pedido de compra
     const { data: pedido, error: pedidoError } = await supabase
       .from('pedidos_compra')
       .select(`
@@ -315,7 +343,6 @@ export const pedidoService = {
       return null;
     }
     
-    // Buscamos os itens do pedido
     const { data: itens, error: itensError } = await supabase
       .from('itens_pedido')
       .select('*')
@@ -326,7 +353,6 @@ export const pedidoService = {
       return null;
     }
     
-    // Buscamos o workflow do pedido
     const { data: workflow, error: workflowError } = await supabase
       .from('workflow_pedidos')
       .select('*')
@@ -364,6 +390,7 @@ export const pedidoService = {
       solicitante: pedido.solicitante?.nome,
       data_compra: new Date(pedido.data_compra),
       created_at: new Date(pedido.created_at),
+      updated_at: new Date(pedido.updated_at),
       itens: itens || [],
       workflow: workflowCompleto
     } as PedidoCompra;
@@ -371,10 +398,14 @@ export const pedidoService = {
   
   async create(pedido: Omit<PedidoCompra, 'id' | 'created_at' | 'itens' | 'workflow'>, 
                 itens: Omit<Item, 'id' | 'pedido_id'>[]): Promise<PedidoCompra | null> {
-    // Primeiro, inserimos o pedido de compra
+    const pedidoForDb = {
+      ...pedido,
+      data_compra: pedido.data_compra instanceof Date ? pedido.data_compra.toISOString() : pedido.data_compra
+    };
+    
     const { data: novoPedido, error: pedidoError } = await supabase
       .from('pedidos_compra')
-      .insert(pedido)
+      .insert(pedidoForDb)
       .select()
       .single();
     
@@ -383,7 +414,6 @@ export const pedidoService = {
       return null;
     }
     
-    // Se houver itens, inserimos cada um deles
     if (itens && itens.length > 0) {
       const itensComPedidoId = itens.map(item => ({
         ...item,
@@ -399,15 +429,24 @@ export const pedidoService = {
       }
     }
     
-    // Retornamos o pedido criado
     return await this.getById(novoPedido.id);
   },
   
   async update(id: string, pedido: Partial<PedidoCompra>): Promise<PedidoCompra | null> {
-    // Atualizamos o pedido de compra
+    const pedidoForDb = { ...pedido };
+    if (pedidoForDb.data_compra instanceof Date) {
+      pedidoForDb.data_compra = pedidoForDb.data_compra.toISOString();
+    }
+    if (pedidoForDb.created_at instanceof Date) {
+      pedidoForDb.created_at = pedidoForDb.created_at.toISOString();
+    }
+    if (pedidoForDb.updated_at instanceof Date) {
+      pedidoForDb.updated_at = pedidoForDb.updated_at.toISOString();
+    }
+    
     const { data: pedidoAtualizado, error: pedidoError } = await supabase
       .from('pedidos_compra')
-      .update(pedido)
+      .update(pedidoForDb)
       .eq('id', id)
       .select()
       .single();
@@ -417,7 +456,6 @@ export const pedidoService = {
       return null;
     }
     
-    // Retornamos o pedido atualizado
     return await this.getById(id);
   },
   
@@ -516,7 +554,6 @@ export const authService = {
     }
     
     if (data.user) {
-      // Criar o registro na tabela de usuários
       const { error: usuarioError } = await supabase
         .from('usuarios')
         .insert({

@@ -1,3 +1,4 @@
+
 // Add workflow updates function that updates the title property for compatibility
 export function atualizarWorkflow(
   pedidoId: string,
@@ -19,8 +20,9 @@ export function atualizarWorkflow(
 export const atualizarEtapaWorkflow = atualizarWorkflow;
 
 export function obterTodosPedidos() {
-  // In a real implementation, this would fetch all pedidos from the database
-  return []; // This is just a placeholder
+  // Import from mockPedidos for consistency
+  const { obterPedidosFicticios } = require('./pedidos/mockPedidos');
+  return obterPedidosFicticios();
 }
 
 export function obterPedidos() {
@@ -35,3 +37,6 @@ export function removerPedido(id: string) {
   console.log(`Removing pedido ${id}`);
   return Promise.resolve(true);
 }
+
+// Export the formatarData function for compatibility
+export { formatarData } from '../utils/formatters';

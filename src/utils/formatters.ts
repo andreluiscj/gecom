@@ -1,3 +1,4 @@
+
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -43,3 +44,6 @@ export function calcularPorcentagem(valor: number, total: number): number {
 export function formatarData(data: Date): string {
   return data.toLocaleDateString('pt-BR');
 }
+
+// Add mockData export for backward compatibility
+export { formatarData as formatarData };

@@ -1,7 +1,8 @@
+
 import { Funcionario } from '@/types';
 
 // Mock data for funcionarios
-const funcionarios: Funcionario[] = [
+const funcionariosList: Funcionario[] = [
   {
     id: "1",
     nome: "João Admin",
@@ -39,6 +40,8 @@ const funcionarios: Funcionario[] = [
     telefone: "11 94567-8901"
   }
 ];
+
+export const funcionarios = funcionariosList;
 
 // Mock function to authenticate user
 export function autenticarUsuario(username: string, password: string) {

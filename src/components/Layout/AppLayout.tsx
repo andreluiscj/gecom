@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import Navbar from './Navbar'; // Fix casing to match file system
+import NavBar from './NavBar';
 import Sidebar from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader } from '@/components/ui/loader';
@@ -13,7 +12,6 @@ const AppLayout: React.FC = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!loading && !user) {
       navigate('/login');
     }
@@ -33,7 +31,7 @@ const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar toggleSidebar={toggleSidebar} />
+      <NavBar toggleSidebar={toggleSidebar} />
       <Sidebar isOpen={isSidebarOpen} />
       <main 
         className={cn(

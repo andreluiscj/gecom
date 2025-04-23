@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -20,6 +19,10 @@ const pedidoSchema = z.object({
       valor_unitario: z.number().min(0.01, 'Valor unitário deve ser maior que zero'),
     })
   ).min(1, 'Pelo menos um item é obrigatório'),
+  observacoes: z.string().optional(),
+  solicitante_id: z.string().optional(),
+  local_entrega: z.string().optional(),
+  justificativa: z.string().optional(),
 });
 
 export type PedidoFormValues = z.infer<typeof pedidoSchema>;
@@ -45,6 +48,10 @@ export const usePedidoForm = () => {
       fundo_monetario: '',
       setor_id: '',
       itens: [{ nome: '', quantidade: 1, valor_unitario: 0 }],
+      observacoes: '',
+      solicitante_id: '',
+      local_entrega: '',
+      justificativa: '',
     },
   });
 
@@ -77,7 +84,6 @@ export const usePedidoForm = () => {
       [campo]: valor,
     };
 
-    // Recalcular valor total
     if (campo === 'quantidade' || campo === 'valor_unitario') {
       novosItens[index].valor_total =
         Number(novosItens[index].quantidade) * Number(novosItens[index].valor_unitario);
@@ -85,7 +91,6 @@ export const usePedidoForm = () => {
 
     setItens(novosItens);
     
-    // Atualiza os valores no formulário também
     const formItens = form.getValues().itens || [];
     formItens[index] = {
       nome: novosItens[index].nome,
@@ -101,7 +106,6 @@ export const usePedidoForm = () => {
 
   const onSubmit = async (data: PedidoFormValues) => {
     try {
-      // Criar o pedido
       const { data: pedido, error: pedidoError } = await supabase
         .from('pedidos_compra')
         .insert({
@@ -111,13 +115,16 @@ export const usePedidoForm = () => {
           fundo_monetario: data.fundo_monetario,
           valor_total: calcularValorTotal(),
           status: 'Pendente',
+          observacoes: data.observacoes,
+          solicitante_id: data.solicitante_id,
+          local_entrega: data.local_entrega,
+          justificativa: data.justificativa
         })
         .select()
         .single();
 
       if (pedidoError) throw pedidoError;
 
-      // Criar os itens do pedido
       const itensParaInserir = itens.map(item => ({
         ...item,
         pedido_id: pedido.id
