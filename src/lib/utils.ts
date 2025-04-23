@@ -13,8 +13,6 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export function formatDate(date: Date | string): string {
-  if (!date) return "";
-  const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString('pt-BR');
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('pt-BR').format(date);
 }

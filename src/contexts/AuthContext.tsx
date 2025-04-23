@@ -1,121 +1,142 @@
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { UsuarioLogin } from '@/types';
 
-interface AuthContextProps {
-  user: UsuarioLogin | null;
+interface User {
+  id: string;
+  email: string;
+  role: string;
+}
+
+interface AuthContextType {
+  user: User | null;
   loading: boolean;
+  error: string | null;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextProps>({
+const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  error: null,
   signIn: async () => ({ success: false }),
   signOut: async () => {}
 });
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UsuarioLogin | null>(null);
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Check for existing session
   useEffect(() => {
-    async function loadUser() {
-      setLoading(true);
-      
-      // Check if there's an active session
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      if (sessionData?.session) {
-        try {
-          const { data: userData, error } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('auth_user_id', sessionData.session.user.id)
-            .single();
-
-          if (error) throw error;
-          
-          if (userData) {
-            setUser(userData);
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            role: (session.user.user_metadata?.role as string) || 'user'
+          });
+        } else {
+          setUser(null);
         }
+        setLoading(false);
       }
-      
+    );
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          role: (session.user.user_metadata?.role as string) || 'user'
+        });
+      }
       setLoading(false);
-    }
-    
-    loadUser();
-    
-    // Set up subscription for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        try {
-          const { data: userData, error } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('auth_user_id', session.user.id)
-            .single();
-
-          if (error) throw error;
-          
-          if (userData) {
-            setUser(userData);
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
+    }).catch((err) => {
+      console.error("Error fetching session:", err);
+      setLoading(false);
     });
-    
+
     return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
-      }
+      subscription.unsubscribe();
     };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
+      setError(null);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
 
-      if (error) throw error;
-      
-      const { data: userData, error: userError } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('auth_user_id', data.user.id)
-        .single();
-      
-      if (userError) throw userError;
-      
-      setUser(userData);
-      return { success: true };
-    } catch (error: any) {
-      console.error('Login error:', error);
-      return { success: false, error: error.message };
+      if (error) {
+        setError(error.message);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        // Fetch additional user data if needed
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('auth_user_id', data.user.id)
+            .single();
+
+          if (!userError && userData) {
+            // Store any relevant user data in localStorage for easy access
+            localStorage.setItem('user-role', userData.role);
+            localStorage.setItem('user-authenticated', 'true');
+            localStorage.setItem('user-id', userData.id);
+            localStorage.setItem('funcionario-id', userData.funcionario_id);
+          }
+        } catch (err) {
+          console.error("Error fetching user data:", err);
+        }
+
+        return { success: true };
+      } else {
+        return { success: false, error: "Falha na autenticação" };
+      }
+    } catch (err) {
+      console.error("Sign in error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Erro ao fazer login";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem('user-authenticated');
+      localStorage.removeItem('user-role');
+      localStorage.removeItem('user-id');
+      localStorage.removeItem('funcionario-id');
+    } catch (err) {
+      console.error("Sign out error:", err);
+    }
+  };
+
+  const value = {
+    user,
+    loading,
+    error,
+    signIn,
+    signOut
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export const useAuth = () => useContext(AuthContext);
+};

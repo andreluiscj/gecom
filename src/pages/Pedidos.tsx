@@ -35,7 +35,6 @@ const Pedidos: React.FC = () => {
           ...pedido,
           data_compra: new Date(pedido.data_compra),
           created_at: new Date(pedido.created_at),
-          updated_at: new Date(pedido.updated_at),
           setor: pedido.setores?.nome || '',
           itens: []
         }));
@@ -55,7 +54,7 @@ const Pedidos: React.FC = () => {
   const filteredPedidos = pedidos.filter(pedido =>
     pedido.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
     pedido.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    pedido.setor.toLowerCase().includes(searchTerm.toLowerCase())
+    pedido.setor?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -67,8 +66,8 @@ const Pedidos: React.FC = () => {
             Gerencie todos os pedidos de compra do município
           </p>
         </div>
-        <Button asChild>
-          <Link to="/pedidos/novo">
+        <Button>
+          <Link to="/pedidos/novo" className="flex items-center">
             <Plus className="mr-2 h-4 w-4" /> Novo Pedido
           </Link>
         </Button>
@@ -129,9 +128,8 @@ const Pedidos: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      asChild
                     >
-                      <Link to={`/pedidos/${pedido.id}`}>
+                      <Link to={`/pedidos/${pedido.id}`} className="flex items-center">
                         <FileText className="h-4 w-4 mr-1" /> Visualizar
                       </Link>
                     </Button>
@@ -150,8 +148,8 @@ const Pedidos: React.FC = () => {
                 : "Ainda não há pedidos cadastrados no sistema."}
             </p>
             {!searchTerm && (
-              <Button className="mt-6" asChild>
-                <Link to="/pedidos/novo">
+              <Button className="mt-6">
+                <Link to="/pedidos/novo" className="flex items-center">
                   <Plus className="mr-2 h-4 w-4" /> Criar Pedido
                 </Link>
               </Button>

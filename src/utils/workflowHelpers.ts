@@ -1,42 +1,39 @@
-
 import { Workflow, WorkflowStep, PedidoCompra } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
 
 export function initializeWorkflow(): Workflow {
-  const workflowId = uuidv4();
   const steps: WorkflowStep[] = [
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       titulo: 'Solicitação',
       status: 'Pendente',
       ordem: 1
     },
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       titulo: 'Análise',
       status: 'Pendente',
       ordem: 2
     },
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       titulo: 'Aprovação',
       status: 'Pendente',
       ordem: 3
     },
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       titulo: 'Cotação',
       status: 'Pendente',
       ordem: 4
     },
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       titulo: 'Empenho',
       status: 'Pendente',
       ordem: 5
     },
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       titulo: 'Entrega',
       status: 'Pendente',
       ordem: 6
@@ -44,13 +41,45 @@ export function initializeWorkflow(): Workflow {
   ];
 
   return {
-    id: workflowId,
+    id: crypto.randomUUID(),
     pedido_id: '',
     etapa_atual: 1,
     total_etapas: steps.length,
     percentual_completo: 0,
     steps
   };
+}
+
+// Array of default workflow step names for reference
+export const DEFAULT_WORKFLOW_STEPS = [
+  'Solicitação',
+  'Análise',
+  'Aprovação',
+  'Cotação',
+  'Empenho',
+  'Entrega'
+];
+
+// Check if step can be edited
+export function canEditStep(workflow: Workflow, stepIndex: number): boolean {
+  // First step can always be edited
+  if (stepIndex === 0) return true;
+  
+  // Other steps can only be edited if all previous steps are completed
+  for (let i = 0; i < stepIndex; i++) {
+    if (workflow.steps[i].status !== 'Concluído') {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+// Check if user has permission
+export function funcionarioTemPermissao(funcionarioId: string, etapa: string): boolean {
+  // Simplified permission check
+  // In a real app, this would check against actual permissions in the database
+  return true;
 }
 
 export function updateWorkflowFromPedidoStatus(pedido: PedidoCompra): PedidoCompra {

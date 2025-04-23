@@ -6,6 +6,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader } from '@/components/ui/loader';
 import { BarChart, Building2, Users, Wallet } from 'lucide-react';
+import DashboardHeader from '@/components/Dashboard/DashboardHeader';
 
 const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -65,7 +66,7 @@ const Dashboard: React.FC = () => {
         console.error('Error fetching dashboard data:', error);
         
         // Set default municipality if error occurs
-        const defaultMunicipio = {
+        const defaultMunicipio: Municipio = {
           id: 'default',
           nome: 'Município Padrão',
           estado: 'MG',
@@ -104,25 +105,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {municipio && (
-        <div className="bg-white rounded-lg p-6 border shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">
-            {municipio.nome} - {municipio.estado}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">População</p>
-              <p className="text-lg font-medium">{municipio.populacao.toLocaleString()} habitantes</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Prefeito(a)</p>
-              <p className="text-lg font-medium">{municipio.prefeito}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Orçamento Anual</p>
-              <p className="text-lg font-medium">{formatCurrency(municipio.orcamento_anual)}</p>
-            </div>
-          </div>
-        </div>
+        <DashboardHeader municipio={municipio} language="pt" />
       )}
 
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">

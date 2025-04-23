@@ -90,7 +90,7 @@ export interface UsuarioLogin {
   primeiro_acesso?: boolean;
 }
 
-// Add the DadosDashboard interface
+// Dashboard data interface for metrics
 export interface DadosDashboard {
   resumo_financeiro: {
     estimativa_despesa: number;
