@@ -17,13 +17,13 @@ interface DashboardFiltersProps {
   departments: string[];
 }
 
-export const DashboardFilters: React.FC<DashboardFiltersProps> = ({ 
+export function DashboardFilters({ 
   period, 
   setPeriod, 
   filters, 
   setFilters,
   departments 
-}) => {
+}: DashboardFiltersProps) {
   const months = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -182,6 +182,4 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
       </div>
     </div>
   );
-};
-
-export default DashboardFilters;
+}

@@ -11,18 +11,18 @@ export function useAuth() {
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
   const [showGDPRDialog, setShowGDPRDialog] = useState(false);
 
-  const handleLogin = (email: string, password: string) => {
+  const handleLogin = (username: string, password: string) => {
     setIsSubmitting(true);
 
     // Basic validation
-    if (!email || !password) {
+    if (!username || !password) {
       toast.error('Por favor, preencha todos os campos.');
       setIsSubmitting(false);
       return;
     }
 
     // Try to authenticate user
-    const result = autenticarUsuario(email, password);
+    const result = autenticarUsuario(username, password);
     if (result.authenticated) {
       // Check if it's first login, if so show password change dialog
       if (result.primeiroAcesso) {
@@ -43,8 +43,7 @@ export function useAuth() {
             result.funcionario.nome, 
             undefined, 
             result.userId, 
-            result.funcionario.id,
-            result.funcionario.setor
+            result.funcionario.id
           );
         }
       }
@@ -81,45 +80,23 @@ export function useAuth() {
     }
   };
 
-  const handleGDPRConsent = () => {
+  const handleGDPRConsent = (username: string, password: string) => {
     // Save GDPR consent
     localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
     setShowGDPRDialog(false);
     
-    // Complete login process with existing credentials
-    const userData = getUserById(currentUserId);
-    
-    if (userData) {
+    // Complete login process
+    const result = autenticarUsuario(username, password);
+    if (result.authenticated) {
       loginSuccess(
-        userData.usuario.role, 
+        result.role, 
         'São Paulo', 
-        userData.funcionario.nome, 
+        result.funcionario.nome, 
         undefined, 
-        userData.usuario.id,
-        userData.funcionario.id,
-        userData.funcionario.setor
+        result.userId,
+        result.funcionario.id
       );
-    } else {
-      toast.error('Erro ao concluir o login. Por favor, tente novamente.');
-      setIsSubmitting(false);
     }
-  };
-  
-  // Helper function to get user data by ID
-  const getUserById = (userId: string) => {
-    const usuarios = JSON.parse(localStorage.getItem('usuarios-login') || '[]');
-    const user = usuarios.find((u: any) => u.id === userId);
-    
-    if (user) {
-      const funcionarios = JSON.parse(localStorage.getItem('funcionarios') || '[]');
-      const funcionario = funcionarios.find((f: any) => f.id === user.funcionarioId);
-      
-      if (funcionario) {
-        return { usuario: user, funcionario };
-      }
-    }
-    
-    return null;
   };
 
   const loginSuccess = (
@@ -128,8 +105,7 @@ export function useAuth() {
     name: string = '', 
     permittedStep: string = '',
     userId: string = '',
-    funcionarioId: string = '',
-    setor: string = ''
+    funcionarioId: string = ''
   ) => {
     // Set authenticated state in localStorage
     localStorage.setItem('user-authenticated', 'true');
@@ -137,7 +113,6 @@ export function useAuth() {
     localStorage.setItem('user-municipality', municipality);
     localStorage.setItem('user-id', userId);
     localStorage.setItem('funcionario-id', funcionarioId);
-    localStorage.setItem('user-setor', setor);
     
     if (name) {
       localStorage.setItem('user-name', name);
@@ -147,19 +122,12 @@ export function useAuth() {
     }
 
     toast.success('Login realizado com sucesso!');
-    setIsSubmitting(false);
     
-    // Direct users according to their access level
+    // Direct admin users to the admin panel, others to dashboard
     if (role === 'admin') {
       navigate('/admin');
-    } else if (role === 'prefeito') {
-      // Prefeito can access dashboard like manager
-      navigate('/dashboard');
-    } else if (role === 'manager') {
-      navigate('/dashboard');
     } else {
-      // Regular users (servidores) go directly to the order list
-      navigate('/pedidos');
+      navigate('/dashboard');
     }
   };
 
@@ -171,7 +139,7 @@ export function useAuth() {
     setShowGDPRDialog,
     currentUserId,
     handleLogin,
-    handlePasswordChange: handlePasswordChange,
-    handleGDPRConsent: handleGDPRConsent
+    handlePasswordChange,
+    handleGDPRConsent
   };
 }

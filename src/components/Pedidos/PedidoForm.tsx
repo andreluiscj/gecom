@@ -1,64 +1,81 @@
 
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import TotalSection from "./Form/TotalSection";
-import ItemsSection from "./Form/ItemsSection";
-import ActionButtons from "./Form/ActionButtons";
-import { toast } from "sonner";
-import { createDfd } from "@/services/dfdService";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { PedidoCompra } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
 
-export interface PedidoFormProps {
-  onSubmit?: (data: any) => void;
-  onCancel?: () => void;
-  initialData?: any;
-  isEditing?: boolean;
-}
+import { adicionarPedido } from '@/data/mockData';
+import { initializeWorkflow } from '@/utils/workflowHelpers';
+import ActionButtons from './Form/ActionButtons';
+import ItemsSection from './Form/ItemsSection';
+import TotalSection from './Form/TotalSection';
 
-const PedidoForm: React.FC<PedidoFormProps> = ({
-  onSubmit,
-  onCancel,
-  initialData,
-  isEditing = false
-}) => {
-  const { user, userMunicipality, userSectors } = useAuth();
+const fundosMonetarios = [
+  'Fundo Municipal de Saúde',
+  'Fundo Municipal de Educação',
+  'Fundo Municipal de Assistência Social',
+  'Fundo Municipal de Meio Ambiente',
+  'Recursos Próprios',
+  'Recursos Federais',
+  'Recursos Estaduais'
+];
+
+const secretarias = [
+  'Saúde',
+  'Educação',
+  'Administrativo',
+  'Transporte',
+  'Assistência Social',
+  'Cultura',
+  'Meio Ambiente',
+  'Obras',
+  'Segurança Pública',
+  'Fazenda',
+  'Turismo',
+  'Esportes e Lazer',
+  'Planejamento',
+  'Comunicação',
+  'Ciência e Tecnologia'
+];
+
+const PedidoForm: React.FC = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    dataCompra: initialData?.dataCompra || new Date().toISOString().split("T")[0],
-    descricao: initialData?.descricao || "",
-    fundoMonetario: initialData?.fundoMonetario || "",
-    setor: initialData?.setor || (userSectors?.[0]?.sector_id || ""),
-    observacoes: initialData?.observacoes || "",
-    localEntrega: initialData?.localEntrega || "",
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [formData, setFormData] = useState<any>({});
+  const [itens, setItens] = useState([
+    { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 }
+  ]);
+
+  const form = useForm({
+    defaultValues: {
+      dataCompra: new Date().toISOString().split('T')[0],
+      setor: '',
+      fundoMonetario: '',
+      responsavel: '',
+      justificativa: '',
+      descricao: '',
+      localEntrega: '',
+      valorEstimado: ''
+    },
+    resolver: zodResolver(
+      currentStep === 1
+        ? firstStepSchema
+        : secondStepSchema
+    ),
   });
-
-  const [itens, setItens] = useState(
-    initialData?.itens || [
-      { id: crypto.randomUUID(), nome: "", quantidade: 1, valorUnitario: 0, valorTotal: 0 }
-    ]
-  );
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
 
   const adicionarItem = () => {
     setItens([
       ...itens,
-      { id: crypto.randomUUID(), nome: "", quantidade: 1, valorUnitario: 0, valorTotal: 0 }
+      { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
     ]);
   };
 
@@ -74,11 +91,10 @@ const PedidoForm: React.FC<PedidoFormProps> = ({
     const novosItens = [...itens];
     novosItens[index] = {
       ...novosItens[index],
-      [campo]: valor
+      [campo]: valor,
     };
 
-    // Recalcular valor total
-    if (campo === "quantidade" || campo === "valorUnitario") {
+    if (campo === 'quantidade' || campo === 'valorUnitario') {
       novosItens[index].valorTotal =
         Number(novosItens[index].quantidade) * Number(novosItens[index].valorUnitario);
     }
@@ -90,196 +106,301 @@ const PedidoForm: React.FC<PedidoFormProps> = ({
     return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const total = calcularValorTotal();
+
+  const handleNextStep = async () => {
+    const isValid = await form.trigger([
+      'setor',
+      'fundoMonetario', 
+      'responsavel', 
+      'justificativa', 
+      'dataCompra', 
+      'descricao'
+    ]);
     
-    if (!userMunicipality) {
-      toast.error("Nenhum município selecionado");
+    if (!isValid) return;
+    
+    const hasEmptyItems = itens.some(item => !item.nome);
+    if (hasEmptyItems) {
+      toast.error('Preencha todos os itens antes de continuar.');
       return;
     }
     
-    // Validate form data
-    if (formData.setor === "") {
-      toast.error("Selecione um setor");
-      return;
-    }
-    
-    if (formData.fundoMonetario === "") {
-      toast.error("Informe o fundo monetário");
-      return;
-    }
-    
-    // Validate items
-    const isItemsValid = itens.every(item => 
-      item.nome.trim() !== "" && 
-      item.quantidade > 0 &&
-      item.valorUnitario > 0
-    );
-    
-    if (!isItemsValid) {
-      toast.error("Verifique os itens. Todos precisam ter nome, quantidade e valor.");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      const dfdData = {
-        description: formData.descricao,
-        purchase_date: formData.dataCompra,
-        sector_id: formData.setor,
-        total_value: calcularValorTotal(),
-        status: "Pendente",
-        monetary_fund: formData.fundoMonetario,
-        requester_id: user?.id,
-        observations: formData.observacoes,
-        delivery_location: formData.localEntrega,
-        municipality_id: userMunicipality.id
-      };
-      
-      if (onSubmit) {
-        onSubmit({
-          ...dfdData,
-          items: itens
-        });
-      } else {
-        // Create new DFD directly
-        const { success, data } = await createDfd(dfdData, itens);
-        
-        if (success) {
-          toast.success("DFD cadastrada com sucesso!");
-          navigate("/pedidos");
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao salvar DFD:", error);
-      toast.error("Erro ao cadastrar DFD. Verifique os dados e tente novamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    const step1Data = form.getValues();
+    setFormData({ ...step1Data, itens });
+    setCurrentStep(2);
   };
 
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    } else {
-      navigate("/pedidos");
+  const handlePreviousStep = () => {
+    setCurrentStep(1);
+  };
+
+  const handleSubmit = async (data: any) => {
+    try {
+      const combinedData = {
+        ...formData,
+        localEntrega: data.localEntrega,
+        valorEstimado: parseFloat(data.valorEstimado) || total,
+      };
+
+      const novoPedido: PedidoCompra = {
+        id: uuidv4(),
+        descricao: combinedData.descricao,
+        justificativa: combinedData.justificativa,
+        dataCompra: new Date(combinedData.dataCompra),
+        setor: combinedData.setor,
+        solicitante: combinedData.responsavel,
+        valorTotal: combinedData.valorEstimado || total,
+        itens: itens.map(item => ({
+          ...item,
+          valorTotal: item.quantidade * item.valorUnitario
+        })),
+        status: 'Pendente',
+        fundoMonetario: combinedData.fundoMonetario,
+        createdAt: new Date(),
+        observacoes: '',
+        workflow: initializeWorkflow(),
+        localEntrega: combinedData.localEntrega
+      };
+
+      const pedidoAdicionado = adicionarPedido(novoPedido);
+      toast.success('DFD cadastrada com sucesso! A DFD já está disponível na página da secretaria e nos relatórios do sistema.');
+      navigate(`/pedidos/${pedidoAdicionado.id}`);
+    } catch (error) {
+      console.error('Erro ao submeter o formulário:', error);
+      toast.error('Erro ao cadastrar DFD. Tente novamente.');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardContent className="p-6">
-              <div className="space-y-6">
-                <h2 className="text-xl font-semibold">Informações Básicas</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="dataCompra">Data da Compra</Label>
-                    <Input
-                      id="dataCompra"
-                      name="dataCompra"
-                      type="date"
-                      value={formData.dataCompra}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="setor">Setor / Secretaria</Label>
-                    <Select
-                      value={formData.setor}
-                      onValueChange={(value) => handleSelectChange("setor", value)}
-                      required
-                    >
-                      <SelectTrigger id="setor">
-                        <SelectValue placeholder="Selecione o setor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {userSectors?.map((sectorItem) => (
-                          <SelectItem key={sectorItem.sector_id} value={sectorItem.sector_id}>
-                            {sectorItem.sectors.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+    <Card className="p-6">
+      <Form {...form}>
+        <form onSubmit={
+          currentStep === 1 
+            ? (e) => { e.preventDefault(); handleNextStep(); }
+            : form.handleSubmit(handleSubmit)
+        } className="space-y-6">
+          {currentStep === 1 ? (
+            <>
+              <h2 className="text-lg font-semibold">Informações Básicas</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="setor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Identificação do Requisitante (Secretaria)</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a secretaria" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {secretarias.map(secretaria => (
+                            <SelectItem key={secretaria} value={secretaria}>
+                              {secretaria}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="descricao">Descrição da Demanda</Label>
-                  <Textarea
-                    id="descricao"
-                    name="descricao"
-                    value={formData.descricao}
-                    onChange={handleInputChange}
-                    rows={3}
-                    required
-                    placeholder="Descreva o propósito desta compra"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fundoMonetario">Fundo Monetário</Label>
-                    <Input
-                      id="fundoMonetario"
-                      name="fundoMonetario"
-                      value={formData.fundoMonetario}
-                      onChange={handleInputChange}
-                      placeholder="Ex: Fundo Municipal de Saúde"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="localEntrega">Local de Entrega</Label>
-                    <Input
-                      id="localEntrega"
-                      name="localEntrega"
-                      value={formData.localEntrega}
-                      onChange={handleInputChange}
-                      placeholder="Local de entrega dos itens"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="observacoes">Observações</Label>
-                  <Textarea
-                    id="observacoes"
-                    name="observacoes"
-                    value={formData.observacoes}
-                    onChange={handleInputChange}
-                    rows={2}
-                    placeholder="Alguma observação adicional? (opcional)"
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="fundoMonetario"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unidade Administrativa Requisitante (Fundo)</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o fundo monetário" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {fundosMonetarios.map((fundo) => (
+                            <SelectItem key={fundo} value={fundo}>
+                              {fundo}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </CardContent>
-          </Card>
 
-          <div className="mt-6">
-            <ItemsSection
-              items={itens}
-              onUpdateItem={atualizarItem}
-              onAddItem={adicionarItem}
-              onRemoveItem={removerItem}
-            />
-          </div>
-        </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="responsavel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Responsável</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome do responsável pela solicitação" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-        <div>
-          <TotalSection total={calcularValorTotal()} />
+                <FormField
+                  control={form.control}
+                  name="dataCompra"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data do Pedido</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-          <ActionButtons
-            isSubmitting={isSubmitting}
-          />
-        </div>
-      </div>
-    </form>
+              <FormField
+                control={form.control}
+                name="justificativa"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Justificativa da Necessidade</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Justifique a necessidade deste pedido..."
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="descricao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição do Pedido</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Descreva o pedido de compra..."
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <ItemsSection
+                items={itens}
+                onAddItem={adicionarItem}
+                onRemoveItem={removerItem}
+                onUpdateItem={atualizarItem}
+              />
+
+              <div className="flex justify-end space-x-4">
+                <button 
+                  type="submit"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md"
+                >
+                  Próxima Etapa
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold">Informações Complementares</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="valorEstimado"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estimativa de Valor</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder={`Valor sugerido: ${total.toFixed(2)}`}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="localEntrega"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Local de Entrega</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Endereço completo para entrega" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <TotalSection total={total} />
+
+              <div className="flex justify-between">
+                <button
+                  type="button"
+                  className="border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md"
+                  onClick={handlePreviousStep}
+                >
+                  Voltar
+                </button>
+                <button 
+                  type="submit"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md"
+                >
+                  Finalizar Cadastro
+                </button>
+              </div>
+            </>
+          )}
+        </form>
+      </Form>
+    </Card>
   );
 };
+
+import * as z from 'zod';
+
+const firstStepSchema = z.object({
+  dataCompra: z.string().nonempty('Data do pedido é obrigatória'),
+  setor: z.string().nonempty('Secretaria solicitante é obrigatória'),
+  fundoMonetario: z.string().nonempty('Fundo monetário é obrigatório'),
+  responsavel: z.string().nonempty('Nome do responsável é obrigatório'),
+  descricao: z.string().min(5, 'Descrição deve ter pelo menos 5 caracteres'),
+  justificativa: z.string().min(5, 'Justificativa deve ter pelo menos 5 caracteres'),
+});
+
+const secondStepSchema = z.object({
+  valorEstimado: z.string().optional(),
+  localEntrega: z.string().nonempty('Local de entrega é obrigatório'),
+});
 
 export default PedidoForm;

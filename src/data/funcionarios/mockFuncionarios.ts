@@ -1,248 +1,115 @@
+import { v4 as uuidv4 } from 'uuid';
+import { Funcionario, UsuarioLogin } from '@/types';
 
-// Function to generate a unique ID
-function generateId() {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-}
+// Admin user data
+const adminUserId = "admin-user-id";
+const adminFuncionarioId = "admin-funcionario-id";
 
-// Initial data setup (if localStorage is empty)
-if (!localStorage.getItem('funcionarios')) {
-  const initialFuncionarios = [
-    { id: generateId(), nome: 'Admin User', setor: 'Administração', permissaoEtapa: 'all' },
-    { id: generateId(), nome: 'Servidor User', setor: 'Compras', permissaoEtapa: 'analise_tecnica' },
-    { id: generateId(), nome: 'Gestor User', setor: 'Financeiro', permissaoEtapa: 'cotacao' }
-  ];
-  localStorage.setItem('funcionarios', JSON.stringify(initialFuncionarios));
-}
-
-if (!localStorage.getItem('usuarios-login')) {
-  const initialUsuariosLogin = [
-    { id: generateId(), email: 'admin@gecom.com', senha: 'admin', role: 'admin', funcionarioId: JSON.parse(localStorage.getItem('funcionarios') || '[]')[0].id, primeiroAcesso: false },
-    { id: generateId(), email: 'servidor@gecom.com', senha: 'servidor', role: 'servidor', funcionarioId: JSON.parse(localStorage.getItem('funcionarios') || '[]')[1].id, primeiroAcesso: false },
-    { id: generateId(), email: 'gestor@gecom.com', senha: 'gestor', role: 'gestor', funcionarioId: JSON.parse(localStorage.getItem('funcionarios') || '[]')[2].id, primeiroAcesso: false }
-  ];
-  localStorage.setItem('usuarios-login', JSON.stringify(initialUsuariosLogin));
-}
-
-// Function to generate username from name
-export function generateUsername(name: string) {
-  // Convert to lowercase, remove accents, replace spaces with dots
-  return name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, ".")
-    .substring(0, 20);
-}
-
-// Function to get all funcionarios
-export function getFuncionarios() {
-  const funcionarios = localStorage.getItem('funcionarios');
-  return funcionarios ? JSON.parse(funcionarios) : [];
-}
-
-// Function to add a new funcionario
-export function adicionarFuncionario(nome: string, setor: string, permissaoEtapa: string) {
-  const funcionarios = getFuncionarios();
-  const newFuncionario = { id: generateId(), nome, setor, permissaoEtapa };
-  funcionarios.push(newFuncionario);
-  localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
-  return newFuncionario;
-}
-
-// Function to update an existing funcionario
-export function atualizarFuncionario(id: string, nome: string, setor: string, permissaoEtapa: string) {
-  const funcionarios = getFuncionarios();
-  const funcionarioIndex = funcionarios.findIndex((f: any) => f.id === id);
-  if (funcionarioIndex !== -1) {
-    funcionarios[funcionarioIndex] = { id, nome, setor, permissaoEtapa };
-    localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
-    return true;
+// Empty employees data with admin
+export const mockFuncionarios: Funcionario[] = [
+  {
+    id: adminFuncionarioId,
+    nome: "Administrador",
+    cargo: "Administrador do Sistema",
+    setor: "Administrativo",
+    email: "admin@sistema.gov.br",
+    cpf: "000.000.000-00",
+    telefone: "(00) 0000-0000",
+    dataContratacao: new Date(),
+    dataNascimento: new Date(),
+    ativo: true,
+    permissaoEtapa: "all"
   }
-  return false;
-}
+];
 
-// Function to delete a funcionario
-export function deletarFuncionario(id: string) {
-  const funcionarios = getFuncionarios();
-  const updatedFuncionarios = funcionarios.filter((f: any) => f.id !== id);
-  localStorage.setItem('funcionarios', JSON.stringify(updatedFuncionarios));
-
-  // Also, remove the user from usuarios-login if exists
-  const usuarios = getUsuariosLogin();
-  const updatedUsuarios = usuarios.filter((u: any) => u.funcionarioId !== id);
-  localStorage.setItem('usuarios-login', JSON.stringify(updatedUsuarios));
-  return true;
-}
-
-// Function to get all usuarios-login
-export function getUsuariosLogin() {
-  const usuarios = localStorage.getItem('usuarios-login');
-  return usuarios ? JSON.parse(usuarios) : [];
-}
-
-// Function to add a new usuario-login
-export function adicionarUsuarioLogin(email: string, senha: string, role: string, funcionarioId: string, primeiroAcesso: boolean = false) {
-  const usuarios = getUsuariosLogin();
-  const newUsuario = { id: generateId(), email, senha, role, funcionarioId, primeiroAcesso };
-  usuarios.push(newUsuario);
-  localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
-  return newUsuario;
-}
-
-// Function to update an existing usuario-login
-export function atualizarUsuarioLogin(id: string, email: string, senha: string, role: string, funcionarioId: string) {
-  const usuarios = getUsuariosLogin();
-  const usuarioIndex = usuarios.findIndex((u: any) => u.id === id);
-  if (usuarioIndex !== -1) {
-    usuarios[usuarioIndex] = { id, email, senha, role, funcionarioId };
-    localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
-    return true;
+// Login users data store with admin user
+export const mockUsuariosLogin: UsuarioLogin[] = [
+  {
+    id: adminUserId,
+    username: "admin",
+    senha: "admin",
+    funcionarioId: adminFuncionarioId,
+    role: "admin",
+    ativo: true,
+    primeiroAcesso: false
   }
-  return false;
-}
+];
 
-// Function to delete a usuario-login
-export function deletarUsuarioLogin(id: string) {
+// Login logs storage
+export const mockLoginLogs: any[] = [];
+
+// Password reset tokens storage
+export const mockPasswordResetTokens: Record<string, { token: string, expires: Date, userId: string }> = {};
+
+// Ensure admin account exists
+const ensureAdminExists = () => {
   const usuarios = getUsuariosLogin();
-  const updatedUsuarios = usuarios.filter((u: any) => u.id !== id);
-  localStorage.setItem('usuarios-login', JSON.stringify(updatedUsuarios));
-  return true;
-}
-
-// Function to authenticate user
-export function autenticarUsuario(email: string, password: string) {
-  // Get users from localStorage or use an empty array if none exist
-  const usuarios = JSON.parse(localStorage.getItem('usuarios-login') || '[]');
+  const funcionarios = getFuncionarios();
   
-  // Find user with matching email and password
-  const usuario = usuarios.find((u: any) => 
-    u.email === email && u.senha === password
-  );
+  // Check if admin user exists
+  const adminUserExists = usuarios.some(user => user.username === 'admin' && user.role === 'admin');
   
-  if (usuario) {
-    // If user found, get funcionario details
-    const funcionarios = JSON.parse(localStorage.getItem('funcionarios') || '[]');
-    const funcionario = funcionarios.find((f: any) => f.id === usuario.funcionarioId);
+  if (!adminUserExists) {
+    // Add admin user if it doesn't exist
+    const adminUser = mockUsuariosLogin[0];
+    const adminFuncionario = mockFuncionarios[0];
     
-    if (funcionario) {
-      return {
-        authenticated: true,
-        userId: usuario.id,
-        role: usuario.role,
-        primeiroAcesso: usuario.primeiroAcesso,
-        funcionario
-      };
-    }
-  }
-  
-  return {
-    authenticated: false
-  };
-}
-
-// Function to update user password
-export function atualizarSenhaUsuario(userId: string, newPassword: string) {
-  const usuarios = getUsuariosLogin();
-  const usuarioIndex = usuarios.findIndex((u: any) => u.id === userId);
-  if (usuarioIndex !== -1) {
-    usuarios[usuarioIndex].senha = newPassword;
-    localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
-    return true;
-  }
-  return false;
-}
-
-// ADD MISSING FUNCTIONS NEEDED BY OTHER COMPONENTS
-
-// Function to get user by ID
-export function getUserById(userId: string) {
-  const usuarios = getUsuariosLogin();
-  const usuario = usuarios.find(u => u.id === userId);
-  
-  if (usuario) {
-    const funcionarios = getFuncionarios();
-    const funcionario = funcionarios.find(f => f.id === usuario.funcionarioId);
+    usuarios.push(adminUser);
+    funcionarios.push(adminFuncionario);
     
-    if (funcionario) {
-      return { usuario, funcionario };
-    }
-  }
-  
-  return null;
-}
-
-// Function to add a new funcionario with full data
-export function addFuncionario(funcionarioData: any) {
-  const funcionarios = getFuncionarios();
-  const newFuncionario = { 
-    id: generateId(),
-    ...funcionarioData
-  };
-  funcionarios.push(newFuncionario);
-  localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
-  
-  // Generate email from name if not provided
-  const emailPrefix = generateUsername(funcionarioData.nome);
-  const email = funcionarioData.email || `${emailPrefix}@gecom.com`;
-  
-  // Create user login for new funcionario
-  const login = adicionarUsuarioLogin(
-    email,
-    '123', // Default password
-    funcionarioData.cargo?.toLowerCase().includes('prefeito') ? 'prefeito' : 
-      funcionarioData.cargo?.toLowerCase().includes('gerente') ? 'gestor' : 'user',
-    newFuncionario.id,
-    true // First access
-  );
-  
-  return { funcionario: newFuncionario, login };
-}
-
-// Function to update an existing funcionario with full data
-export function updateFuncionario(id: string, funcionarioData: any) {
-  const funcionarios = getFuncionarios();
-  const funcionarioIndex = funcionarios.findIndex(f => f.id === id);
-  
-  if (funcionarioIndex !== -1) {
-    funcionarios[funcionarioIndex] = { 
-      ...funcionarios[funcionarioIndex],
-      ...funcionarioData,
-      id // Ensure ID is preserved
-    };
+    localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
     localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
     
-    // If email changed, update the user login
-    if (funcionarioData.email) {
-      const usuarios = getUsuariosLogin();
-      const usuario = usuarios.find(u => u.funcionarioId === id);
-      if (usuario) {
-        usuario.email = funcionarioData.email;
-        localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
-      }
-    }
-    
-    return true;
+    console.log('Admin account created');
   }
-  return false;
-}
+};
 
-// Function to delete a funcionario - alias for deletarFuncionario
-export const deleteFuncionario = deletarFuncionario;
+// Get all employees
+export const getFuncionarios = () => {
+  // Get from localStorage if available, otherwise use mockFuncionarios
+  const storedFuncionarios = localStorage.getItem('funcionarios');
+  if (storedFuncionarios) {
+    const parsed = JSON.parse(storedFuncionarios);
+    // Convert string dates back to Date objects
+    return parsed.map((func: any) => ({
+      ...func,
+      dataContratacao: func.dataContratacao ? new Date(func.dataContratacao) : new Date(),
+      dataNascimento: func.dataNascimento ? new Date(func.dataNascimento) : new Date()
+    }));
+  }
+  
+  // Initialize localStorage with mock data if it doesn't exist
+  localStorage.setItem('funcionarios', JSON.stringify(mockFuncionarios));
+  return mockFuncionarios;
+};
 
-// Function to filter funcionarios by setor
-export function filtrarFuncionariosPorSetor(setor: string) {
-  const funcionarios = getFuncionarios();
-  return funcionarios.filter(f => f.setor === setor);
-}
+// Get all login users
+export const getUsuariosLogin = () => {
+  const storedUsuarios = localStorage.getItem('usuarios-login');
+  if (storedUsuarios) {
+    return JSON.parse(storedUsuarios);
+  }
+  
+  localStorage.setItem('usuarios-login', JSON.stringify(mockUsuariosLogin));
+  return mockUsuariosLogin;
+};
 
-// Function to get login activity logs
-export function getLoginLogs() {
-  const logs = localStorage.getItem('login-logs');
-  return logs ? JSON.parse(logs) : [];
-}
+// Call ensureAdminExists when the module is imported
+ensureAdminExists();
 
-// Function to add a new login log entry
-export function addLoginLog(userId: string, success: boolean, ip: string = '127.0.0.1') {
+// Get login logs
+export const getLoginLogs = () => {
+  const storedLogs = localStorage.getItem('login-logs');
+  if (storedLogs) {
+    return JSON.parse(storedLogs);
+  }
+  
+  localStorage.setItem('login-logs', JSON.stringify(mockLoginLogs));
+  return mockLoginLogs;
+};
+
+// Add login log
+export const addLoginLog = (userId: string, success: boolean, ip: string = "127.0.0.1") => {
   const logs = getLoginLogs();
   const newLog = {
     userId,
@@ -254,4 +121,243 @@ export function addLoginLog(userId: string, success: boolean, ip: string = '127.
   logs.push(newLog);
   localStorage.setItem('login-logs', JSON.stringify(logs));
   return newLog;
-}
+};
+
+// Generate username from name (firstName.lastName)
+export const generateUsername = (nome: string): string => {
+  const nameParts = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(' ');
+  
+  if (nameParts.length >= 2) {
+    return `${nameParts[0]}.${nameParts[nameParts.length - 1]}`;
+  } else if (nameParts.length === 1) {
+    return nameParts[0];
+  } else {
+    return `user_${Date.now()}`;
+  }
+};
+
+// Add a new employee and create login
+export const addFuncionario = (funcionario: Omit<Funcionario, 'id'>) => {
+  const funcionarios = getFuncionarios();
+  const usuarios = getUsuariosLogin();
+  
+  const newFuncionario = {
+    ...funcionario,
+    id: uuidv4(),
+  };
+  
+  // Generate username for login
+  const username = generateUsername(funcionario.nome);
+  
+  // Create login for the employee
+  const newLogin: UsuarioLogin = {
+    id: uuidv4(),
+    username: username,
+    senha: "123", // Default password
+    funcionarioId: newFuncionario.id,
+    role: funcionario.cargo.toLowerCase().includes('gerente') || 
+          funcionario.cargo.toLowerCase().includes('secretário') ? 'manager' : 'user',
+    ativo: newFuncionario.ativo,
+    primeiroAcesso: true // Flag for first-time access
+  };
+  
+  // Add new employee and login
+  funcionarios.push(newFuncionario);
+  usuarios.push(newLogin);
+  
+  // Save to localStorage
+  localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+  localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
+  
+  return { funcionario: newFuncionario, login: newLogin };
+};
+
+// Update an employee
+export const updateFuncionario = (id: string, funcionario: Partial<Funcionario>) => {
+  const funcionarios = getFuncionarios();
+  const index = funcionarios.findIndex(f => f.id === id);
+  
+  if (index !== -1) {
+    funcionarios[index] = { ...funcionarios[index], ...funcionario };
+    localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+    
+    // Update login if employee is active/inactive
+    if (funcionario.ativo !== undefined) {
+      const usuarios = getUsuariosLogin();
+      const userIndex = usuarios.findIndex(u => u.funcionarioId === id);
+      
+      if (userIndex !== -1) {
+        usuarios[userIndex].ativo = funcionario.ativo;
+        localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
+      }
+    }
+    
+    return funcionarios[index];
+  }
+  
+  return null;
+};
+
+// Delete an employee
+export const deleteFuncionario = (id: string) => {
+  const funcionarios = getFuncionarios();
+  const filteredFuncionarios = funcionarios.filter(f => f.id !== id);
+  
+  localStorage.setItem('funcionarios', JSON.stringify(filteredFuncionarios));
+  
+  // Also delete associated login
+  const usuarios = getUsuariosLogin();
+  const filteredUsuarios = usuarios.filter(u => u.funcionarioId !== id);
+  localStorage.setItem('usuarios-login', JSON.stringify(filteredUsuarios));
+  
+  return filteredFuncionarios;
+};
+
+// Filter employees by sector/department
+export const filtrarFuncionariosPorSetor = (setor: string) => {
+  const funcionarios = getFuncionarios();
+  return funcionarios.filter(funcionario => 
+    funcionario.ativo && (
+      funcionario.setor === setor || 
+      (funcionario.setoresAdicionais && funcionario.setoresAdicionais.includes(setor))
+    )
+  );
+};
+
+// Login functions
+export const autenticarUsuario = (username: string, senha: string) => {
+  const usuarios = getUsuariosLogin();
+  const usuario = usuarios.find(u => 
+    u.username === username && 
+    u.senha === senha && 
+    u.ativo === true
+  );
+  
+  if (usuario) {
+    // Get associated employee data
+    const funcionarios = getFuncionarios();
+    const funcionario = funcionarios.find(f => f.id === usuario.funcionarioId);
+    
+    // Record successful login
+    addLoginLog(usuario.id, true);
+    
+    if (funcionario) {
+      return {
+        authenticated: true,
+        role: usuario.role,
+        funcionario: funcionario,
+        userId: usuario.id,
+        primeiroAcesso: usuario.primeiroAcesso
+      };
+    }
+  } else {
+    // Record failed login attempt if the username exists
+    const userToLog = usuarios.find(u => u.username === username);
+    if (userToLog) {
+      addLoginLog(userToLog.id, false);
+    }
+  }
+  
+  return { authenticated: false };
+};
+
+// Update user password
+export const atualizarSenhaUsuario = (userId: string, novaSenha: string) => {
+  const usuarios = getUsuariosLogin();
+  const index = usuarios.findIndex(u => u.id === userId);
+  
+  if (index !== -1) {
+    usuarios[index].senha = novaSenha;
+    usuarios[index].primeiroAcesso = false;
+    localStorage.setItem('usuarios-login', JSON.stringify(usuarios));
+    return true;
+  }
+  
+  return false;
+};
+
+// Create password reset token
+export const criarTokenRecuperacaoSenha = (username: string) => {
+  const usuarios = getUsuariosLogin();
+  const usuario = usuarios.find(u => u.username === username && u.ativo === true);
+  
+  if (!usuario) {
+    return { success: false };
+  }
+  
+  // Generate a reset token
+  const token = uuidv4();
+  const expires = new Date();
+  expires.setHours(expires.getHours() + 1); // Token valid for 1 hour
+  
+  // Store token
+  mockPasswordResetTokens[token] = {
+    token,
+    expires,
+    userId: usuario.id
+  };
+  
+  // In a real application, an email would be sent
+  return { 
+    success: true, 
+    token,
+    email: 'user@example.com' // In a real app, would get email from user data
+  };
+};
+
+// Validate password reset token
+export const validarTokenRecuperacaoSenha = (token: string) => {
+  const tokenData = mockPasswordResetTokens[token];
+  
+  if (!tokenData) {
+    return { valid: false, message: 'Token inválido' };
+  }
+  
+  if (new Date() > new Date(tokenData.expires)) {
+    return { valid: false, message: 'Token expirado' };
+  }
+  
+  return { valid: true, userId: tokenData.userId };
+};
+
+// Reset password using token
+export const recuperarSenhaComToken = (token: string, novaSenha: string) => {
+  const validation = validarTokenRecuperacaoSenha(token);
+  
+  if (!validation.valid) {
+    return { success: false, message: validation.message };
+  }
+  
+  // Update password
+  const success = atualizarSenhaUsuario(validation.userId, novaSenha);
+  
+  if (success) {
+    // Remove the used token
+    delete mockPasswordResetTokens[token];
+    return { success: true };
+  }
+  
+  return { success: false, message: 'Erro ao atualizar senha' };
+};
+
+// Get user by ID
+export const getUserById = (userId: string) => {
+  if (!userId) return null;
+  
+  const usuarios = getUsuariosLogin();
+  const usuario = usuarios.find(u => u.id === userId);
+  
+  if (usuario) {
+    const funcionarios = getFuncionarios();
+    const funcionario = funcionarios.find(f => f.id === usuario.funcionarioId);
+    
+    if (funcionario) {
+      return {
+        usuario,
+        funcionario
+      };
+    }
+  }
+  
+  return null;
+};

@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
 import { toast } from 'sonner';
-import { getUserRole, canAccessDashboard } from '@/utils/authHelpers';
 
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -26,20 +24,12 @@ const AppLayout: React.FC = () => {
     setUserRole(role);
     setUserMunicipality(municipality);
 
-    // Restrict access to administrative area (only admin can access)
-    if (role !== 'admin' && location.pathname.includes('/admin')) {
-      toast.error('Você não tem permissão para acessar esta página');
-      navigate('/dashboard');
-      return;
+    if (role === 'gerente' || role === 'funcionario') {
+      if (location.pathname === '/admin') {
+        toast.error('Você não tem permissão para acessar esta página');
+        navigate('/dashboard');
+      }
     }
-    
-    // Restrict dashboard access for regular users (servidores)
-    if (role === 'user' && location.pathname === '/dashboard') {
-      toast.error('Você não tem permissão para acessar o dashboard');
-      navigate('/pedidos');
-      return;
-    }
-
   }, [navigate, location.pathname]);
 
   const toggleSidebar = () => {

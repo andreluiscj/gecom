@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { getFuncionarios, getUsuariosLogin } from "./data/funcionarios/mockFuncionarios";
@@ -21,13 +22,6 @@ const WorkflowPedido = lazy(() => import("./pages/Pedidos/WorkflowPedido"));
 const AprovacaoDFD = lazy(() => import("./pages/Pedidos/AprovacaoDFD"));
 const Funcionarios = lazy(() => import("./pages/Gerenciamento/Funcionarios"));
 const CadastroGerente = lazy(() => import("./pages/Admin/CadastroGerente"));
-const PrefeitoPage = lazy(() => import("./pages/Prefeito/PrefeitoPage"));
-const PrefeitoDashboard = lazy(() => import("./pages/Prefeito/PrefeitoDashboard"));
-const Usuarios = lazy(() => import("./pages/Usuarios/Usuarios"));
-const AdminDashboard = lazy(() => import("./pages/Admin/AdminDashboard"));
-const MunicipioForm = lazy(() => import("./pages/Admin/MunicipioForm"));
-const Municipios = lazy(() => import("./pages/Admin/Municipios"));
-const MunicipioNovo = lazy(() => import("./pages/Admin/MunicipioNovo"));
 
 // Loading component
 const LoadingFallback = () => (
@@ -62,22 +56,7 @@ function App() {
         } />
         <Route path="/admin/municipios" element={
           <ProtectedRoute>
-            <Municipios />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/municipios/novo" element={
-          <ProtectedRoute>
-            <MunicipioNovo />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/municipios/novo" element={
-          <ProtectedRoute>
-            <MunicipioForm />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/dashboard" element={
-          <ProtectedRoute>
-            <AdminDashboard />
+            <MunicipioSelection />
           </ProtectedRoute>
         } />
 
@@ -98,9 +77,6 @@ function App() {
           <Route path="pedidos/novo" element={<NovoPedido />} />
           <Route path="admin/gerentes" element={<CadastroGerente />} />
           <Route path="gerenciamento/funcionarios" element={<Funcionarios />} />
-          <Route path="usuarios" element={<Usuarios />} />
-          <Route path="prefeito" element={<PrefeitoPage />} />
-          <Route path="prefeito/dashboard" element={<PrefeitoDashboard />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

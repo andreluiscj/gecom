@@ -1,24 +1,24 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Building2, Settings } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
 const Admin: React.FC = () => {
   const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   
   useEffect(() => {
     const auth = localStorage.getItem('user-authenticated') === 'true';
     const userRole = localStorage.getItem('user-role');
     
+    setIsAuthenticated(auth);
+    
     if (!auth) {
       toast.error('Você precisa estar autenticado para acessar esta página');
       navigate('/login');
-    } else if (userRole !== 'admin') {
-      toast.error('Apenas administradores podem acessar esta página');
-      navigate('/dashboard');
     }
   }, [navigate]);
 
@@ -53,21 +53,6 @@ const Admin: React.FC = () => {
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
                   Gerencie os municípios cadastrados no sistema
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card 
-              className="bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer" 
-              onClick={() => navigate('/admin/dashboard')}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Settings className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-medium">Administração</h3>
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Acesse o painel completo de administração do sistema
                 </p>
               </CardContent>
             </Card>

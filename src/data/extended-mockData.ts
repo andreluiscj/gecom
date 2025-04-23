@@ -1,14 +1,22 @@
 
-// Exibir dashboard sempre com dados zerados se não houver pedidos de compras
-
-import { obterPedidos } from './mockData';
+// Re-exporting just the function for the mock orders
+export { obterPedidosFicticios } from './pedidos/mockPedidos';
+import { obterPedidosFicticios } from './pedidos/mockPedidos';
 import { Setor } from '@/types';
 
+// Function to calculate dashboard data based on actual pedidos
 export function calcularDadosDashboard() {
-  const pedidos = obterPedidos();
+  const pedidos = obterPedidosFicticios();
+  
+  // Calculate total value of all pedidos
   const valorTotal = pedidos.reduce((sum, pedido) => sum + pedido.valorTotal, 0);
+  
+  // Count pedidos by setor
   const pedidosPorSetor: Record<string, number> = {};
+  // Calculate spending by setor
   const gastosPorSetor: Record<string, number> = {};
+  
+  // Initialize with zeros for all sectors
   const todosSetores: Setor[] = [
     'Saúde', 'Educação', 'Administrativo', 'Transporte', 
     'Obras', 'Segurança Pública', 'Assistência Social', 
@@ -16,16 +24,20 @@ export function calcularDadosDashboard() {
     'Esportes e Lazer', 'Planejamento', 'Comunicação', 
     'Ciência e Tecnologia'
   ];
+  
   todosSetores.forEach(setor => {
     pedidosPorSetor[setor] = 0;
     gastosPorSetor[setor] = 0;
   });
+  
+  // Calculate actual values from pedidos
   pedidos.forEach(pedido => {
     if (pedidosPorSetor[pedido.setor] !== undefined) {
       pedidosPorSetor[pedido.setor]++;
       gastosPorSetor[pedido.setor] += pedido.valorTotal;
     }
   });
+  
   return {
     totalPedidos: pedidos.length,
     valorTotal,
@@ -51,9 +63,13 @@ export function calcularDadosDashboard() {
   };
 }
 
-// Painel utiliza resultados calculados — sempre retorna zero se vazio
+// Dashboard mock data - now uses the calculated values
 export function obterDadosDashboard() {
+  // Get calculated data based on actual pedidos
   const calculatedData = calcularDadosDashboard();
+  // Data atual
+  const hoje = new Date();
+  
   return {
     resumoFinanceiro: {
       orcamentoAnual: 2500000.00,
@@ -61,38 +77,40 @@ export function obterDadosDashboard() {
       percentualUtilizado: (calculatedData.valorTotal / 2500000.00) * 100,
       totalPedidos: calculatedData.totalPedidos,
     },
+    
     cartoes: [
       {
         titulo: "Pedidos Abertos",
-        valor: calculatedData.totalPedidos,
-        percentualMudanca: 0,
+        valor: 38,
+        percentualMudanca: 12.5,
         icon: "ShoppingCart",
         classeCor: "bg-blue-500"
       },
       {
         titulo: "Orçamento Restante",
         valor: `R$ ${(2500000.00 - calculatedData.valorTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
-        percentualMudanca: 0,
+        percentualMudanca: -8.3,
         icon: "Wallet",
         classeCor: "bg-green-500"
       },
       {
         titulo: "Pedidos Aprovados",
-        valor: 0, // não existem aprovados
-        percentualMudanca: 0,
+        valor: 86,
+        percentualMudanca: 23.7,
         icon: "CheckCircle",
         classeCor: "bg-emerald-500"
       },
       {
         titulo: "Valor Médio",
-        valor: `R$ 0,00`,
-        percentualMudanca: 0,
+        valor: `R$ ${(calculatedData.totalPedidos > 0 ? calculatedData.valorTotal / calculatedData.totalPedidos : 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+        percentualMudanca: 5.2,
         icon: "TrendingUp",
         classeCor: "bg-amber-500"
       }
     ],
+    
+    // Use the calculated values from actual pedidos
     orcamentoPrevisto: calculatedData.orcamentoPrevisto,
     gastosPorSetor: calculatedData.gastosPorSetor
   };
 }
-

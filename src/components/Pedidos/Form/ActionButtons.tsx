@@ -5,13 +5,9 @@ import { useNavigate } from 'react-router-dom';
 
 interface ActionButtonsProps {
   isSubmitting?: boolean;
-  isEditing?: boolean;
 }
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ 
-  isSubmitting = false,
-  isEditing = false 
-}) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({ isSubmitting = false }) => {
   const navigate = useNavigate();
 
   return (
@@ -24,7 +20,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         Cancelar
       </Button>
       <Button type="submit" disabled={isSubmitting}>
-        {isEditing ? 'Atualizar' : 'Salvar'} Pedido
+        Salvar Pedido
       </Button>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { addDays, addHours, format, subMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { PedidoCompra, Item, Setor } from '@/types';
@@ -34,32 +35,53 @@ export function gerarId() {
   return uuidv4();
 }
 
-// Inicializa todosPedidos como array vazio
+// Import functions from pedidos module - MOVED UP before it's used
+import { obterPedidosFicticios } from './pedidos/mockPedidos';
+
+// Initialize todosPedidos
 const todosPedidos: PedidoCompra[] = [];
 
-// Função para inicializar dados mock - faz nada agora, pois começa vazio
+// Function to initialize the data - will be called when needed
 export function initializeMockData() {
+  // Reset todosPedidos array to start with a clean slate
   todosPedidos.length = 0;
+  
+  // Load fictional orders when initializing
+  const ficticios = obterPedidosFicticios();
+  todosPedidos.push(...ficticios);
+  
   return todosPedidos;
 }
 
-// Chamar initializeMockData para garantir array vazio
+// Make sure data is initialized before first use
 initializeMockData();
+
+// Re-export the function for external use
+export { obterPedidosFicticios };
 
 // Função para adicionar um novo pedido
 export function adicionarPedido(pedido: PedidoCompra) {
+  // Initialize workflow for new pedido if not already present
   if (!pedido.workflow) {
     pedido.workflow = initializeWorkflow();
   }
-  const pedidoComWorkflow = updateWorkflowFromPedidoStatus(pedido);
-  const existingIndex = todosPedidos.findIndex(p => p.id === pedido.id);
 
+  // Update workflow based on status
+  const pedidoComWorkflow = updateWorkflowFromPedidoStatus(pedido);
+  
+  // Check if the pedido already exists (in case of update)
+  const existingIndex = todosPedidos.findIndex(p => p.id === pedido.id);
+  
   if (existingIndex >= 0) {
+    // Update existing pedido
     todosPedidos[existingIndex] = pedidoComWorkflow;
   } else {
+    // Add new pedido
     todosPedidos.push(pedidoComWorkflow);
   }
+  
   console.log(`DFD adicionada: ${pedido.descricao} para a secretaria ${pedido.setor}`);
+  
   return pedidoComWorkflow;
 }
 
@@ -73,9 +95,9 @@ export function removerPedido(id: string, setor?: Setor) {
   return false;
 }
 
-// Função para obter todos os pedidos — retorna sempre array vazio
+// Função para obter todos os pedidos
 export function obterPedidos(): PedidoCompra[] {
-  return todosPedidos;
+  return todosPedidos.length > 0 ? todosPedidos : obterPedidosFicticios();
 }
 
 // Função para obter todos os pedidos (alias para compatibilidade)

@@ -1,4 +1,3 @@
-
 export type Role = "admin" | "editor" | null;
 
 export type Tarefa = {
@@ -30,9 +29,7 @@ export type Setor =
   | "Esportes e Lazer"
   | "Planejamento"
   | "Comunicação"
-  | "Ciência e Tecnologia"
-  | "Gabinete"
-  | "Prefeito";
+  | "Ciência e Tecnologia";
 
 export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
 
@@ -68,8 +65,8 @@ export interface WorkflowStep {
   title: string;
   status: WorkflowStepStatus;
   date?: Date;
-  dataConclusao?: Date;
-  responsavel?: string;
+  dataConclusao?: Date;   // New field: completion date
+  responsavel?: string;   // New field: responsible person
 }
 
 export interface Workflow {
@@ -80,11 +77,11 @@ export interface Workflow {
 }
 
 export interface Municipio {
-  id: string | number;
+  id: string;
   nome: string;
   estado: string;
   populacao: number;
-  logo?: string;
+  logo?: string; // Added logo property as optional
   orcamento: number;
   orcamentoAnual: number;
   prefeito: string;
@@ -96,7 +93,6 @@ export interface DadosDashboard {
     valorContratadoTotal: number;
     percentualUtilizado: number;
     totalPedidos: number;
-    orcamentoAnual?: number;
   };
   cartoes: Array<{
     titulo: string;
@@ -115,7 +111,7 @@ export interface DadosDashboard {
   };
 }
 
-export type UserRole = 'admin' | 'gestor' | 'prefeito' | 'servidor';
+export type UserRole = 'admin' | 'user' | 'manager';
 
 export interface Funcionario {
   id: string;
@@ -128,10 +124,10 @@ export interface Funcionario {
   setoresAdicionais?: Setor[];
   dataContratacao: Date;
   ativo: boolean;
-  senha?: string;
+  senha?: string; // Only used for creation/update, not stored in state
   permissaoEtapa?: string;
-  username?: string;
-  telefone?: string;
+  username?: string; // Username for login
+  telefone?: string; // Added the missing telefone property
 }
 
 export interface LoginLog {
@@ -143,126 +139,10 @@ export interface LoginLog {
 
 export interface UsuarioLogin {
   id: string;
-  email: string;
+  username: string;
   senha: string;
   funcionarioId: string;
   role: UserRole;
   ativo: boolean;
   primeiroAcesso?: boolean;
-}
-
-export interface PrefeitoData {
-  id: string;
-  nome: string;
-  municipio: string;
-  mandatoInicio: Date;
-  mandatoFim: Date;
-  partido: string;
-  email: string;
-  telefone: string;
-}
-
-// Types for Supabase database tables
-export interface Profile {
-  id: string;
-  name: string;
-  cpf: string;
-  birthdate: Date | string;
-  zip_code: string;
-  address: string;
-  district: string;
-  complement?: string;
-  role: UserRole;
-  active: boolean;
-  created_at: string;
-  updated_at: string;
-  street_number?: string;
-  city?: string;
-  municipality_id?: number;
-  position_title?: string;
-}
-
-export interface Municipality {
-  id: number;
-  name: string;
-  state: string;
-  population?: number;
-  budget?: number;
-  mayor?: string;
-  logo?: string;
-  created_at: string;
-}
-
-export interface Sector {
-  id: number;
-  name: string;
-  municipality_id?: number;
-  created_at: string;
-}
-
-export interface DFD {
-  id: string;
-  description: string;
-  purchase_date: string | Date;
-  sector_id: number;
-  total_value: number;
-  status: PedidoStatus;
-  monetary_fund: string;
-  created_at: string;
-  updated_at: string;
-  justification?: string;
-  requester_id?: string;
-  observations?: string;
-  delivery_location?: string;
-  municipality_id: number;
-}
-
-export interface DFDItem {
-  id: string;
-  dfd_id: string;
-  name: string;
-  quantity: number;
-  unit_value: number;
-  total_value: number;
-  created_at: string;
-}
-
-export interface WorkflowStepDB {
-  id: string;
-  dfd_id: string;
-  title: string;
-  status: WorkflowStepStatus;
-  step_order: number;
-  responsible_id?: string;
-  start_date?: string;
-  completion_date?: string;
-  created_at: string;
-}
-
-export interface PurchaseOrder {
-  id: string;
-  dfd_id: string;
-  homologated_value?: number;
-  homologation_date?: string | Date;
-  status: PedidoStatus;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface UserProfile {
-  name: string;
-  cpf: string;
-  birthdate: string | Date;
-  email: string;
-  role: UserRole;
-  position_title?: string;
-  sectors?: number[];
-  zip_code?: string; 
-  address?: string;
-  street_number?: string;
-  district?: string;
-  city?: string;
-  complement?: string;
-  active?: boolean;
-  municipality_id?: number;
 }

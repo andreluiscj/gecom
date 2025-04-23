@@ -155,7 +155,7 @@ const CadastroGerente: React.FC = () => {
         toast.success(
           <div className="flex flex-col gap-1">
             <div>Gerente {values.nome} cadastrado com sucesso!</div>
-            <div className="text-sm">Login criado: {result.login.email} | Senha: 123</div>
+            <div className="text-sm">Login criado: {result.login.username} | Senha: 123</div>
           </div>
         );
       }
