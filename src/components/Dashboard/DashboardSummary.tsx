@@ -16,12 +16,12 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
   municipio,
   language
 }) => {
-  // Calculate the percentage of homologated expenses against estimated budget
-  const percentualOrcamento = ((dadosDashboard.valorContratadoTotal / municipio.orcamentoAnual) * 100).toFixed(2);
+  // Calcular a porcentagem de despesas homologadas em relação ao orçamento estimado
+  const percentualOrcamento = ((dadosDashboard.valor_contratado_total / municipio.orcamento_anual) * 100).toFixed(2);
   
   return (
     <>
-      <Card className="border shadow-sm">
+      <Card className="border shadow-sm hover:shadow-md transition-all">
         <CardHeader className="border-b pb-3">
           <CardTitle className="text-xl">{language === 'pt' ? 'Resumo Financeiro' : 'Financial Summary'}</CardTitle>
         </CardHeader>
@@ -29,12 +29,12 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
           <div className="space-y-6">
             <div className="border rounded-md overflow-hidden shadow-sm">
               <table className="min-w-full divide-y divide-border">
-                <thead className="bg-muted/50">
+                <thead className="bg-blue-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">
                       {language === 'pt' ? 'Métrica' : 'Metric'}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-blue-800 uppercase tracking-wider">
                       {language === 'pt' ? 'Valor' : 'Value'}
                     </th>
                   </tr>
@@ -46,7 +46,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
                       Estimativa de Despesa
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      {formatCurrency(municipio.orcamentoAnual)}
+                      {formatCurrency(municipio.orcamento_anual)}
                     </td>
                   </tr>
                   <tr>
@@ -55,7 +55,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
                       Valor Contratado
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      {formatCurrency(dadosDashboard.valorContratadoTotal)}
+                      {formatCurrency(dadosDashboard.valor_contratado_total)}
                     </td>
                   </tr>
                   <tr>
@@ -64,7 +64,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
                       Diferença
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      {formatCurrency(municipio.orcamentoAnual - dadosDashboard.valorContratadoTotal)}
+                      {formatCurrency(municipio.orcamento_anual - dadosDashboard.valor_contratado_total)}
                     </td>
                   </tr>
                 </tbody>
@@ -74,7 +74,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
         </CardContent>
       </Card>
       
-      <Card className="border shadow-sm">
+      <Card className="border shadow-sm hover:shadow-md transition-all">
         <CardHeader className="border-b pb-3">
           <CardTitle className="text-xl">{language === 'pt' ? 'Informações do Município' : 'Municipality Information'}</CardTitle>
         </CardHeader>

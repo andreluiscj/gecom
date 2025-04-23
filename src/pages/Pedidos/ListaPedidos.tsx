@@ -1,15 +1,30 @@
 
 import React, { useState, useEffect } from 'react';
 import PedidosTable from '@/components/Pedidos/PedidosTable';
-import { obterTodosPedidos } from '@/data/mockData';
+import { pedidoService } from '@/services/supabase';
 import { PedidoCompra } from '@/types';
+import { toast } from 'sonner';
 
 const ListaPedidos: React.FC = () => {
   const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   
-  // Fetch pedidos whenever the component renders to ensure fresh data
+  // Buscar pedidos do Supabase
   useEffect(() => {
-    setPedidos(obterTodosPedidos());
+    const fetchPedidos = async () => {
+      try {
+        setLoading(true);
+        const data = await pedidoService.getAll();
+        setPedidos(data);
+      } catch (error) {
+        console.error("Erro ao buscar pedidos:", error);
+        toast.error("Não foi possível carregar os pedidos. Tente novamente mais tarde.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPedidos();
   }, []);
 
   return (
@@ -21,7 +36,13 @@ const ListaPedidos: React.FC = () => {
         </p>
       </div>
 
-      <PedidosTable pedidos={pedidos} />
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <PedidosTable pedidos={pedidos} />
+      )}
     </div>
   );
 };

@@ -1,7 +1,8 @@
 
 import { Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
-import { getFuncionarios, getUsuariosLogin } from "./data/funcionarios/mockFuncionarios";
+import { lazy, Suspense } from "react";
+import { AuthProvider } from './context/AuthContext';
+import { Toaster } from './components/ui/sonner';
 
 // Lazy load components for better performance
 const AppLayout = lazy(() => import("./components/Layout/AppLayout"));
@@ -35,49 +36,45 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  // Initialize data on app start
-  useEffect(() => {
-    // These calls ensure the admin user is created
-    getFuncionarios();
-    getUsuariosLogin();
-  }, []);
-
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin" element={
-          <ProtectedRoute>
-            <Admin />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/municipios" element={
-          <ProtectedRoute>
-            <MunicipioSelection />
-          </ProtectedRoute>
-        } />
+    <AuthProvider>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <Admin />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/municipios" element={
+            <ProtectedRoute>
+              <MunicipioSelection />
+            </ProtectedRoute>
+          } />
 
-        <Route path="/" element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="setores" element={<ListaSetores />} />
-          <Route path="setores/:id" element={<DetalheSetor />} />
-          <Route path="tarefas" element={<TarefasSelecao />} />
-          <Route path="tarefas/kanban" element={<TarefasKanban />} />
-          <Route path="pedidos" element={<ListaPedidos />} />
-          <Route path="pedidos/:id" element={<VisualizarPedido />} />
-          <Route path="pedidos/workflow/:id" element={<WorkflowPedido />} />
-          <Route path="pedidos/aprovacao/:id" element={<AprovacaoDFD />} />
-          <Route path="pedidos/novo" element={<NovoPedido />} />
-        </Route>
+          <Route path="/" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="setores" element={<ListaSetores />} />
+            <Route path="setores/:id" element={<DetalheSetor />} />
+            <Route path="tarefas" element={<TarefasSelecao />} />
+            <Route path="tarefas/kanban" element={<TarefasKanban />} />
+            <Route path="pedidos" element={<ListaPedidos />} />
+            <Route path="pedidos/:id" element={<VisualizarPedido />} />
+            <Route path="pedidos/workflow/:id" element={<WorkflowPedido />} />
+            <Route path="pedidos/aprovacao/:id" element={<AprovacaoDFD />} />
+            <Route path="pedidos/novo" element={<NovoPedido />} />
+          </Route>
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+      <Toaster />
+    </AuthProvider>
   );
 }
 

@@ -10,93 +10,16 @@ import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
 import { DadosDashboard, Municipio } from '@/types';
 import { toast } from 'sonner';
 import { exportDashboardAsPDF } from '@/utils/pdfGenerator';
-
-// Default municipality object
-const defaultMunicipio: Municipio = {
-  id: 'pai-pedro',
-  nome: 'Pai Pedro',
-  estado: 'MG',
-  populacao: 6083,
-  orcamento: 28500000,
-  orcamentoAnual: 28500000,
-  prefeito: 'Maria Silva',
-};
-
-// Sample dashboard data
-const dadosDashboard: DadosDashboard = {
-  resumoFinanceiro: {
-    estimativaDespesa: 28500000,
-    valorContratadoTotal: 2400000,
-    percentualUtilizado: 8.42,
-    totalPedidos: 587,
-  },
-  cartoes: [
-    {
-      titulo: 'Total de Pedidos',
-      valor: 587,
-      percentualMudanca: 12.5,
-      icon: 'Receipt',
-      classeCor: 'bg-blue-500',
-    },
-    {
-      titulo: 'Orçamento Executado',
-      valor: formatCurrency(2400000),
-      percentualMudanca: 8.2,
-      icon: 'Wallet',
-      classeCor: 'bg-green-500',
-    },
-  ],
-  orcamentoPrevisto: { 'Trimestre 1': 7000000, 'Trimestre 2': 7500000, 'Trimestre 3': 7000000, 'Trimestre 4': 7000000 },
-  gastosPorSetor: {
-    'Saúde': 800000,
-    'Educação': 650000,
-    'Administrativo': 350000,
-    'Obras': 430000,
-    'Transporte': 170000,
-  },
-  valorContratadoTotal: 2400000,
-  pedidosPorSetor: {
-    'Saúde': 143,
-    'Educação': 125,
-    'Administrativo': 98,
-    'Obras': 87,
-    'Transporte': 62,
-    'Outros': 72,
-  },
-};
-
-// Data for monthly charts
-const monthlyData = [
-  { name: 'Jan', planejado: 240000, executado: 220000 },
-  { name: 'Fev', planejado: 300000, executado: 320000 },
-  { name: 'Mar', planejado: 280000, executado: 290000 },
-  { name: 'Abr', planejado: 320000, executado: 300000 },
-  { name: 'Mai', planejado: 350000, executado: 360000 },
-  { name: 'Jun', planejado: 380000, executado: 390000 },
-  { name: 'Jul', planejado: 400000, executado: 380000 },
-  { name: 'Ago', planejado: 420000, executado: 405000 },
-  { name: 'Set', planejado: 390000, executado: 400000 },
-  { name: 'Out', planejado: 450000, executado: 430000 },
-  { name: 'Nov', planejado: 480000, executado: 460000 },
-  { name: 'Dez', planejado: 520000, executado: 500000 },
-];
-
-// Data for department analysis
-const departmentData = [
-  { name: 'Saúde', valor: 1850000, percent: 28 },
-  { name: 'Educação', valor: 1520000, percent: 23 },
-  { name: 'Administração', valor: 950000, percent: 14 },
-  { name: 'Obras', valor: 1200000, percent: 18 },
-  { name: 'Transporte', valor: 650000, percent: 10 },
-  { name: 'Outros', valor: 450000, percent: 7 },
-];
+import { municipioService, pedidoService } from '@/services/supabase';
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('grafico');
   const [language, setLanguage] = useState('pt'); // Default language is Portuguese
-  const [municipio, setMunicipio] = useState<Municipio>(defaultMunicipio);
-  const [filteredData, setFilteredData] = useState(monthlyData);
-  const [filteredDeptData, setFilteredDeptData] = useState(departmentData);
+  const [municipio, setMunicipio] = useState<Municipio | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [dadosDashboard, setDadosDashboard] = useState<DadosDashboard | null>(null);
+  const [filteredData, setFilteredData] = useState<any[]>([]);
+  const [filteredDeptData, setFilteredDeptData] = useState<any[]>([]);
   const [period, setPeriod] = useState('anual');
   const [filters, setFilters] = useState({
     year: '2024',
@@ -105,32 +28,142 @@ const Dashboard: React.FC = () => {
     department: 'Todos'
   });
 
-  // Effect to load selected municipality
+  // Dados para gráficos mensais
+  const monthlyData = [
+    { name: 'Jan', planejado: 240000, executado: 220000 },
+    { name: 'Fev', planejado: 300000, executado: 320000 },
+    { name: 'Mar', planejado: 280000, executado: 290000 },
+    { name: 'Abr', planejado: 320000, executado: 300000 },
+    { name: 'Mai', planejado: 350000, executado: 360000 },
+    { name: 'Jun', planejado: 380000, executado: 390000 },
+    { name: 'Jul', planejado: 400000, executado: 380000 },
+    { name: 'Ago', planejado: 420000, executado: 405000 },
+    { name: 'Set', planejado: 390000, executado: 400000 },
+    { name: 'Out', planejado: 450000, executado: 430000 },
+    { name: 'Nov', planejado: 480000, executado: 460000 },
+    { name: 'Dez', planejado: 520000, executado: 500000 },
+  ];
+
+  // Dados para análise de departamentos
+  const departmentData = [
+    { name: 'Saúde', valor: 1850000, percent: 28 },
+    { name: 'Educação', valor: 1520000, percent: 23 },
+    { name: 'Administração', valor: 950000, percent: 14 },
+    { name: 'Obras', valor: 1200000, percent: 18 },
+    { name: 'Transporte', valor: 650000, percent: 10 },
+    { name: 'Outros', valor: 450000, percent: 7 },
+  ];
+
+  // Effect para carregar município selecionado
   useEffect(() => {
-    const municipioId = localStorage.getItem('municipio-selecionado');
-    if (municipioId === 'janauba') {
-      setMunicipio({
-        id: 'janauba',
-        nome: 'Janaúba',
-        estado: 'MG',
-        populacao: 72018,
-        orcamento: 145300000,
-        orcamentoAnual: 145300000,
-        prefeito: 'José Santos',
-      });
-    }
+    const fetchMunicipio = async () => {
+      try {
+        setLoading(true);
+        const municipios = await municipioService.getAll();
+        if (municipios && municipios.length > 0) {
+          setMunicipio(municipios[0]);
+        } else {
+          // Se não houver municípios, use um padrão
+          setMunicipio({
+            id: 'default',
+            nome: 'Município Padrão',
+            estado: 'MG',
+            populacao: 50000,
+            orcamento: 25000000,
+            orcamento_anual: 25000000,
+            prefeito: 'Nome do Prefeito',
+          });
+        }
+      } catch (error) {
+        console.error("Erro ao buscar município:", error);
+        toast.error("Não foi possível carregar os dados do município");
+        
+        // Definir município padrão em caso de erro
+        setMunicipio({
+          id: 'default',
+          nome: 'Município Padrão',
+          estado: 'MG',
+          populacao: 50000,
+          orcamento: 25000000,
+          orcamento_anual: 25000000,
+          prefeito: 'Nome do Prefeito',
+        });
+      }
+    };
+
+    const fetchPedidos = async () => {
+      try {
+        // Buscar os pedidos para calcular estatísticas
+        const pedidos = await pedidoService.getAll();
+        
+        if (pedidos) {
+          // Calcular o valor total contratado
+          const valorTotal = pedidos.reduce((acc, pedido) => acc + pedido.valor_total, 0);
+          
+          // Calcular o número de pedidos por setor
+          const pedidosPorSetor: Record<string, number> = {};
+          const gastosPorSetor: Record<string, number> = {};
+          
+          pedidos.forEach(pedido => {
+            if (pedido.setor) {
+              pedidosPorSetor[pedido.setor] = (pedidosPorSetor[pedido.setor] || 0) + 1;
+              gastosPorSetor[pedido.setor] = (gastosPorSetor[pedido.setor] || 0) + pedido.valor_total;
+            }
+          });
+          
+          // Definir dados do dashboard
+          const dashboardData: DadosDashboard = {
+            resumo_financeiro: {
+              estimativa_despesa: municipio?.orcamento_anual || 25000000,
+              valor_contratado_total: valorTotal,
+              percentual_utilizado: municipio?.orcamento_anual ? (valorTotal / municipio.orcamento_anual) * 100 : 0,
+              total_pedidos: pedidos.length
+            },
+            cartoes: [
+              {
+                titulo: 'Total de Pedidos',
+                valor: pedidos.length,
+                percentual_mudanca: 12.5,
+                icon: 'Receipt',
+                classe_cor: 'bg-blue-500'
+              },
+              {
+                titulo: 'Orçamento Executado',
+                valor: formatCurrency(valorTotal),
+                percentual_mudanca: 8.2,
+                icon: 'Wallet',
+                classe_cor: 'bg-green-500'
+              }
+            ],
+            orcamento_previsto: { 'Trimestre 1': 7000000, 'Trimestre 2': 7500000, 'Trimestre 3': 7000000, 'Trimestre 4': 7000000 },
+            gastos_por_setor: gastosPorSetor,
+            valor_contratado_total: valorTotal,
+            pedidos_por_setor: pedidosPorSetor
+          };
+          
+          setDadosDashboard(dashboardData);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar pedidos:", error);
+        toast.error("Não foi possível carregar os dados do dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMunicipio().then(() => fetchPedidos());
   }, []);
 
-  // Effect to apply filters
+  // Efeito para aplicar filtros
   useEffect(() => {
     applyFilters();
   }, [period, filters]);
 
   const applyFilters = () => {
-    // Apply period filter
+    // Aplicar filtro de período
     let periodFilteredData = [...monthlyData];
     if (period === 'mensal') {
-      // Filter to show only current month (using the selected month from filters)
+      // Filtrar para mostrar apenas o mês atual (usando o mês selecionado dos filtros)
       const monthIndex = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
                         .findIndex(m => m === filters.month);
@@ -140,10 +173,10 @@ const Dashboard: React.FC = () => {
                                 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         periodFilteredData = monthlyData.filter(data => data.name === monthShortNames[monthIndex]);
       } else {
-        periodFilteredData = monthlyData.slice(0, 1); // Default to first month if not found
+        periodFilteredData = monthlyData.slice(0, 1); // Padrão para o primeiro mês se não encontrado
       }
     } else if (period === 'trimestral') {
-      // Filter by quarter
+      // Filtrar por trimestre
       let quarterMonths: string[] = [];
       switch(filters.quarter) {
         case 'Q1':
@@ -162,7 +195,7 @@ const Dashboard: React.FC = () => {
       periodFilteredData = monthlyData.filter(data => quarterMonths.includes(data.name));
     }
     
-    // Apply department filter
+    // Aplicar filtro de departamento
     let deptFilteredData = [...departmentData];
     if (filters.department !== 'Todos') {
       deptFilteredData = departmentData.filter(dept => dept.name === filters.department);
@@ -173,9 +206,9 @@ const Dashboard: React.FC = () => {
   };
 
   // Valores para os cards de estatísticas
-  const totalPedidos = 587;
-  const orcamentoExecutado = municipio.id === 'janauba' ? 12000000 : 2400000;
-  const pedidosAprovados = 432;
+  const totalPedidos = dadosDashboard?.resumo_financeiro.total_pedidos || 0;
+  const orcamentoExecutado = dadosDashboard?.valor_contratado_total || 0;
+  const pedidosAprovados = dadosDashboard ? Math.floor(dadosDashboard.resumo_financeiro.total_pedidos * 0.75) : 0;
   const secretarias = 15;
 
   // Handle data export from dashboard
@@ -184,12 +217,12 @@ const Dashboard: React.FC = () => {
     
     setTimeout(() => {
       const dashboardData = {
-        municipio: municipio.nome,
+        municipio: municipio?.nome || 'Município',
         totalPedidos,
         orcamentoExecutado,
         pedidosAprovados,
         secretarias,
-        orcamentoAnual: municipio.orcamentoAnual,
+        orcamentoAnual: municipio?.orcamento_anual || 0,
         data: new Date().toLocaleDateString('pt-BR')
       };
       
@@ -198,10 +231,18 @@ const Dashboard: React.FC = () => {
     }, 500);
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in dashboard-view">
       {/* Cabeçalho com informações do município */}
-      <DashboardHeader municipio={municipio} language={language} />
+      <DashboardHeader municipio={municipio!} language={language} />
       
       {/* Cards de estatísticas */}
       <DashboardStatCards 
@@ -216,8 +257,8 @@ const Dashboard: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         handleExportDashboard={handleExportDashboard}
-        dadosDashboard={dadosDashboard}
-        municipio={municipio}
+        dadosDashboard={dadosDashboard!}
+        municipio={municipio!}
         language={language}
         filteredData={filteredData}
         filteredDeptData={filteredDeptData}
@@ -320,7 +361,7 @@ function DashboardTabs({
         
         <button
           onClick={handleExportDashboard}
-          className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700"
+          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
         >
           <Printer className="h-4 w-4 mr-2" />
           Exportar PDF

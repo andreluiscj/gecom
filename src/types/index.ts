@@ -1,18 +1,16 @@
 
-export type Role = "admin" | "editor" | null;
+export type Role = "admin" | "editor" | "user" | null;
 
 export type Tarefa = {
   id: string;
-  title: string;
-  description: string;
+  titulo: string;
+  descricao: string;
   status: "pendente" | "em_progresso" | "concluida";
-  priority: "alta" | "media" | "baixa";
-  dueDate: Date;
-  assignedTo: string;
-  comments: string[];
-  attachments: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  prioridade: "alta" | "media" | "baixa";
+  data_vencimento: Date | null;
+  responsavel_id: string | null;
+  created_at: Date;
+  updated_at: Date;
 };
 
 export type Setor =
@@ -38,42 +36,49 @@ export interface Item {
   id: string;
   nome: string;
   quantidade: number;
-  valorUnitario: number;
-  valorTotal?: number;
+  valor_unitario: number;
+  valor_total: number;
+  pedido_id: string;
 }
 
 export interface PedidoCompra {
   id: string;
   descricao: string;
-  dataCompra: Date;
-  setor: Setor;
+  data_compra: Date;
+  setor_id: string;
+  setor?: string; // Campo para exibição
   itens: Item[];
-  valorTotal: number;
+  valor_total: number;
   status: PedidoStatus;
-  fundoMonetario: string;
-  createdAt: Date;
+  fundo_monetario: string | null;
+  created_at: Date;
   justificativa?: string;
-  solicitante?: string;
+  solicitante_id?: string;
+  solicitante?: string; // Campo para exibição
   observacoes?: string;
   workflow?: Workflow;
-  localEntrega?: string;
+  local_entrega?: string;
 }
 
 export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído';
 
 export interface WorkflowStep {
   id: string;
-  title: string;
+  titulo: string;
   status: WorkflowStepStatus;
-  date?: Date;
-  dataConclusao?: Date;   // New field: completion date
-  responsavel?: string;   // New field: responsible person
+  data_inicio?: Date;
+  data_conclusao?: Date;
+  responsavel_id?: string | null;
+  responsavel?: string; // Campo para exibição
+  ordem: number;
 }
 
 export interface Workflow {
-  currentStep: number;
-  totalSteps: number;
-  percentComplete: number;
+  id: string;
+  pedido_id: string;
+  etapa_atual: number;
+  total_etapas: number;
+  percentual_completo: number;
   steps: WorkflowStep[];
 }
 
@@ -82,30 +87,30 @@ export interface Municipio {
   nome: string;
   estado: string;
   populacao: number;
-  logo?: string; // Added logo property as optional
+  logo?: string;
   orcamento: number;
-  orcamentoAnual: number;
+  orcamento_anual: number;
   prefeito: string;
 }
 
 export interface DadosDashboard {
-  resumoFinanceiro: {
-    estimativaDespesa: number;
-    valorContratadoTotal: number;
-    percentualUtilizado: number;
-    totalPedidos: number;
+  resumo_financeiro: {
+    estimativa_despesa: number;
+    valor_contratado_total: number;
+    percentual_utilizado: number;
+    total_pedidos: number;
   };
   cartoes: Array<{
     titulo: string;
     valor: string | number;
-    percentualMudanca: number;
+    percentual_mudanca: number;
     icon: string;
-    classeCor: string;
+    classe_cor: string;
   }>;
-  orcamentoPrevisto: Record<string, number>;
-  gastosPorSetor: Record<string, number>;
-  valorContratadoTotal: number;
-  pedidosPorSetor: Record<string, number>;
+  orcamento_previsto: Record<string, number>;
+  gastos_por_setor: Record<string, number>;
+  valor_contratado_total: number;
+  pedidos_por_setor: Record<string, number>;
 }
 
 export type UserRole = 'admin' | 'user' | 'manager';
@@ -114,21 +119,19 @@ export interface Funcionario {
   id: string;
   nome: string;
   cpf: string;
-  dataNascimento: Date;
+  data_nascimento: Date;
   email: string;
   cargo: string;
-  setor: Setor;
-  setoresAdicionais?: Setor[];
-  dataContratacao: Date;
+  setor_id: string | null;
+  setor?: string; // Campo para exibição
+  setores_adicionais?: string[];
+  data_contratacao: Date;
   ativo: boolean;
-  senha?: string; // Only used for creation/update, not stored in state
-  permissaoEtapa?: string;
-  username?: string; // Username for login
-  telefone?: string; // Added the missing telefone property
+  telefone?: string;
 }
 
 export interface LoginLog {
-  userId: string;
+  user_id: string;
   timestamp: string;
   success: boolean;
   ip: string;
@@ -136,10 +139,27 @@ export interface LoginLog {
 
 export interface UsuarioLogin {
   id: string;
+  auth_user_id?: string;
   username: string;
-  senha: string;
-  funcionarioId: string;
+  funcionario_id: string;
   role: UserRole;
   ativo: boolean;
-  primeiroAcesso?: boolean;
+  primeiro_acesso?: boolean;
+}
+
+// Interface para representar os dados do Supabase
+export interface Database {
+  municipios: Municipio[];
+  setores: {
+    id: string;
+    nome: string;
+    municipio_id: string;
+  }[];
+  funcionarios: Funcionario[];
+  usuarios: UsuarioLogin[];
+  pedidos_compra: PedidoCompra[];
+  itens_pedido: Item[];
+  workflow_pedidos: Workflow[];
+  workflow_etapas: WorkflowStep[];
+  tarefas: Tarefa[];
 }
