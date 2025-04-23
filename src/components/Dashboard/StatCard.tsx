@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowDown, ArrowUp, Wallet, Building, ShoppingCart, Receipt, LucideIcon } from 'lucide-react';
+import { ArrowDown, ArrowUp, Clock, TrendingDown, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPercentage } from '@/utils/formatters';
 
@@ -24,16 +24,12 @@ const StatCard: React.FC<StatCardProps> = ({
   const renderIcon = () => {
     if (typeof icon === 'string') {
       switch (icon) {
-        case 'Building':
-          return <Building className="h-5 w-5 text-white" />;
-        case 'Wallet':
-          return <Wallet className="h-5 w-5 text-white" />;
-        case 'ShoppingCart':
-          return <ShoppingCart className="h-5 w-5 text-white" />;
-        case 'Receipt':
-          return <Receipt className="h-5 w-5 text-white" />;
+        case 'Clock':
+          return <Clock className="h-5 w-5 text-white" />;
+        case 'TrendingDown':
+          return <TrendingDown className="h-5 w-5 text-white" />;
         default:
-          return <Wallet className="h-5 w-5 text-white" />;
+          return <Clock className="h-5 w-5 text-white" />;
       }
     } else {
       const Icon = icon;

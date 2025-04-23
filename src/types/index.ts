@@ -90,11 +90,10 @@ export interface Municipio {
 
 export interface DadosDashboard {
   resumoFinanceiro: {
-    estimativaDespesa: number;
-    valorContratadoTotal: number;
+    orcamentoAnual: number;
+    orcamentoUtilizado: number;
     percentualUtilizado: number;
     totalPedidos: number;
-    orcamentoAnual?: number; // Added orcamentoAnual as optional to match usage
   };
   cartoes: Array<{
     titulo: string;
@@ -105,12 +104,8 @@ export interface DadosDashboard {
   }>;
   orcamentoPrevisto: Record<string, number>;
   gastosPorSetor: Record<string, number>;
-  valorContratadoTotal: number;
+  gastosTotais: number;
   pedidosPorSetor: Record<string, number>;
-  indicadoresDesempenho: {
-    tempoMedioConclusao: number;
-    percentualEconomia: number;
-  };
 }
 
 export type UserRole = 'admin' | 'user' | 'manager';

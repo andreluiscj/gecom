@@ -16,8 +16,8 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
   municipio,
   language
 }) => {
-  // Calculate the percentage of homologated expenses against estimated budget
-  const percentualOrcamento = ((dadosDashboard.valorContratadoTotal / municipio.orcamentoAnual) * 100).toFixed(2);
+  const totalDFDs = Object.values(dadosDashboard.pedidosPorSetor || {}).reduce((sum, count) => sum + (count || 0), 0);
+  const percentualOrcamento = ((dadosDashboard.gastosTotais / municipio.orcamentoAnual) * 100).toFixed(2);
   
   return (
     <>
@@ -43,7 +43,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
                   <tr>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium flex items-center">
                       <DollarSign className="h-4 w-4 mr-2 text-green-500" />
-                      Estimativa de Despesa
+                      {language === 'pt' ? 'Orçamento Anual' : 'Annual Budget'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
                       {formatCurrency(municipio.orcamentoAnual)}
@@ -52,19 +52,28 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({
                   <tr>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium flex items-center">
                       <DollarSign className="h-4 w-4 mr-2 text-blue-500" />
-                      Valor Contratado
+                      {language === 'pt' ? 'Gastos Totais' : 'Total Expenses'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      {formatCurrency(dadosDashboard.valorContratadoTotal)}
+                      {formatCurrency(dadosDashboard.gastosTotais)}
                     </td>
                   </tr>
                   <tr>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium flex items-center">
                       <DollarSign className="h-4 w-4 mr-2 text-purple-500" />
-                      Diferença
+                      {language === 'pt' ? 'Percentual do Orçamento Utilizado' : 'Budget Usage Percentage'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      {formatCurrency(municipio.orcamentoAnual - dadosDashboard.valorContratadoTotal)}
+                      {percentualOrcamento}%
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium flex items-center">
+                      <DollarSign className="h-4 w-4 mr-2 text-yellow-500" />
+                      {language === 'pt' ? 'Total de DFDs' : 'Total Purchase Orders'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
+                      {totalDFDs}
                     </td>
                   </tr>
                 </tbody>
