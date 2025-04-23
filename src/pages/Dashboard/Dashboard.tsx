@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardHeader from '@/components/Dashboard/DashboardHeader';
 import StatCard from '@/components/Dashboard/StatCard';
 import DashboardSummary from '@/components/Dashboard/DashboardSummary';
-import { Clock, TrendingDown, Printer } from 'lucide-react';
+import { Building, Printer, Receipt, ShoppingCart, Wallet } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
 import { DadosDashboard, Municipio } from '@/types';
 import { toast } from 'sonner';
 import { exportDashboardAsPDF } from '@/utils/pdfGenerator';
+import { getUserRole, getUserSetor, shouldFilterByUserSetor } from '@/utils/authHelpers';
 
 // Default municipality object
 const defaultMunicipio: Municipio = {
@@ -25,24 +25,24 @@ const defaultMunicipio: Municipio = {
 // Sample dashboard data
 const dadosDashboard: DadosDashboard = {
   resumoFinanceiro: {
-    orcamentoAnual: 28500000,
-    orcamentoUtilizado: 2400000,
+    estimativaDespesa: 28500000,
+    valorContratadoTotal: 2400000,
     percentualUtilizado: 8.42,
     totalPedidos: 587,
   },
   cartoes: [
     {
-      titulo: 'Tempo Médio para Conclusão',
-      valor: '27 dias',
+      titulo: 'Total de Pedidos',
+      valor: 587,
       percentualMudanca: 12.5,
-      icon: 'Clock',
+      icon: 'Receipt',
       classeCor: 'bg-blue-500',
     },
     {
-      titulo: 'Percentual de Economia',
-      valor: '15,7%',
+      titulo: 'Orçamento Executado',
+      valor: formatCurrency(2400000),
       percentualMudanca: 8.2,
-      icon: 'TrendingDown',
+      icon: 'Wallet',
       classeCor: 'bg-green-500',
     },
   ],
@@ -54,7 +54,7 @@ const dadosDashboard: DadosDashboard = {
     'Obras': 430000,
     'Transporte': 170000,
   },
-  gastosTotais: 2400000,
+  valorContratadoTotal: 2400000,
   pedidosPorSetor: {
     'Saúde': 143,
     'Educação': 125,
@@ -62,6 +62,10 @@ const dadosDashboard: DadosDashboard = {
     'Obras': 87,
     'Transporte': 62,
     'Outros': 72,
+  },
+  indicadoresDesempenho: {
+    tempoMedioConclusao: 45,
+    percentualEconomia: 12.5,
   },
 };
 
@@ -81,14 +85,14 @@ const monthlyData = [
   { name: 'Dez', planejado: 520000, executado: 500000 },
 ];
 
-// Data for department analysis - Fixed percentages to add up to 100%
+// Data for department analysis
 const departmentData = [
-  { name: 'Saúde', valor: 1850000, percent: 33 },
-  { name: 'Educação', valor: 1520000, percent: 27 },
-  { name: 'Administração', valor: 950000, percent: 17 },
-  { name: 'Obras', valor: 1200000, percent: 13 },
-  { name: 'Transporte', valor: 650000, percent: 7 },
-  { name: 'Outros', valor: 450000, percent: 3 },
+  { name: 'Saúde', valor: 1850000, percent: 28 },
+  { name: 'Educação', valor: 1520000, percent: 23 },
+  { name: 'Administração', valor: 950000, percent: 14 },
+  { name: 'Obras', valor: 1200000, percent: 18 },
+  { name: 'Transporte', valor: 650000, percent: 10 },
+  { name: 'Outros', valor: 450000, percent: 7 },
 ];
 
 const Dashboard: React.FC = () => {
@@ -104,18 +108,26 @@ const Dashboard: React.FC = () => {
     month: 'Junho',
     department: 'Todos'
   });
+  
+  // Get user information for filtering
+  const userRole = getUserRole();
+  const userSetor = getUserSetor();
+  const shouldFilter = shouldFilterByUserSetor();
+  
+  // Filtered dashboard data based on user's secretaria
+  const [filteredDashboardData, setFilteredDashboardData] = useState(dadosDashboard);
 
   // Effect to load selected municipality
   useEffect(() => {
     const municipioId = localStorage.getItem('municipio-selecionado');
-    if (municipioId === 'capitao-eneas') {
+    if (municipioId === 'janauba') {
       setMunicipio({
-        id: 'capitao-eneas',
-        nome: 'Capitão Enéas',
+        id: 'janauba',
+        nome: 'Janaúba',
         estado: 'MG',
-        populacao: 15438,
-        orcamento: 0,
-        orcamentoAnual: 0,
+        populacao: 72018,
+        orcamento: 145300000,
+        orcamentoAnual: 145300000,
         prefeito: 'José Santos',
       });
     }
@@ -124,7 +136,49 @@ const Dashboard: React.FC = () => {
   // Effect to apply filters
   useEffect(() => {
     applyFilters();
-  }, [period, filters]);
+  }, [period, filters, userSetor, shouldFilter]);
+  
+  // Effect to filter dashboard data by user's department
+  useEffect(() => {
+    if (shouldFilter && userSetor) {
+      // If user should only see their department data
+      const filteredData = filterDashboardDataBySetor(dadosDashboard, userSetor);
+      setFilteredDashboardData(filteredData);
+      
+      // Force department filter to user's department
+      setFilters(prev => ({...prev, department: userSetor}));
+    } else {
+      // Admin and prefeito see all data
+      setFilteredDashboardData(dadosDashboard);
+    }
+  }, [userSetor, shouldFilter]);
+
+  // Function to filter dashboard data by secretaria/department
+  const filterDashboardDataBySetor = (data: DadosDashboard, setor: string): DadosDashboard => {
+    // Create a copy to not modify the original
+    const filtered = {...data};
+    
+    // Filter gastosPorSetor to only include user's department
+    const filteredGastos: Record<string, number> = {};
+    if (data.gastosPorSetor[setor]) {
+      filteredGastos[setor] = data.gastosPorSetor[setor];
+    }
+    
+    // Filter pedidosPorSetor to only include user's department
+    const filteredPedidos: Record<string, number> = {};
+    if (data.pedidosPorSetor[setor]) {
+      filteredPedidos[setor] = data.pedidosPorSetor[setor];
+    }
+    
+    // Update the data
+    filtered.gastosPorSetor = filteredGastos;
+    filtered.pedidosPorSetor = filteredPedidos;
+    
+    // Also update total contracted value to reflect only this department
+    filtered.valorContratadoTotal = filteredGastos[setor] || 0;
+    
+    return filtered;
+  };
 
   const applyFilters = () => {
     // Apply period filter
@@ -162,24 +216,38 @@ const Dashboard: React.FC = () => {
       periodFilteredData = monthlyData.filter(data => quarterMonths.includes(data.name));
     }
     
-    // Apply department filter
+    // Apply department filter (if regular user, force to their department)
     let deptFilteredData = [...departmentData];
-    if (filters.department !== 'Todos') {
-      deptFilteredData = departmentData.filter(dept => dept.name === filters.department);
-      
-      // Automatically filter indicators for department
-      // This would be where you'd calculate department-specific indicators
-      // For now, we'll just show a toast notification
-      toast.info(`Indicadores filtrados para: ${filters.department}`);
+    const selectedDepartment = shouldFilter && userSetor ? userSetor : filters.department;
+    
+    if (selectedDepartment !== 'Todos') {
+      deptFilteredData = departmentData.filter(dept => dept.name === selectedDepartment);
     }
     
     setFilteredData(periodFilteredData);
     setFilteredDeptData(deptFilteredData);
   };
 
-  // Valores para os cards de estatísticas
-  const tempoMedioConclusao = "27 dias";
-  const percentualEconomia = "15,7%";
+  // Calculate values for the stats cards based on filtered data if needed
+  const calculateTotalPedidos = () => {
+    if (shouldFilter && userSetor) {
+      return filteredDashboardData.pedidosPorSetor[userSetor] || 0;
+    }
+    return 587; // Default total
+  };
+
+  const calculateOrcamentoExecutado = () => {
+    if (shouldFilter && userSetor) {
+      return filteredDashboardData.gastosPorSetor[userSetor] || 0;
+    }
+    return municipio.id === 'janauba' ? 12000000 : 2400000;
+  };
+
+  // Values for the stats cards
+  const totalPedidos = calculateTotalPedidos();
+  const orcamentoExecutado = calculateOrcamentoExecutado();
+  const pedidosAprovados = shouldFilter && userSetor ? Math.floor(totalPedidos * 0.75) : 432; // approx 75% of total
+  const secretarias = shouldFilter ? 1 : 15;
 
   // Handle data export from dashboard
   const handleExportDashboard = () => {
@@ -188,8 +256,10 @@ const Dashboard: React.FC = () => {
     setTimeout(() => {
       const dashboardData = {
         municipio: municipio.nome,
-        tempoMedioConclusao,
-        percentualEconomia,
+        totalPedidos,
+        orcamentoExecutado,
+        pedidosAprovados,
+        secretarias,
         orcamentoAnual: municipio.orcamentoAnual,
         data: new Date().toLocaleDateString('pt-BR')
       };
@@ -206,8 +276,10 @@ const Dashboard: React.FC = () => {
       
       {/* Cards de estatísticas */}
       <DashboardStatCards 
-        tempoMedioConclusao={tempoMedioConclusao}
-        percentualEconomia={percentualEconomia}
+        totalPedidos={totalPedidos}
+        orcamentoExecutado={orcamentoExecutado}
+        pedidosAprovados={pedidosAprovados}
+        secretarias={secretarias}
       />
 
       {/* Tabs para alternar entre gráficos e resumo */}
@@ -215,7 +287,7 @@ const Dashboard: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         handleExportDashboard={handleExportDashboard}
-        dadosDashboard={dadosDashboard}
+        dadosDashboard={filteredDashboardData}
         municipio={municipio}
         language={language}
         filteredData={filteredData}
@@ -224,35 +296,55 @@ const Dashboard: React.FC = () => {
         setPeriod={setPeriod}
         filters={filters}
         setFilters={setFilters}
+        shouldFilter={shouldFilter}
+        userSetor={userSetor}
       />
     </div>
   );
 };
 
 interface DashboardStatCardsProps {
-  tempoMedioConclusao: string;
-  percentualEconomia: string;
+  totalPedidos: number;
+  orcamentoExecutado: number;
+  pedidosAprovados: number;
+  secretarias: number;
 }
 
 function DashboardStatCards({ 
-  tempoMedioConclusao, 
-  percentualEconomia
+  totalPedidos, 
+  orcamentoExecutado, 
+  pedidosAprovados, 
+  secretarias 
 }: DashboardStatCardsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard 
-        title="Tempo Médio para Conclusão"
-        value={tempoMedioConclusao}
-        percentChange={-8.5}
-        icon={Clock}
+        title="Total de Pedidos"
+        value={totalPedidos}
+        percentChange={12.5}
+        icon={Receipt}
         colorClass="bg-blue-500"
       />
       <StatCard 
-        title="Percentual de Economia por Processo"
-        value={percentualEconomia}
-        percentChange={3.2}
-        icon={TrendingDown}
+        title="Orçamento Executado"
+        value={formatCurrency(orcamentoExecutado)}
+        percentChange={8.2}
+        icon={Wallet}
         colorClass="bg-green-500"
+      />
+      <StatCard 
+        title="Pedidos Aprovados"
+        value={pedidosAprovados}
+        percentChange={4.3}
+        icon={ShoppingCart}
+        colorClass="bg-yellow-500"
+      />
+      <StatCard 
+        title="Secretarias"
+        value={secretarias}
+        percentChange={0}
+        icon={Building}
+        colorClass="bg-purple-500"
       />
     </div>
   );
@@ -271,6 +363,8 @@ interface DashboardTabsProps {
   setPeriod: (period: string) => void;
   filters: any;
   setFilters: (filters: any) => void;
+  shouldFilter?: boolean;
+  userSetor?: string | null;
 }
 
 function DashboardTabs({
@@ -285,7 +379,9 @@ function DashboardTabs({
   period,
   setPeriod,
   filters,
-  setFilters
+  setFilters,
+  shouldFilter,
+  userSetor
 }: DashboardTabsProps) {
   return (
     <Tabs 
@@ -296,7 +392,7 @@ function DashboardTabs({
       <div className="flex justify-between items-center">
         <TabsList className="grid w-full md:w-[400px] grid-cols-2">
           <TabsTrigger value="grafico">Gráficos</TabsTrigger>
-          <TabsTrigger value="avancado">Painel de Gestão</TabsTrigger>
+          <TabsTrigger value="avancado">Analytics Avançado</TabsTrigger>
         </TabsList>
         
         <button

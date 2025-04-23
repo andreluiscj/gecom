@@ -25,16 +25,11 @@ const NavBar: React.FC<NavBarProps> = ({ toggleSidebar, userRole, userMunicipali
         >
           <Menu className="h-5 w-5" />
         </Button>
-        
-        <img 
-          src="/lovable-uploads/16b8bdb2-a18d-4ef2-8b14-ce836cb5bef0.png" 
-          alt="GECOM Logo" 
-          className="h-12"
-        />
       </div>
 
       <div className="flex items-center space-x-2">
         <HelpButton />
+        <ThemeToggle />
         <NotificationMenu />
         <UserMenu userRole={userRole} />
       </div>

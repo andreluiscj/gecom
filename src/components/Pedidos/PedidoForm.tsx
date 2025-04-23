@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { adicionarPedido } from '@/data/mockData';
 import { initializeWorkflow } from '@/utils/workflowHelpers';
+import { getUserSetor, getUserName, getUserRole } from '@/utils/authHelpers';
 import ActionButtons from './Form/ActionButtons';
 import ItemsSection from './Form/ItemsSection';
 import TotalSection from './Form/TotalSection';
@@ -53,13 +53,21 @@ const PedidoForm: React.FC = () => {
   const [itens, setItens] = useState([
     { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 }
   ]);
+  
+  const userName = getUserName() || '';
+  const userSetor = getUserSetor() || '';
+  const userRole = getUserRole();
+  
+  const shouldRestrictSetor = userRole === 'user' || userRole === 'manager';
+  
+  const availableSecretarias = shouldRestrictSetor ? [userSetor] : secretarias;
 
   const form = useForm({
     defaultValues: {
       dataCompra: new Date().toISOString().split('T')[0],
-      setor: '',
+      setor: userSetor,
       fundoMonetario: '',
-      responsavel: '',
+      responsavel: userName,
       justificativa: '',
       descricao: '',
       localEntrega: '',
@@ -71,6 +79,14 @@ const PedidoForm: React.FC = () => {
         : secondStepSchema
     ),
   });
+
+  useEffect(() => {
+    form.setValue('responsavel', userName);
+    
+    if (shouldRestrictSetor) {
+      form.setValue('setor', userSetor);
+    }
+  }, [form, userName, userSetor, shouldRestrictSetor]);
 
   const adicionarItem = () => {
     setItens([
@@ -194,6 +210,7 @@ const PedidoForm: React.FC = () => {
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
+                        disabled={shouldRestrictSetor}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -201,7 +218,7 @@ const PedidoForm: React.FC = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {secretarias.map(secretaria => (
+                          {availableSecretarias.map(secretaria => (
                             <SelectItem key={secretaria} value={secretaria}>
                               {secretaria}
                             </SelectItem>
@@ -250,7 +267,7 @@ const PedidoForm: React.FC = () => {
                     <FormItem>
                       <FormLabel>Responsável</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nome do responsável pela solicitação" {...field} />
+                        <Input placeholder="Nome do responsável pela solicitação" {...field} readOnly />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

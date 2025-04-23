@@ -43,7 +43,8 @@ export function useAuth() {
             result.funcionario.nome, 
             undefined, 
             result.userId, 
-            result.funcionario.id
+            result.funcionario.id,
+            result.funcionario.setor
           );
         }
       }
@@ -80,23 +81,45 @@ export function useAuth() {
     }
   };
 
-  const handleGDPRConsent = (username: string, password: string) => {
+  const handleGDPRConsent = () => {
     // Save GDPR consent
     localStorage.setItem(`gdpr-accepted-${currentUserId}`, 'true');
     setShowGDPRDialog(false);
     
-    // Complete login process
-    const result = autenticarUsuario(username, password);
-    if (result.authenticated) {
+    // Complete login process with existing credentials
+    const userData = getUserById(currentUserId);
+    
+    if (userData) {
       loginSuccess(
-        result.role, 
+        userData.usuario.role, 
         'São Paulo', 
-        result.funcionario.nome, 
+        userData.funcionario.nome, 
         undefined, 
-        result.userId,
-        result.funcionario.id
+        userData.usuario.id,
+        userData.funcionario.id,
+        userData.funcionario.setor
       );
+    } else {
+      toast.error('Erro ao concluir o login. Por favor, tente novamente.');
+      setIsSubmitting(false);
     }
+  };
+  
+  // Helper function to get user data by ID
+  const getUserById = (userId: string) => {
+    const usuarios = JSON.parse(localStorage.getItem('usuarios-login') || '[]');
+    const user = usuarios.find((u: any) => u.id === userId);
+    
+    if (user) {
+      const funcionarios = JSON.parse(localStorage.getItem('funcionarios') || '[]');
+      const funcionario = funcionarios.find((f: any) => f.id === user.funcionarioId);
+      
+      if (funcionario) {
+        return { usuario: user, funcionario };
+      }
+    }
+    
+    return null;
   };
 
   const loginSuccess = (
@@ -105,7 +128,8 @@ export function useAuth() {
     name: string = '', 
     permittedStep: string = '',
     userId: string = '',
-    funcionarioId: string = ''
+    funcionarioId: string = '',
+    setor: string = ''
   ) => {
     // Set authenticated state in localStorage
     localStorage.setItem('user-authenticated', 'true');
@@ -113,6 +137,7 @@ export function useAuth() {
     localStorage.setItem('user-municipality', municipality);
     localStorage.setItem('user-id', userId);
     localStorage.setItem('funcionario-id', funcionarioId);
+    localStorage.setItem('user-setor', setor);
     
     if (name) {
       localStorage.setItem('user-name', name);
@@ -122,12 +147,19 @@ export function useAuth() {
     }
 
     toast.success('Login realizado com sucesso!');
+    setIsSubmitting(false);
     
-    // Direct admin users to the admin panel, others to dashboard
+    // Direct users according to their access level
     if (role === 'admin') {
       navigate('/admin');
-    } else {
+    } else if (role === 'prefeito') {
+      // Prefeito can access dashboard like manager
       navigate('/dashboard');
+    } else if (role === 'manager') {
+      navigate('/dashboard');
+    } else {
+      // Regular users (servidores) go directly to the order list
+      navigate('/pedidos');
     }
   };
 

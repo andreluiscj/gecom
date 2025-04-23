@@ -30,7 +30,9 @@ export type Setor =
   | "Esportes e Lazer"
   | "Planejamento"
   | "Comunicação"
-  | "Ciência e Tecnologia";
+  | "Ciência e Tecnologia"
+  | "Gabinete"
+  | "Prefeito";
 
 export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
 
@@ -66,8 +68,8 @@ export interface WorkflowStep {
   title: string;
   status: WorkflowStepStatus;
   date?: Date;
-  dataConclusao?: Date;   // New field: completion date
-  responsavel?: string;   // New field: responsible person
+  dataConclusao?: Date;
+  responsavel?: string;
 }
 
 export interface Workflow {
@@ -82,7 +84,7 @@ export interface Municipio {
   nome: string;
   estado: string;
   populacao: number;
-  logo?: string; // Added logo property as optional
+  logo?: string;
   orcamento: number;
   orcamentoAnual: number;
   prefeito: string;
@@ -90,10 +92,11 @@ export interface Municipio {
 
 export interface DadosDashboard {
   resumoFinanceiro: {
-    orcamentoAnual: number;
-    orcamentoUtilizado: number;
+    estimativaDespesa: number;
+    valorContratadoTotal: number;
     percentualUtilizado: number;
     totalPedidos: number;
+    orcamentoAnual?: number;
   };
   cartoes: Array<{
     titulo: string;
@@ -104,11 +107,15 @@ export interface DadosDashboard {
   }>;
   orcamentoPrevisto: Record<string, number>;
   gastosPorSetor: Record<string, number>;
-  gastosTotais: number;
+  valorContratadoTotal: number;
   pedidosPorSetor: Record<string, number>;
+  indicadoresDesempenho: {
+    tempoMedioConclusao: number;
+    percentualEconomia: number;
+  };
 }
 
-export type UserRole = 'admin' | 'user' | 'manager';
+export type UserRole = 'admin' | 'user' | 'manager' | 'prefeito';
 
 export interface Funcionario {
   id: string;
@@ -121,10 +128,10 @@ export interface Funcionario {
   setoresAdicionais?: Setor[];
   dataContratacao: Date;
   ativo: boolean;
-  senha?: string; // Only used for creation/update, not stored in state
+  senha?: string;
   permissaoEtapa?: string;
-  username?: string; // Username for login
-  telefone?: string; // Added the missing telefone property
+  username?: string;
+  telefone?: string;
 }
 
 export interface LoginLog {
@@ -142,4 +149,15 @@ export interface UsuarioLogin {
   role: UserRole;
   ativo: boolean;
   primeiroAcesso?: boolean;
+}
+
+export interface PrefeitoData {
+  id: string;
+  nome: string;
+  municipio: string;
+  mandatoInicio: Date;
+  mandatoFim: Date;
+  partido: string;
+  email: string;
+  telefone: string;
 }

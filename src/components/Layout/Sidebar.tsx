@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -34,7 +35,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { canAccessUserManagement } from '@/utils/authHelpers';
+import { canAccessUserManagement, canAccessDashboard, getUserSetor, shouldFilterByUserSetor } from '@/utils/authHelpers';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -46,6 +47,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
   const location = useLocation();
   const navigate = useNavigate();
   const [secretariasOpen, setSecretariasOpen] = useState(false);
+  const userSetor = getUserSetor();
+  const showOnlyUserSetor = shouldFilterByUserSetor();
 
   const toggleSecretarias = () => {
     setSecretariasOpen(!secretariasOpen);
@@ -56,54 +59,72 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
     localStorage.removeItem('user-role');
     localStorage.removeItem('user-municipality');
     localStorage.removeItem('user-name');
+    localStorage.removeItem('user-setor');
+    localStorage.removeItem('funcionario-id');
+    localStorage.removeItem('user-id');
     toast.success('Logout realizado com sucesso!');
     navigate('/login');
   };
 
   const hasUserManagementAccess = canAccessUserManagement();
+  const hasDashboardAccess = canAccessDashboard();
 
   const menuItems = [
     {
       title: 'Painel de Gestão',
       path: '/dashboard',
       icon: <Home className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'user', 'manager'],
+      roles: ['admin', 'prefeito', 'manager'],
+      visible: hasDashboardAccess
     },
     {
       title: 'Pedidos de Compras',
       path: '/pedidos',
       icon: <List className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'user', 'manager'],
+      roles: ['admin', 'prefeito', 'gerente', 'user', 'manager'],
+      visible: true
     },
     {
       title: 'Nova DFD',
       path: '/pedidos/novo',
       icon: <FilePlus className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'user', 'manager'],
+      roles: ['admin', 'prefeito', 'gerente', 'user', 'manager'],
+      visible: true
     },
     {
       title: 'Tarefas',
       path: '/tarefas',
       icon: <CheckSquare className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'user', 'manager'],
+      roles: ['admin', 'prefeito', 'gerente', 'user', 'manager'],
+      visible: true
     },
     {
       title: 'Administração',
       path: '/admin',
       icon: <Building2 className="h-5 w-5" />,
       roles: ['admin'],
+      visible: userRole === 'admin'
     },
     {
       title: 'Cadastro de Gestor',
       path: '/admin/gerentes',
       icon: <UserPlus className="h-5 w-5" />,
-      roles: ['admin'],
+      roles: ['admin', 'prefeito'],
+      visible: userRole === 'admin' || userRole === 'prefeito'
     },
     {
       title: 'Gerenciamento de Servidores',
       path: '/gerenciamento/funcionarios',
       icon: <Users className="h-5 w-5" />,
-      roles: ['admin', 'manager', 'gerente'],
+      roles: ['admin', 'prefeito'],
+      visible: userRole === 'admin' || userRole === 'prefeito'
+    },
+    {
+      title: 'Área do Prefeito',
+      path: '/prefeito',
+      icon: <Building2 />,
+      roles: ['admin', 'prefeito'],
+      visible: userRole === 'admin' || userRole === 'prefeito'
     }
   ];
 
@@ -200,8 +221,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
     },
   ];
 
+  const filteredSecretarias = showOnlyUserSetor 
+    ? secretariasItems.filter(item => item.title === userSetor)
+    : secretariasItems;
+
   const filteredMenuItems = menuItems.filter(
-    (item) => (item.roles && userRole && item.roles.includes(userRole))
+    (item) => item.visible && ((item.roles && userRole && item.roles.includes(userRole)))
   );
 
   return (
@@ -241,47 +266,49 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
             </div>
           ))}
           
-          <div className="mb-1">
-            <button
-              onClick={toggleSecretarias}
-              className={cn(
-                'flex items-center w-full justify-between rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 text-white',
-                secretariasOpen ? 'bg-sidebar-primary shadow-md' : 'hover:bg-sidebar-accent hover:shadow-sm'
+          {filteredSecretarias.length > 0 && (
+            <div className="mb-1">
+              <button
+                onClick={toggleSecretarias}
+                className={cn(
+                  'flex items-center w-full justify-between rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 text-white',
+                  secretariasOpen ? 'bg-sidebar-primary shadow-md' : 'hover:bg-sidebar-accent hover:shadow-sm'
+                )}
+              >
+                <div className="flex items-center">
+                  <span className="mr-3"><Folder className="h-5 w-5" /></span>
+                  <span>Secretarias</span>
+                </div>
+                {secretariasOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
+              
+              {secretariasOpen && (
+                <div className="mt-1 space-y-1 pl-10 pr-3 max-h-64 overflow-y-auto">
+                  {filteredSecretarias.map((subItem, subIdx) => (
+                    <Link
+                      key={subIdx}
+                      to={subItem.path}
+                      className={cn(
+                        'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 text-white',
+                        location.pathname === subItem.path
+                          ? 'bg-sidebar-primary shadow-md'
+                          : 'hover:bg-sidebar-accent hover:shadow-sm'
+                      )}
+                    >
+                      <div className="mr-2.5">
+                        {subItem.icon}
+                      </div>
+                      <span>{subItem.title}</span>
+                    </Link>
+                  ))}
+                </div>
               )}
-            >
-              <div className="flex items-center">
-                <span className="mr-3"><Folder className="h-5 w-5" /></span>
-                <span>Secretarias</span>
-              </div>
-              {secretariasOpen ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-            
-            {secretariasOpen && (
-              <div className="mt-1 space-y-1 pl-10 pr-3 max-h-64 overflow-y-auto">
-                {secretariasItems.map((subItem, subIdx) => (
-                  <Link
-                    key={subIdx}
-                    to={subItem.path}
-                    className={cn(
-                      'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 text-white',
-                      location.pathname === subItem.path
-                        ? 'bg-sidebar-primary shadow-md'
-                        : 'hover:bg-sidebar-accent hover:shadow-sm'
-                    )}
-                  >
-                    <div className="mr-2.5">
-                      {subItem.icon}
-                    </div>
-                    <span>{subItem.title}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </nav>
       </div>
       <div className="border-t border-sidebar-border p-4">
