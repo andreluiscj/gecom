@@ -1,4 +1,3 @@
-
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -34,4 +33,13 @@ export function formatPercentage(value: number): string {
 // Format number with thousands separator
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat('pt-BR').format(value);
+}
+
+export function calcularPorcentagem(valor: number, total: number): number {
+  if (total === 0) return 0;
+  return Math.round((valor / total) * 100);
+}
+
+export function formatarData(data: Date): string {
+  return data.toLocaleDateString('pt-BR');
 }

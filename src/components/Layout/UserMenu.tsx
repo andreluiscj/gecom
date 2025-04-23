@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, LogOut, Key } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -39,16 +38,13 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
     const profilePhoto = localStorage.getItem('user-profile-photo');
     
     if (userId) {
-      const userData = getUserById(userId);
+      const userData = getUserInfo();
       if (userData) {
-        const { funcionario } = userData;
         setUserInfo({
-          name: funcionario.nome,
-          role: userData.usuario.role,
-          initials: getInitials(funcionario.nome),
-          birthDate: funcionario.dataNascimento,
-          cpf: funcionario.cpf,
-          email: funcionario.email,
+          name: userData.name,
+          role: userData.role,
+          initials: getInitials(userData.name),
+          email: userData.email,
           profilePhoto: profilePhoto
         });
         return;
@@ -65,7 +61,21 @@ const UserMenu = ({ userRole }: UserMenuProps) => {
       });
     }
   };
-  
+
+  const getUserInfo = () => {
+    const userId = localStorage.getItem('user-id');
+    if (!userId) return null;
+
+    const userData = getUserById(userId);
+    if (!userData) return null;
+
+    return {
+      name: userData.funcionario.nome,
+      role: userData.usuario.role,
+      email: userData.funcionario.email
+    };
+  };
+
   const getInitials = (name: string): string => {
     return name
       .split(' ')

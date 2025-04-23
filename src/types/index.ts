@@ -75,6 +75,8 @@ export interface Workflow {
   total_etapas: number;
   percentual_completo: number;
   steps: WorkflowStep[];
+  // For backward compatibility
+  percentComplete?: number;
 }
 
 export interface Funcionario {
@@ -119,4 +121,21 @@ export interface DadosDashboard {
   gastos_por_setor: Record<string, number>;
   valor_contratado_total: number;
   pedidos_por_setor: Record<string, number>;
+  
+  // Add compatibility properties for legacy code
+  orcamentoPrevisto?: Record<string, number>;
+  gastosPorSetor?: Record<string, number>;
+}
+
+export interface Tarefa {
+  id: string;
+  titulo: string;
+  descricao?: string;
+  status: string;
+  prioridade: string;
+  data_vencimento?: Date;
+  responsavel_id?: string;
+  responsavel?: string;
+  created_at: Date;
+  updated_at: Date;
 }

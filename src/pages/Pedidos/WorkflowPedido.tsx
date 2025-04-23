@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,11 +27,26 @@ const WorkflowPedido: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [refreshKey, setRefreshKey] = useState(0);
-  
+  const [canEdit, setCanEdit] = useState(false);
+
   const allPedidos = obterTodosPedidos();
   const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos, refreshKey]);
   const permittedStep = getPermittedWorkflowStep();
   const userRole = getUserRole();
+
+  useEffect(() => {
+    checkAndUpdatePermissions();
+  }, []);
+
+  const checkAndUpdatePermissions = async () => {
+    try {
+      const role = await getUserRole();
+      setCanEdit(role === "admin" || role === "manager");
+    } catch (error) {
+      console.error("Error checking user role:", error);
+      setCanEdit(false);
+    }
+  };
 
   if (!pedido) {
     return (

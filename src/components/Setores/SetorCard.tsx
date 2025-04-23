@@ -1,46 +1,66 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface SetorCardProps {
-  titulo: string;
-  descricao: string;
-  icone: React.ReactNode;
-  colorClass: string;
-  href: string;
+  id: string;
+  nome: string;
+  descricao?: string;
+  orcamentoUtilizado?: number;
+  orcamentoTotal?: number;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const SetorCard: React.FC<SetorCardProps> = ({
-  titulo,
+  id,
+  nome,
   descricao,
-  icone,
-  colorClass,
-  href,
+  orcamentoUtilizado = 0,
+  orcamentoTotal = 100,
+  onEdit,
+  onDelete,
 }) => {
+  const percentage = orcamentoTotal ? (orcamentoUtilizado / orcamentoTotal) * 100 : 0;
+
   return (
-    <Card className="transition-all hover:shadow-lg hover:-translate-y-1">
+    <Card className="relative">
       <CardHeader>
-        <div className="flex items-center space-x-2">
-          <div className="p-2 rounded-md bg-white shadow-sm">
-            {icone}
-          </div>
-          <CardTitle>{titulo}</CardTitle>
-        </div>
+        <CardTitle>{nome}</CardTitle>
+        <CardDescription>{descricao}</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground">{descricao}</p>
+        <div className="flex items-center space-x-4">
+          <Avatar>
+            <AvatarFallback>{nome.substring(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-sm font-medium leading-none">
+              Orçamento Utilizado: R$ {orcamentoUtilizado}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {percentage.toFixed(2)}% do orçamento total
+            </p>
+          </div>
+        </div>
       </CardContent>
-      <CardFooter>
-        <Button variant="ghost" asChild className="ml-auto">
-          <Link to={href}>
-            Ver Detalhes <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="absolute top-2 right-2 h-8 w-8 p-0">
+          <MoreHorizontal className="h-4 w-4" />
         </Button>
-      </CardFooter>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => onEdit(id)}>
+          <Edit className="mr-2 h-4 w-4" /> Editar
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="text-red-500" onClick={() => onDelete(id)}>
+          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+        </DropdownMenuItem>
+      </DropdownMenuContent>
     </Card>
   );
 };

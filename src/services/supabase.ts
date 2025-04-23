@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Municipio, 
@@ -8,8 +7,8 @@ import {
   Item, 
   Workflow, 
   WorkflowStep, 
-  Tarefa, 
-  UsuarioLogin 
+  UsuarioLogin,
+  Tarefa
 } from '@/types';
 
 // Serviço de Municípios

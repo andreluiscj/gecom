@@ -51,7 +51,11 @@ export function isAuthenticated(): boolean {
   return localStorage.getItem('user-authenticated') === 'true';
 }
 
-// Add missing function
+// Add missing functions
 export function getUserId(): string {
   return localStorage.getItem('user-id') || '';
+}
+
+export function getPermittedWorkflowStep(): string {
+  return localStorage.getItem('user-permitted-step') || '';
 }

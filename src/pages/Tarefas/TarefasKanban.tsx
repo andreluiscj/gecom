@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,13 +47,13 @@ const Task: React.FC<TaskProps> = ({ pedido }) => {
         <div className="mt-3 mb-2">
           <div className="flex justify-between text-xs mb-1">
             <span>Progresso</span>
-            <span>{pedido.workflow.percentComplete}%</span>
+            <span>{pedido.workflow.percentual_completo}%</span>
           </div>
           <Progress 
-            value={pedido.workflow.percentComplete} 
+            value={pedido.workflow.percentual_completo} 
             className="h-1" 
-            color={pedido.workflow?.percentComplete > 70 ? 'bg-green-500' : 
-                  pedido.workflow?.percentComplete > 30 ? 'bg-yellow-500' : 'bg-red-500'}
+            color={pedido.workflow?.percentual_completo > 70 ? 'bg-green-500' : 
+                  pedido.workflow?.percentual_completo > 30 ? 'bg-yellow-500' : 'bg-red-500'}
           />
         </div>
       )}
