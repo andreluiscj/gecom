@@ -1,283 +1,85 @@
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+
+import React from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import {
-  BarChart3,
-  FilePlus,
-  Folder,
-  HeartPulse,
-  Home,
-  List,
-  BookOpen,
-  Building2,
-  Bus,
-  ShoppingCart,
-  Check,
-  CheckSquare,
-  ChevronDown,
-  ChevronRight,
-  Shield,
-  Heart,
-  Leaf,
-  Coins,
-  Briefcase,
-  Music,
-  Ticket,
-  MapPin,
-  Globe,
-  Radio,
-  Award,
-  PieChart as PieChartIcon,
-  LogOut,
+import { 
+  LayoutDashboard, 
+  FileText, 
+  Users, 
+  Settings,
+  Building,
+  BarChart
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 
 interface SidebarProps {
   isOpen: boolean;
-  userRole?: string | null;
-  userMunicipality?: string | null;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipality }) => {
+interface SidebarItemProps {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+}
+
+const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, label }) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [secretariasOpen, setSecretariasOpen] = useState(false);
-
-  const toggleSecretarias = () => {
-    setSecretariasOpen(!secretariasOpen);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user-authenticated');
-    localStorage.removeItem('user-role');
-    localStorage.removeItem('user-municipality');
-    localStorage.removeItem('user-name');
-    toast.success('Logout realizado com sucesso!');
-    navigate('/login');
-  };
-
-  const menuItems = [
-    {
-      title: 'Painel de Gestão',
-      path: '/dashboard',
-      icon: <Home className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'user', 'manager'],
-    },
-    {
-      title: 'Pedidos de Compras',
-      path: '/pedidos',
-      icon: <List className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'user', 'manager'],
-    },
-    {
-      title: 'Nova DFD',
-      path: '/pedidos/novo',
-      icon: <FilePlus className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'user', 'manager'],
-    },
-    {
-      title: 'Tarefas',
-      path: '/tarefas',
-      icon: <CheckSquare className="h-5 w-5" />,
-      roles: ['admin', 'gerente', 'user', 'manager'],
-    },
-    {
-      title: 'Administração',
-      path: '/admin',
-      icon: <Building2 className="h-5 w-5" />,
-      roles: ['admin'],
-    }
-  ];
-
-  const secretariasItems = [
-    {
-      title: 'Saúde',
-      path: '/setores/saude',
-      icon: <HeartPulse className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Educação',
-      path: '/setores/educacao',
-      icon: <BookOpen className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Administração',
-      path: '/setores/administrativo',
-      icon: <Building2 className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Transporte',
-      path: '/setores/transporte',
-      icon: <Bus className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Obras',
-      path: '/setores/obras',
-      icon: <Briefcase className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Segurança Pública',
-      path: '/setores/seguranca',
-      icon: <Shield className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Assistência Social',
-      path: '/setores/social',
-      icon: <Heart className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Meio Ambiente',
-      path: '/setores/ambiente',
-      icon: <Leaf className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Fazenda',
-      path: '/setores/fazenda',
-      icon: <Coins className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Turismo',
-      path: '/setores/turismo',
-      icon: <Globe className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Cultura',
-      path: '/setores/cultura',
-      icon: <Music className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Esportes e Lazer',
-      path: '/setores/esportes',
-      icon: <Award className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Planejamento',
-      path: '/setores/planejamento',
-      icon: <PieChartIcon className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Comunicação',
-      path: '/setores/comunicacao',
-      icon: <Radio className="h-5 w-5" />,
-      color: 'text-white',
-    },
-    {
-      title: 'Ciência e Tecnologia',
-      path: '/setores/ciencia',
-      icon: <MapPin className="h-5 w-5" />,
-      color: 'text-white',
-    },
-  ];
-
-  const filteredMenuItems = menuItems.filter(
-    (item) => (item.roles && userRole && item.roles.includes(userRole))
-  );
+  const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
 
   return (
-    <div
+    <NavLink
+      to={to}
       className={cn(
-        'border-r border-sidebar-border bg-sidebar fixed inset-y-0 z-30 flex w-64 flex-col transition-all duration-300 ease-in-out shadow-lg',
-        isOpen ? 'left-0' : '-left-64'
+        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+        isActive 
+          ? "bg-blue-50 text-blue-700 font-medium" 
+          : "text-gray-600 hover:bg-blue-50 hover:text-blue-700"
       )}
     >
-      <div className="border-b border-sidebar-border py-5 px-5">
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center">
-            <img 
-              src="/lovable-uploads/16b8bdb2-a18d-4ef2-8b14-ce836cb5bef0.png" 
-              alt="Logo" 
-              className="h-8"
-            />
-          </div>
-        </div>
+      <span className="flex-shrink-0">{icon}</span>
+      <span className="truncate">{label}</span>
+    </NavLink>
+  );
+};
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+  return (
+    <aside className={cn(
+      "fixed left-0 top-0 z-20 flex h-full w-64 flex-col bg-white shadow-lg pt-16 transition-transform duration-300",
+      isOpen ? "translate-x-0" : "-translate-x-full"
+    )}>
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-2">
+        <SidebarItem 
+          to="/dashboard" 
+          icon={<LayoutDashboard className="h-4 w-4" />} 
+          label="Dashboard" 
+        />
+        <SidebarItem 
+          to="/pedidos" 
+          icon={<FileText className="h-4 w-4" />} 
+          label="Pedidos de Compra" 
+        />
+        <SidebarItem 
+          to="/funcionarios" 
+          icon={<Users className="h-4 w-4" />} 
+          label="Funcionários" 
+        />
+        <SidebarItem 
+          to="/setores" 
+          icon={<Building className="h-4 w-4" />} 
+          label="Setores" 
+        />
+        <SidebarItem 
+          to="/relatorios" 
+          icon={<BarChart className="h-4 w-4" />} 
+          label="Relatórios" 
+        />
+        <SidebarItem 
+          to="/configuracoes" 
+          icon={<Settings className="h-4 w-4" />} 
+          label="Configurações" 
+        />
       </div>
-      <div className="flex flex-1 flex-col overflow-auto py-4">
-        <nav className="flex-1 px-3 space-y-1">
-          {filteredMenuItems.map((item, idx) => (
-            <div key={idx} className="mb-1">
-              <Link
-                to={item.path}
-                className={cn(
-                  'flex items-center rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 text-white',
-                  location.pathname === item.path
-                    ? 'bg-sidebar-primary shadow-md'
-                    : 'hover:bg-sidebar-accent hover:shadow-sm'
-                )}
-              >
-                <span className="mr-3">{item.icon}</span>
-                <span>{item.title}</span>
-              </Link>
-            </div>
-          ))}
-          
-          <div className="mb-1">
-            <button
-              onClick={toggleSecretarias}
-              className={cn(
-                'flex items-center w-full justify-between rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 text-white',
-                secretariasOpen ? 'bg-sidebar-primary shadow-md' : 'hover:bg-sidebar-accent hover:shadow-sm'
-              )}
-            >
-              <div className="flex items-center">
-                <span className="mr-3"><Folder className="h-5 w-5" /></span>
-                <span>Secretarias</span>
-              </div>
-              {secretariasOpen ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-            
-            {secretariasOpen && (
-              <div className="mt-1 space-y-1 pl-10 pr-3 max-h-64 overflow-y-auto">
-                {secretariasItems.map((subItem, subIdx) => (
-                  <Link
-                    key={subIdx}
-                    to={subItem.path}
-                    className={cn(
-                      'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 text-white',
-                      location.pathname === subItem.path
-                        ? 'bg-sidebar-primary shadow-md'
-                        : 'hover:bg-sidebar-accent hover:shadow-sm'
-                    )}
-                  >
-                    <div className="mr-2.5">
-                      {subItem.icon}
-                    </div>
-                    <span>{subItem.title}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </nav>
-      </div>
-      <div className="border-t border-sidebar-border p-4">
-        <Button 
-          variant="outline" 
-          className="w-full flex items-center justify-center gap-2"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4" /> 
-          <span>Sair</span>
-        </Button>
-      </div>
-    </div>
+    </aside>
   );
 };
 

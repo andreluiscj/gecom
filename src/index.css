@@ -1,301 +1,78 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
+ 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 221 83% 53%;
+ 
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-
+ 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-
+ 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
+ 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
+ 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 215 100% 25%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 215 90% 40%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 90% 35%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 215 90% 20%;
-    --sidebar-ring: 221 83% 53%;
+    --ring: 221.2 83.2% 53.3%;
+ 
+    --radius: 0.5rem;
   }
-
-  .dark-theme {
+ 
+  .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
+ 
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
+ 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
+ 
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
-    /* Changed from yellow to dark blue */
-    --secondary: 221 70% 20%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
+ 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
+ 
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
+ 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
+ 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    
-    --sidebar-background: 217 33% 17%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217.2 91.2% 59.8%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 28% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 28% 10%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  
-  /* High contrast mode - Updated for better visibility */
-  .high-contrast {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-
-    --card: 0 0% 0%;
-    --card-foreground: 0 0% 100%;
-
-    --popover: 0 0% 0%;
-    --popover-foreground: 0 0% 100%;
-
-    --primary: 60 100% 50%; /* Yellow for primary */
-    --primary-foreground: 0 0% 0%;
-
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 90%;
-
-    --accent: 240 100% 50%; /* Blue for accent */
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 60%;
-    --input: 0 0% 60%;
-    --ring: 60 100% 50%;
-    
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 60 100% 50%; /* Yellow for sidebar primary */
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 240 100% 30%; /* Dark blue for sidebar accent */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 40%;
-    --sidebar-ring: 60 100% 50%;
-
-    /* Chart colors with higher contrast */
-    --chart-saude: 0, 100%, 50%; /* Bright red */
-    --chart-educacao: 120, 100%, 50%; /* Bright green */
-    --chart-administrativo: 60, 100%, 50%; /* Bright yellow */
-    --chart-transporte: 240, 100%, 50%; /* Bright blue */
+    --ring: 224.3 76.5% 48%;
   }
 }
-
+ 
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-semibold tracking-tight;
-  }
-  
-  /* Light theme and dark theme variables */
-  .light-theme {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
-  }
-  
-  .dark-theme {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-  }
-}
-
-/* Customizações adicionais */
-.table :where(th, td) {
-  @apply whitespace-nowrap;
-}
-
-.shadcn-dropdown-menu {
-  @apply z-50 opacity-100 shadow-lg;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
-.card-hover {
-  @apply transition-all duration-300 hover:shadow-card-hover;
-}
-
-.glass-effect {
-  @apply bg-white/80 backdrop-blur-sm border border-white/20;
-}
-
-.border-dash {
-  @apply border border-dashed;
-}
-
-/* High contrast mode specific styles - Updated for better visibility */
-.high-contrast button,
-.high-contrast a,
-.high-contrast input,
-.high-contrast select {
-  @apply focus:outline-2 focus:outline-yellow-400 focus:ring-yellow-400 focus:ring-2;
-}
-
-.high-contrast .border-element {
-  @apply border-white/60;
-}
-
-.high-contrast .shadow-card {
-  @apply shadow-[0_0_0_2px_rgba(255,255,255,0.6)];
-}
-
-.high-contrast .shadow-nav {
-  @apply shadow-[0_1px_0_0_rgba(255,255,255,0.6)];
-}
-
-.high-contrast .shadow-card-hover {
-  @apply shadow-[0_0_0_3px_rgba(255,255,255,0.7)];
-}
-
-/* Improving contrast for active elements */
-.high-contrast [data-state="active"].sidebar-item {
-  @apply bg-yellow-400 text-black font-bold;
-}
-
-.high-contrast [data-state="inactive"].sidebar-item:hover {
-  @apply bg-blue-400 text-black;
-}
-
-.high-contrast [data-state="active"].tab-item {
-  @apply bg-yellow-400 text-black font-bold;
-}
-
-.high-contrast [data-state="inactive"].tab-item:hover {
-  @apply bg-blue-400 text-black;
-}
-
-.high-contrast .tabs-list {
-  @apply bg-black border-2 border-white;
-}
-
-.high-contrast .logo-text {
-  @apply text-yellow-400 font-bold;
-}
-
-/* Fix for high contrast mode text visibility */
-.high-contrast [data-state="active"] {
-  color: black !important;
-  font-weight: bold !important;
-}
-
-.high-contrast input, 
-.high-contrast select {
-  @apply border-2 border-white bg-black text-white placeholder-gray-400;
-}
-
-.high-contrast button {
-  @apply border-2 border-white;
-}
-
-/* Estilos adicionais para cores dos gráficos */
-:root {
-  --chart-color-primary: 59, 130, 246; /* blue-500 */
-  --chart-color-secondary: 156, 163, 175; /* gray-400 */
-  --chart-color-success: 5, 150, 105; /* green-600 */
-  --chart-color-warning: 245, 158, 11; /* amber-500 */
-  --chart-color-danger: 239, 68, 68; /* red-500 */
-  
-  --chart-saude: 225, 29, 72; /* saude */
-  --chart-educacao: 5, 150, 105; /* educacao */
-  --chart-administrativo: 202, 138, 4; /* administrativo */
-  --chart-transporte: 234, 88, 12; /* transporte */
-}
-
-/* Updated high contrast chart colors */
-.high-contrast {
-  --chart-color-primary: 255, 255, 0; /* yellow */
-  --chart-color-secondary: 200, 200, 200; /* light gray */
-  --chart-color-success: 0, 255, 0; /* bright green */
-  --chart-color-warning: 255, 255, 0; /* yellow */
-  --chart-color-danger: 255, 0, 0; /* bright red */
-  
-  --chart-saude: 255, 0, 0; /* bright red for saude */
-  --chart-educacao: 0, 255, 0; /* bright green for educacao */
-  --chart-administrativo: 255, 255, 0; /* yellow for administrativo */
-  --chart-transporte: 0, 0, 255; /* blue for transporte */
-}
-
-/* Theme toggle styles */
-.theme-toggle-button {
-  @apply flex items-center justify-center rounded-full w-10 h-10 transition-colors;
-}
-
-.dark-theme .theme-toggle-button {
-  @apply bg-primary text-primary-foreground hover:bg-primary/90;
-}
-
-.light-theme .theme-toggle-button {
-  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
 }

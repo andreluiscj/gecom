@@ -1,58 +1,49 @@
+
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import NavBar from './NavBar';
+import { Outlet, useNavigate } from 'react-router-dom';
+import Navbar from './Navbar';
 import Sidebar from './Sidebar';
-import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { Loader } from '@/components/ui/loader';
 
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [userMunicipality, setUserMunicipality] = useState<string | null>(null);
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
-    const role = localStorage.getItem('user-role');
-    const municipality = localStorage.getItem('user-municipality');
-    
-    if (!isAuthenticated) {
+    // Redirect to login if not authenticated
+    if (!loading && !user) {
       navigate('/login');
-      return;
     }
-    
-    setUserRole(role);
-    setUserMunicipality(municipality);
-
-    if (role === 'gerente' || role === 'funcionario') {
-      if (location.pathname === '/admin') {
-        toast.error('Você não tem permissão para acessar esta página');
-        navigate('/dashboard');
-      }
-    }
-  }, [navigate, location.pathname]);
+  }, [user, loading, navigate]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        userRole={userRole} 
-        userMunicipality={userMunicipality} 
-      />
-      <div className={`transition-all duration-300 ${isSidebarOpen ? 'pl-64' : 'pl-0'}`}>
-        <NavBar 
-          toggleSidebar={toggleSidebar} 
-          userRole={userRole} 
-          userMunicipality={userMunicipality} 
-        />
-        <main className="p-5 md:p-6">
-          <Outlet />
-        </main>
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader className="h-10 w-10 text-blue-600" />
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar toggleSidebar={toggleSidebar} />
+      <Sidebar isOpen={isSidebarOpen} />
+      <main 
+        className={cn(
+          "transition-all duration-300 pt-16",
+          isSidebarOpen ? "ml-64" : "ml-0"
+        )}
+      >
+        <div className="p-6">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 };
