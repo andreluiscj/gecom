@@ -1,16 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardHeader from '@/components/Dashboard/DashboardHeader';
 import StatCard from '@/components/Dashboard/StatCard';
 import DashboardSummary from '@/components/Dashboard/DashboardSummary';
 import { Building, Printer, Receipt, ShoppingCart, Wallet } from 'lucide-react';
-import { formatCurrency } from '@/utils/formatters';
-import AdvancedAnalytics from '@/components/Dashboard/AdvancedAnalytics';
-import { DadosDashboard, Municipio } from '@/types';
+import { formatCurrency } from '@/lib/utils';
+import { Municipio, DadosDashboard } from '@/types';
 import { toast } from 'sonner';
-import { exportDashboardAsPDF } from '@/utils/pdfGenerator';
-import { municipioService, pedidoService } from '@/services/supabase';
+import { supabase } from '@/lib/supabase';
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('grafico');
@@ -59,27 +56,28 @@ const Dashboard: React.FC = () => {
     const fetchMunicipio = async () => {
       try {
         setLoading(true);
-        const municipios = await municipioService.getAll();
-        if (municipios && municipios.length > 0) {
-          setMunicipio(municipios[0]);
-        } else {
-          // Se não houver municípios, use um padrão
-          setMunicipio({
-            id: 'default',
-            nome: 'Município Padrão',
-            estado: 'MG',
-            populacao: 50000,
-            orcamento: 25000000,
-            orcamento_anual: 25000000,
-            prefeito: 'Nome do Prefeito',
-          });
-        }
+        const { data, error } = await supabase
+          .from('municipios')
+          .select('*')
+          .limit(1)
+          .single();
+          
+        if (error) throw error;
+        
+        // Transform dates into Date objects
+        const municipioWithDates: Municipio = {
+          ...data,
+          created_at: new Date(data.created_at),
+          updated_at: new Date(data.updated_at)
+        };
+        
+        setMunicipio(municipioWithDates);
       } catch (error) {
         console.error("Erro ao buscar município:", error);
         toast.error("Não foi possível carregar os dados do município");
         
-        // Definir município padrão em caso de erro
-        setMunicipio({
+        // Set default municipality in case of error
+        const defaultMunicipio: Municipio = {
           id: 'default',
           nome: 'Município Padrão',
           estado: 'MG',
@@ -87,62 +85,57 @@ const Dashboard: React.FC = () => {
           orcamento: 25000000,
           orcamento_anual: 25000000,
           prefeito: 'Nome do Prefeito',
-        });
+          created_at: new Date(),
+          updated_at: new Date()
+        };
+        
+        setMunicipio(defaultMunicipio);
       }
     };
 
     const fetchPedidos = async () => {
       try {
         // Buscar os pedidos para calcular estatísticas
-        const pedidos = await pedidoService.getAll();
+        const { data: pedidosData, error: pedidosError } = await supabase
+          .from('pedidos_compra')
+          .select('*');
+          
+        if (pedidosError) throw pedidosError;
         
-        if (pedidos) {
-          // Calcular o valor total contratado
-          const valorTotal = pedidos.reduce((acc, pedido) => acc + pedido.valor_total, 0);
-          
-          // Calcular o número de pedidos por setor
-          const pedidosPorSetor: Record<string, number> = {};
-          const gastosPorSetor: Record<string, number> = {};
-          
-          pedidos.forEach(pedido => {
-            if (pedido.setor) {
-              pedidosPorSetor[pedido.setor] = (pedidosPorSetor[pedido.setor] || 0) + 1;
-              gastosPorSetor[pedido.setor] = (gastosPorSetor[pedido.setor] || 0) + pedido.valor_total;
-            }
-          });
-          
-          // Definir dados do dashboard
-          const dashboardData: DadosDashboard = {
-            resumo_financeiro: {
-              estimativa_despesa: municipio?.orcamento_anual || 25000000,
-              valor_contratado_total: valorTotal,
-              percentual_utilizado: municipio?.orcamento_anual ? (valorTotal / municipio.orcamento_anual) * 100 : 0,
-              total_pedidos: pedidos.length
-            },
-            cartoes: [
-              {
-                titulo: 'Total de Pedidos',
-                valor: pedidos.length,
-                percentual_mudanca: 12.5,
-                icon: 'Receipt',
-                classe_cor: 'bg-blue-500'
-              },
-              {
-                titulo: 'Orçamento Executado',
-                valor: formatCurrency(valorTotal),
-                percentual_mudanca: 8.2,
-                icon: 'Wallet',
-                classe_cor: 'bg-green-500'
-              }
-            ],
-            orcamento_previsto: { 'Trimestre 1': 7000000, 'Trimestre 2': 7500000, 'Trimestre 3': 7000000, 'Trimestre 4': 7000000 },
-            gastos_por_setor: gastosPorSetor,
+        // Calculate total value
+        const valorTotal = pedidosData ? pedidosData.reduce((sum, pedido) => sum + pedido.valor_total, 0) : 0;
+        
+        // Create dashboard data
+        const dashboardData: DadosDashboard = {
+          resumo_financeiro: {
+            estimativa_despesa: municipio?.orcamento_anual || 25000000,
             valor_contratado_total: valorTotal,
-            pedidos_por_setor: pedidosPorSetor
-          };
-          
-          setDadosDashboard(dashboardData);
-        }
+            percentual_utilizado: municipio?.orcamento_anual ? (valorTotal / municipio.orcamento_anual) * 100 : 0,
+            total_pedidos: pedidosData?.length || 0
+          },
+          cartoes: [
+            {
+              titulo: 'Total de Pedidos',
+              valor: pedidosData?.length || 0,
+              percentual_mudanca: 12.5,
+              icon: 'Receipt',
+              classe_cor: 'bg-blue-500'
+            },
+            {
+              titulo: 'Orçamento Executado',
+              valor: formatCurrency(valorTotal),
+              percentual_mudanca: 8.2,
+              icon: 'Wallet',
+              classe_cor: 'bg-green-500'
+            }
+          ],
+          orcamento_previsto: { 'Trimestre 1': 7000000, 'Trimestre 2': 7500000, 'Trimestre 3': 7000000, 'Trimestre 4': 7000000 },
+          gastos_por_setor: {},
+          valor_contratado_total: valorTotal,
+          pedidos_por_setor: {}
+        };
+        
+        setDadosDashboard(dashboardData);
       } catch (error) {
         console.error("Erro ao buscar pedidos:", error);
         toast.error("Não foi possível carregar os dados do dashboard");

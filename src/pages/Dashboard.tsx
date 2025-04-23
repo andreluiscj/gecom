@@ -63,6 +63,21 @@ const Dashboard: React.FC = () => {
         
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        
+        // Set default municipality if error occurs
+        const defaultMunicipio = {
+          id: 'default',
+          nome: 'Município Padrão',
+          estado: 'MG',
+          populacao: 50000,
+          orcamento: 25000000,
+          orcamento_anual: 25000000,
+          prefeito: 'Nome do Prefeito',
+          created_at: new Date(),
+          updated_at: new Date()
+        };
+        
+        setMunicipio(defaultMunicipio);
       } finally {
         setLoading(false);
       }

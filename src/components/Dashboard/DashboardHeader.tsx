@@ -4,31 +4,28 @@ import { Municipio } from '@/types';
 
 interface DashboardHeaderProps {
   municipio: Municipio;
-  language?: string;
+  language: string;
 }
 
-const getTranslation = (key: string, language: string = 'pt') => {
-  const translations: Record<string, Record<string, string>> = {
-    dashboardTitle: {
-      pt: 'Painel de Gestão',
-      en: 'Management Panel'
-    },
-    overview: {
-      pt: 'Visão geral da gestão municipal e dos recursos financeiros.',
-      en: 'Overview of municipal management and financial resources.'
-    }
-  };
-  
-  return translations[key]?.[language] || translations[key]?.['pt'] || key;
-};
-
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ municipio, language = 'pt' }) => {
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ municipio, language }) => {
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-1">{getTranslation('dashboardTitle', language)}</h1>
-      <p className="text-muted-foreground text-sm">
-        {getTranslation('overview', language)}
-      </p>
+    <div className="rounded-lg border bg-white p-6 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">{municipio.nome}</h2>
+          <div className="text-sm text-muted-foreground">
+            {municipio.estado} | {municipio.populacao.toLocaleString()} habitantes
+          </div>
+        </div>
+        <div className="flex flex-col items-end">
+          <div className="text-sm">
+            {language === 'pt' ? 'Prefeito' : 'Mayor'}
+          </div>
+          <div className="font-medium">
+            {municipio.prefeito}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

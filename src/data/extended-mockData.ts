@@ -9,7 +9,7 @@ export function calcularDadosDashboard() {
   const pedidos = obterPedidosFicticios();
   
   // Calculate total value of all pedidos
-  const valorTotal = pedidos.reduce((sum, pedido) => sum + pedido.valorTotal, 0);
+  const valorTotal = pedidos.reduce((sum, pedido) => sum + pedido.valor_total, 0);
   
   // Count pedidos by setor
   const pedidosPorSetor: Record<string, number> = {};
@@ -34,7 +34,7 @@ export function calcularDadosDashboard() {
   pedidos.forEach(pedido => {
     if (pedidosPorSetor[pedido.setor] !== undefined) {
       pedidosPorSetor[pedido.setor]++;
-      gastosPorSetor[pedido.setor] += pedido.valorTotal;
+      gastosPorSetor[pedido.setor] += pedido.valor_total;
     }
   });
   
@@ -69,48 +69,48 @@ export function obterDadosDashboard() {
   const calculatedData = calcularDadosDashboard();
   
   return {
-    resumoFinanceiro: {
-      estimativaDespesa: 2500000.00,
-      valorContratadoTotal: calculatedData.valorTotal,
-      percentualUtilizado: (calculatedData.valorTotal / 2500000.00) * 100,
-      totalPedidos: calculatedData.totalPedidos,
+    resumo_financeiro: {
+      estimativa_despesa: 2500000.00,
+      valor_contratado_total: calculatedData.valorTotal,
+      percentual_utilizado: (calculatedData.valorTotal / 2500000.00) * 100,
+      total_pedidos: calculatedData.totalPedidos,
     },
     
     cartoes: [
       {
         titulo: "Pedidos Abertos",
         valor: 38,
-        percentualMudanca: 12.5,
+        percentual_mudanca: 12.5,
         icon: "ShoppingCart",
-        classeCor: "bg-blue-500"
+        classe_cor: "bg-blue-500"
       },
       {
         titulo: "Orçamento Restante",
         valor: `R$ ${(2500000.00 - calculatedData.valorTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
-        percentualMudanca: -8.3,
+        percentual_mudanca: -8.3,
         icon: "Wallet",
-        classeCor: "bg-green-500"
+        classe_cor: "bg-green-500"
       },
       {
         titulo: "Pedidos Aprovados",
         valor: 86,
-        percentualMudanca: 23.7,
+        percentual_mudanca: 23.7,
         icon: "CheckCircle",
-        classeCor: "bg-emerald-500"
+        classe_cor: "bg-emerald-500"
       },
       {
         titulo: "Valor Médio",
         valor: `R$ ${(calculatedData.totalPedidos > 0 ? calculatedData.valorTotal / calculatedData.totalPedidos : 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
-        percentualMudanca: 5.2,
+        percentual_mudanca: 5.2,
         icon: "TrendingUp",
-        classeCor: "bg-amber-500"
+        classe_cor: "bg-amber-500"
       }
     ],
     
     // Use the calculated values from actual pedidos
-    orcamentoPrevisto: calculatedData.orcamentoPrevisto,
-    gastosPorSetor: calculatedData.gastosPorSetor,
-    valorContratadoTotal: calculatedData.valorTotal,
-    pedidosPorSetor: calculatedData.pedidosPorSetor
+    orcamento_previsto: calculatedData.orcamentoPrevisto,
+    gastos_por_setor: calculatedData.gastosPorSetor,
+    valor_contratado_total: calculatedData.valorTotal,
+    pedidos_por_setor: calculatedData.pedidosPorSetor
   };
 }

@@ -128,20 +128,20 @@ export function filtrarPedidos(pedidos: PedidoCompra[], filtros: any) {
     }
     
     // Filtra por data
-    if (filtros.dataInicio && new Date(filtros.dataInicio) > pedido.dataCompra) {
+    if (filtros.dataInicio && new Date(filtros.dataInicio) > pedido.data_compra) {
       return false;
     }
     
-    if (filtros.dataFim && new Date(filtros.dataFim) < pedido.dataCompra) {
+    if (filtros.dataFim && new Date(filtros.dataFim) < pedido.data_compra) {
       return false;
     }
     
     // Filtra por valor
-    if (filtros.valorMinimo && pedido.valorTotal < filtros.valorMinimo) {
+    if (filtros.valorMinimo && pedido.valor_total < filtros.valorMinimo) {
       return false;
     }
     
-    if (filtros.valorMaximo && pedido.valorTotal > filtros.valorMaximo) {
+    if (filtros.valorMaximo && pedido.valor_total > filtros.valorMaximo) {
       return false;
     }
     
@@ -187,7 +187,7 @@ export function atualizarEtapaWorkflow(
   pedidoId: string, 
   etapaIndex: number, 
   novoStatus: 'Concluído' | 'Em Andamento' | 'Pendente',
-  data?: Date,
+  dataInicio?: Date,
   responsavel?: string,
   dataConclusao?: Date
 ) {
@@ -203,10 +203,10 @@ export function atualizarEtapaWorkflow(
       novasEtapas[etapaIndex] = {
         ...novasEtapas[etapaIndex],
         status: novoStatus,
-        date: data || novasEtapas[etapaIndex].date,
+        data_inicio: dataInicio || novasEtapas[etapaIndex].data_inicio,
         responsavel: responsavel !== undefined ? responsavel : novasEtapas[etapaIndex].responsavel,
-        dataConclusao: dataConclusao !== undefined ? dataConclusao : novasEtapas[etapaIndex].dataConclusao || 
-          (novoStatus === 'Concluído' && !novasEtapas[etapaIndex].dataConclusao ? new Date() : undefined)
+        data_conclusao: dataConclusao !== undefined ? dataConclusao : novasEtapas[etapaIndex].data_conclusao || 
+          (novoStatus === 'Concluído' && !novasEtapas[etapaIndex].data_conclusao ? new Date() : undefined)
       };
     }
     
@@ -220,8 +220,8 @@ export function atualizarEtapaWorkflow(
     // Update the workflow
     todosPedidos[index].workflow = {
       ...workflow,
-      currentStep: etapasConcluidas + (etapasEmAndamento > 0 ? 1 : 0),
-      percentComplete: percentualConcluido,
+      etapa_atual: etapasConcluidas + (etapasEmAndamento > 0 ? 1 : 0),
+      percentual_completo: percentualConcluido,
       steps: novasEtapas,
     };
 

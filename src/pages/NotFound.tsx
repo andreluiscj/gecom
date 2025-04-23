@@ -12,7 +12,7 @@ const NotFound: React.FC = () => {
       <p className="text-lg text-gray-600 mb-8">
         A página que você está procurando não existe ou foi removida.
       </p>
-      <Button asChild>
+      <Button>
         <Link to="/">Voltar para a página inicial</Link>
       </Button>
     </div>

@@ -35,33 +35,25 @@ const gerarPedidoFicticio = (
   dataCompra: Date,
   itens: Item[]
 ): PedidoCompra => {
-  const pedido = {
+  const pedido: PedidoCompra = {
     id: gerarIdLocal(),
     descricao,
+    setor_id: setor,
     setor,
-    dataCompra,
+    data_compra: dataCompra,
     status: 'Pendente' as PedidoStatus, // Always start as "Pendente"
-    valorTotal,
+    valor_total: valorTotal,
     itens,
-    fundoMonetario: `Fundo Municipal de ${setor}`,
-    createdAt: new Date(),
+    fundo_monetario: `Fundo Municipal de ${setor}`,
+    created_at: new Date(),
     observacoes: `Observações sobre o pedido de ${descricao}`,
-    fonteRecurso: `Fundo Municipal de ${setor}`,
-    responsavel: {
-      id: gerarIdLocal(),
-      nome: `Responsável ${setor}`,
-      email: `responsavel.${setor.toLowerCase()}@prefeitura.gov.br`,
-      cargo: `Secretário(a) de ${setor}`,
-    },
-    anexos: []
+    solicitante: `Responsável ${setor}`,
+    workflow: initializeWorkflow()
   };
-
-  // Initialize workflow with all steps as "Pendente"
-  const workflow = initializeWorkflow();
 
   // No custom workflow modifications - all steps stay as "Pendente"
 
-  return { ...pedido, workflow };
+  return pedido;
 };
 
 // Gerar pedidos fictícios para cada setor nos últimos 3 meses
@@ -69,37 +61,37 @@ export const obterPedidosFicticios = (): PedidoCompra[] => {
   const hoje = new Date();
   
   const itensSaude: Item[] = [
-    { id: gerarIdLocal(), nome: 'Medicamentos', quantidade: 5000, valorUnitario: 12.5, valorTotal: 62500 },
-    { id: gerarIdLocal(), nome: 'Equipamento Hospitalar', quantidade: 10, valorUnitario: 8500, valorTotal: 85000 },
-    { id: gerarIdLocal(), nome: 'Material Cirúrgico', quantidade: 50, valorUnitario: 1200, valorTotal: 60000 },
+    { id: gerarIdLocal(), nome: 'Medicamentos', quantidade: 5000, valor_unitario: 12.5, valor_total: 62500, pedido_id: '' },
+    { id: gerarIdLocal(), nome: 'Equipamento Hospitalar', quantidade: 10, valor_unitario: 8500, valor_total: 85000, pedido_id: '' },
+    { id: gerarIdLocal(), nome: 'Material Cirúrgico', quantidade: 50, valor_unitario: 1200, valor_total: 60000, pedido_id: '' },
   ];
 
   const itensEducacao: Item[] = [
-    { id: gerarIdLocal(), nome: 'Livros Didáticos', quantidade: 1000, valorUnitario: 45, valorTotal: 45000 },
-    { id: gerarIdLocal(), nome: 'Mobiliário Escolar', quantidade: 100, valorUnitario: 450, valorTotal: 45000 },
-    { id: gerarIdLocal(), nome: 'Material Escolar', quantidade: 5000, valorUnitario: 15, valorTotal: 75000 },
+    { id: gerarIdLocal(), nome: 'Livros Didáticos', quantidade: 1000, valor_unitario: 45, valor_total: 45000, pedido_id: '' },
+    { id: gerarIdLocal(), nome: 'Mobiliário Escolar', quantidade: 100, valor_unitario: 450, valor_total: 45000, pedido_id: '' },
+    { id: gerarIdLocal(), nome: 'Material Escolar', quantidade: 5000, valor_unitario: 15, valor_total: 75000, pedido_id: '' },
   ];
 
   const itensAdmin: Item[] = [
-    { id: gerarIdLocal(), nome: 'Material de Escritório', quantidade: 500, valorUnitario: 20, valorTotal: 10000 },
-    { id: gerarIdLocal(), nome: 'Equipamentos de Informática', quantidade: 20, valorUnitario: 2500, valorTotal: 50000 },
-    { id: gerarIdLocal(), nome: 'Serviço de Manutenção', quantidade: 1, valorUnitario: 15000, valorTotal: 15000 },
+    { id: gerarIdLocal(), nome: 'Material de Escritório', quantidade: 500, valor_unitario: 20, valor_total: 10000, pedido_id: '' },
+    { id: gerarIdLocal(), nome: 'Equipamentos de Informática', quantidade: 20, valor_unitario: 2500, valor_total: 50000, pedido_id: '' },
+    { id: gerarIdLocal(), nome: 'Serviço de Manutenção', quantidade: 1, valor_unitario: 15000, valor_total: 15000, pedido_id: '' },
   ];
 
   const itensTransporte: Item[] = [
-    { id: gerarIdLocal(), nome: 'Combustível', quantidade: 5000, valorUnitario: 5, valorTotal: 25000 },
-    { id: gerarIdLocal(), nome: 'Peças Automotivas', quantidade: 50, valorUnitario: 500, valorTotal: 25000 },
-    { id: gerarIdLocal(), nome: 'Serviço de Manutenção de Veículos', quantidade: 10, valorUnitario: 2000, valorTotal: 20000 },
+    { id: gerarIdLocal(), nome: 'Combustível', quantidade: 5000, valor_unitario: 5, valor_total: 25000, pedido_id: '' },
+    { id: gerarIdLocal(), nome: 'Peças Automotivas', quantidade: 50, valor_unitario: 500, valor_total: 25000, pedido_id: '' },
+    { id: gerarIdLocal(), nome: 'Serviço de Manutenção de Veículos', quantidade: 10, valor_unitario: 2000, valor_total: 20000, pedido_id: '' },
   ];
 
   const itensObras: Item[] = [
-    { id: gerarIdLocal(), nome: 'Material de Construção', quantidade: 1000, valorUnitario: 100, valorTotal: 100000 },
-    { id: gerarIdLocal(), nome: 'Maquinário', quantidade: 2, valorUnitario: 50000, valorTotal: 100000 },
+    { id: gerarIdLocal(), nome: 'Material de Construção', quantidade: 1000, valor_unitario: 100, valor_total: 100000, pedido_id: '' },
+    { id: gerarIdLocal(), nome: 'Maquinário', quantidade: 2, valor_unitario: 50000, valor_total: 100000, pedido_id: '' },
   ];
 
   const itensSeguranca: Item[] = [
-    { id: gerarIdLocal(), nome: 'Equipamento de Monitoramento', quantidade: 20, valorUnitario: 1500, valorTotal: 30000 },
-    { id: gerarIdLocal(), nome: 'Uniformes', quantidade: 100, valorUnitario: 250, valorTotal: 25000 },
+    { id: gerarIdLocal(), nome: 'Equipamento de Monitoramento', quantidade: 20, valor_unitario: 1500, valor_total: 30000, pedido_id: '' },
+    { id: gerarIdLocal(), nome: 'Uniformes', quantidade: 100, valor_unitario: 250, valor_total: 25000, pedido_id: '' },
   ];
 
   const pedidos: PedidoCompra[] = [

@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DadosDashboard, Municipio } from '@/types';
-import { formatCurrency } from '@/utils/formatters';
+import { Municipio, DadosDashboard } from '@/types';
+import { formatCurrency } from '@/lib/utils';
 import { Building, Users, Crown, DollarSign } from 'lucide-react';
 
 interface DashboardSummaryProps {

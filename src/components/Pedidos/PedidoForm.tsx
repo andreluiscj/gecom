@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { PedidoCompra } from '@/types';
+import { PedidoCompra, Item } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 import { adicionarPedido } from '@/data/mockData';
@@ -50,8 +50,8 @@ const PedidoForm: React.FC = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState<any>({});
-  const [itens, setItens] = useState([
-    { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 }
+  const [itens, setItens] = useState<Item[]>([
+    { id: uuidv4(), nome: '', quantidade: 1, valor_unitario: 0, valor_total: 0, pedido_id: '' }
   ]);
 
   const form = useForm({
@@ -75,7 +75,7 @@ const PedidoForm: React.FC = () => {
   const adicionarItem = () => {
     setItens([
       ...itens,
-      { id: uuidv4(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
+      { id: uuidv4(), nome: '', quantidade: 1, valor_unitario: 0, valor_total: 0, pedido_id: '' },
     ]);
   };
 
@@ -87,23 +87,23 @@ const PedidoForm: React.FC = () => {
     }
   };
 
-  const atualizarItem = (index: number, campo: string, valor: string | number) => {
+  const atualizarItem = (index: number, campo: keyof Item, valor: string | number) => {
     const novosItens = [...itens];
     novosItens[index] = {
       ...novosItens[index],
       [campo]: valor,
     };
 
-    if (campo === 'quantidade' || campo === 'valorUnitario') {
-      novosItens[index].valorTotal =
-        Number(novosItens[index].quantidade) * Number(novosItens[index].valorUnitario);
+    if (campo === 'quantidade' || campo === 'valor_unitario') {
+      novosItens[index].valor_total =
+        Number(novosItens[index].quantidade) * Number(novosItens[index].valor_unitario);
     }
 
     setItens(novosItens);
   };
 
   const calcularValorTotal = () => {
-    return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
+    return itens.reduce((total, item) => total + (item.valor_total || 0), 0);
   };
 
   const total = calcularValorTotal();
@@ -147,20 +147,21 @@ const PedidoForm: React.FC = () => {
         id: uuidv4(),
         descricao: combinedData.descricao,
         justificativa: combinedData.justificativa,
-        dataCompra: new Date(combinedData.dataCompra),
+        data_compra: new Date(combinedData.dataCompra),
+        setor_id: combinedData.setor,
         setor: combinedData.setor,
         solicitante: combinedData.responsavel,
-        valorTotal: combinedData.valorEstimado || total,
+        valor_total: combinedData.valorEstimado || total,
         itens: itens.map(item => ({
           ...item,
-          valorTotal: item.quantidade * item.valorUnitario
+          valor_total: item.quantidade * item.valor_unitario
         })),
         status: 'Pendente',
-        fundoMonetario: combinedData.fundoMonetario,
-        createdAt: new Date(),
+        fundo_monetario: combinedData.fundoMonetario,
+        created_at: new Date(),
         observacoes: '',
         workflow: initializeWorkflow(),
-        localEntrega: combinedData.localEntrega
+        local_entrega: combinedData.localEntrega
       };
 
       const pedidoAdicionado = adicionarPedido(novoPedido);

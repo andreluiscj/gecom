@@ -89,3 +89,24 @@ export interface UsuarioLogin {
   ativo: boolean;
   primeiro_acesso?: boolean;
 }
+
+// Add the DadosDashboard interface
+export interface DadosDashboard {
+  resumo_financeiro: {
+    estimativa_despesa: number;
+    valor_contratado_total: number;
+    percentual_utilizado: number;
+    total_pedidos: number;
+  };
+  cartoes: {
+    titulo: string;
+    valor: string | number;
+    percentual_mudanca: number;
+    icon: string;
+    classe_cor: string;
+  }[];
+  orcamento_previsto: Record<string, number>;
+  gastos_por_setor: Record<string, number>;
+  valor_contratado_total: number;
+  pedidos_por_setor: Record<string, number>;
+}
