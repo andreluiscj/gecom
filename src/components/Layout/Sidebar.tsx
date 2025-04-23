@@ -29,12 +29,9 @@ import {
   Award,
   PieChart as PieChartIcon,
   LogOut,
-  Users,
-  UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { canAccessUserManagement } from '@/utils/authHelpers';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -59,8 +56,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
     toast.success('Logout realizado com sucesso!');
     navigate('/login');
   };
-
-  const hasUserManagementAccess = canAccessUserManagement();
 
   const menuItems = [
     {
@@ -92,18 +87,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, userMunicipa
       path: '/admin',
       icon: <Building2 className="h-5 w-5" />,
       roles: ['admin'],
-    },
-    {
-      title: 'Cadastro de Gestor',
-      path: '/admin/gerentes',
-      icon: <UserPlus className="h-5 w-5" />,
-      roles: ['admin'],
-    },
-    {
-      title: 'Gerenciamento de Servidores',
-      path: '/gerenciamento/funcionarios',
-      icon: <Users className="h-5 w-5" />,
-      roles: ['admin', 'manager', 'gerente'],
     }
   ];
 

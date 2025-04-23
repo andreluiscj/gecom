@@ -20,8 +20,6 @@ const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const WorkflowPedido = lazy(() => import("./pages/Pedidos/WorkflowPedido"));
 const AprovacaoDFD = lazy(() => import("./pages/Pedidos/AprovacaoDFD"));
-const Funcionarios = lazy(() => import("./pages/Gerenciamento/Funcionarios"));
-const CadastroGerente = lazy(() => import("./pages/Admin/CadastroGerente"));
 
 // Loading component
 const LoadingFallback = () => (
@@ -75,8 +73,6 @@ function App() {
           <Route path="pedidos/workflow/:id" element={<WorkflowPedido />} />
           <Route path="pedidos/aprovacao/:id" element={<AprovacaoDFD />} />
           <Route path="pedidos/novo" element={<NovoPedido />} />
-          <Route path="admin/gerentes" element={<CadastroGerente />} />
-          <Route path="gerenciamento/funcionarios" element={<Funcionarios />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
