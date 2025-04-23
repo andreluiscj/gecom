@@ -9,13 +9,510 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      anexos_tarefa: {
+        Row: {
+          autor_id: string | null
+          created_at: string
+          id: string
+          nome_arquivo: string
+          tamanho_bytes: number
+          tarefa_id: string
+          tipo_arquivo: string
+          url: string
+        }
+        Insert: {
+          autor_id?: string | null
+          created_at?: string
+          id?: string
+          nome_arquivo: string
+          tamanho_bytes: number
+          tarefa_id: string
+          tipo_arquivo: string
+          url: string
+        }
+        Update: {
+          autor_id?: string | null
+          created_at?: string
+          id?: string
+          nome_arquivo?: string
+          tamanho_bytes?: number
+          tarefa_id?: string
+          tipo_arquivo?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anexos_tarefa_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anexos_tarefa_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comentarios_tarefa: {
+        Row: {
+          autor_id: string | null
+          created_at: string
+          id: string
+          tarefa_id: string
+          texto: string
+        }
+        Insert: {
+          autor_id?: string | null
+          created_at?: string
+          id?: string
+          tarefa_id: string
+          texto: string
+        }
+        Update: {
+          autor_id?: string | null
+          created_at?: string
+          id?: string
+          tarefa_id?: string
+          texto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comentarios_tarefa_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comentarios_tarefa_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcionarios: {
+        Row: {
+          ativo: boolean
+          cargo: string
+          cpf: string
+          created_at: string
+          data_contratacao: string
+          data_nascimento: string
+          email: string
+          id: string
+          nome: string
+          setor_id: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cargo: string
+          cpf: string
+          created_at?: string
+          data_contratacao: string
+          data_nascimento: string
+          email: string
+          id?: string
+          nome: string
+          setor_id?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cargo?: string
+          cpf?: string
+          created_at?: string
+          data_contratacao?: string
+          data_nascimento?: string
+          email?: string
+          id?: string
+          nome?: string
+          setor_id?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionarios_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "setores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itens_pedido: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          pedido_id: string
+          quantidade: number
+          updated_at: string
+          valor_total: number
+          valor_unitario: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          pedido_id: string
+          quantidade?: number
+          updated_at?: string
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          pedido_id?: string
+          quantidade?: number
+          updated_at?: string
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itens_pedido_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos_compra"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      municipios: {
+        Row: {
+          created_at: string
+          estado: string
+          id: string
+          logo: string | null
+          nome: string
+          orcamento: number
+          orcamento_anual: number
+          populacao: number
+          prefeito: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estado: string
+          id?: string
+          logo?: string | null
+          nome: string
+          orcamento?: number
+          orcamento_anual?: number
+          populacao?: number
+          prefeito: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estado?: string
+          id?: string
+          logo?: string | null
+          nome?: string
+          orcamento?: number
+          orcamento_anual?: number
+          populacao?: number
+          prefeito?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pedidos_compra: {
+        Row: {
+          created_at: string
+          data_compra: string
+          descricao: string
+          fundo_monetario: string | null
+          id: string
+          justificativa: string | null
+          local_entrega: string | null
+          observacoes: string | null
+          setor_id: string
+          solicitante_id: string | null
+          status: string
+          updated_at: string
+          valor_total: number
+        }
+        Insert: {
+          created_at?: string
+          data_compra: string
+          descricao: string
+          fundo_monetario?: string | null
+          id?: string
+          justificativa?: string | null
+          local_entrega?: string | null
+          observacoes?: string | null
+          setor_id: string
+          solicitante_id?: string | null
+          status?: string
+          updated_at?: string
+          valor_total?: number
+        }
+        Update: {
+          created_at?: string
+          data_compra?: string
+          descricao?: string
+          fundo_monetario?: string | null
+          id?: string
+          justificativa?: string | null
+          local_entrega?: string | null
+          observacoes?: string | null
+          setor_id?: string
+          solicitante_id?: string | null
+          status?: string
+          updated_at?: string
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_compra_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "setores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_compra_solicitante_id_fkey"
+            columns: ["solicitante_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setores: {
+        Row: {
+          created_at: string
+          id: string
+          municipio_id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          municipio_id: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          municipio_id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setores_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefas: {
+        Row: {
+          created_at: string
+          data_vencimento: string | null
+          descricao: string | null
+          id: string
+          prioridade: string
+          responsavel_id: string | null
+          status: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_vencimento?: string | null
+          descricao?: string | null
+          id?: string
+          prioridade?: string
+          responsavel_id?: string | null
+          status?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_vencimento?: string | null
+          descricao?: string | null
+          id?: string
+          prioridade?: string
+          responsavel_id?: string | null
+          status?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuarios: {
+        Row: {
+          ativo: boolean
+          auth_user_id: string | null
+          created_at: string
+          funcionario_id: string
+          id: string
+          primeiro_acesso: boolean
+          role: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          ativo?: boolean
+          auth_user_id?: string | null
+          created_at?: string
+          funcionario_id: string
+          id?: string
+          primeiro_acesso?: boolean
+          role: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          ativo?: boolean
+          auth_user_id?: string | null
+          created_at?: string
+          funcionario_id?: string
+          id?: string
+          primeiro_acesso?: boolean
+          role?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_etapas: {
+        Row: {
+          created_at: string
+          data_conclusao: string | null
+          data_inicio: string | null
+          id: string
+          ordem: number
+          responsavel_id: string | null
+          status: string
+          titulo: string
+          updated_at: string
+          workflow_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          id?: string
+          ordem: number
+          responsavel_id?: string | null
+          status?: string
+          titulo: string
+          updated_at?: string
+          workflow_id: string
+        }
+        Update: {
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          id?: string
+          ordem?: number
+          responsavel_id?: string | null
+          status?: string
+          titulo?: string
+          updated_at?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_etapas_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_etapas_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_pedidos: {
+        Row: {
+          created_at: string
+          etapa_atual: number
+          id: string
+          pedido_id: string
+          percentual_completo: number
+          total_etapas: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          etapa_atual?: number
+          id?: string
+          pedido_id: string
+          percentual_completo?: number
+          total_etapas?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          etapa_atual?: number
+          id?: string
+          pedido_id?: string
+          percentual_completo?: number
+          total_etapas?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_pedidos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos_compra"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

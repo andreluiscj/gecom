@@ -55,19 +55,19 @@ const ItemForm: React.FC<ItemFormProps> = ({
         />
       </div>
       <div>
-        <FormLabel htmlFor={`item-${index}-valor`}>
+        <FormLabel htmlFor={`item-${index}-valor-unitario`}>
           Valor Unitário
         </FormLabel>
         <Input
-          id={`item-${index}-valor`}
+          id={`item-${index}-valor-unitario`}
           type="number"
           min="0.01"
           step="0.01"
-          value={item.valorUnitario}
+          value={item.valor_unitario}
           onChange={(e) =>
             onUpdate(
               index,
-              'valorUnitario',
+              'valor_unitario',
               parseFloat(e.target.value) || 0
             )
           }
