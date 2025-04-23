@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,6 @@ const VisualizarPedido: React.FC = () => {
   const todosPedidos = obterTodosPedidos();
   const pedido = useMemo(() => todosPedidos.find(p => p.id === id), [id, todosPedidos]);
 
-  // Add compatibility properties
   const normalizedPedido: PedidoCompra | undefined = pedido ? {
     ...pedido,
     dataCompra: pedido.data_compra,
@@ -40,7 +38,7 @@ const VisualizarPedido: React.FC = () => {
 
   const handleDelete = () => {
     if (pedido) {
-      removerPedido(pedido.id, pedido.setor);
+      removerPedido(pedido.id);
       toast.success('DFD excluída com sucesso!');
       navigate('/pedidos');
     }
@@ -209,7 +207,6 @@ const VisualizarPedido: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Confirm delete dialog */}
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent>
           <DialogHeader>

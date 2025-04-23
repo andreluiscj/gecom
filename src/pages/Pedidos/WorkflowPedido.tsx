@@ -10,7 +10,7 @@ import { obterTodosPedidos, atualizarEtapaWorkflow } from '@/data/mockData';
 import { toast } from 'sonner';
 import { WorkflowStepStatus } from '@/types';
 import { canEditStep } from '@/utils/workflowHelpers';
-import { canEditWorkflowStep, getPermittedWorkflowStep, getUserRole } from '@/utils/authHelpers';
+import { canEditWorkflowStep, getPermittedWorkflowStep, getUserRoleSync } from '@/utils/authHelpers';
 import {
   Select,
   SelectContent,
@@ -32,7 +32,7 @@ const WorkflowPedido: React.FC = () => {
   const allPedidos = obterTodosPedidos();
   const pedido = useMemo(() => allPedidos.find(p => p.id === id), [id, allPedidos, refreshKey]);
   const permittedStep = getPermittedWorkflowStep();
-  const userRole = getUserRole();
+  const userRole = getUserRoleSync();
 
   useEffect(() => {
     checkAndUpdatePermissions();
@@ -40,7 +40,7 @@ const WorkflowPedido: React.FC = () => {
 
   const checkAndUpdatePermissions = async () => {
     try {
-      const role = await getUserRole();
+      const role = getUserRoleSync();
       setCanEdit(role === "admin" || role === "manager");
     } catch (error) {
       console.error("Error checking user role:", error);
@@ -77,34 +77,33 @@ const WorkflowPedido: React.FC = () => {
     if (pedido && pedido.workflow) {
       const currentStep = pedido.workflow.steps[stepIndex];
       
-      // Check if user has permission to edit this specific step
       if (!canEditWorkflowStep(currentStep.title)) {
         toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
         return;
       }
       
-      // Verificar se a etapa pode ser editada na sequência correta
       if (!canEditStep(pedido.workflow, stepIndex)) {
         toast.error('Você não pode alterar esta etapa até que as anteriores sejam concluídas');
         return;
       }
       
-      // Verificar se a alteração segue a ordem lógica
       if (status === 'Concluído' && stepIndex < pedido.workflow.steps.length - 1) {
-        // Se estamos concluindo uma etapa, precisamos verificar se a próxima etapa existe
-        // e atualizá-la para "Em Andamento" se estiver "Pendente"
         if (pedido.workflow.steps[stepIndex + 1].status === 'Pendente') {
           atualizarEtapaWorkflow(
             pedido.id, 
-            stepIndex + 1, 
+            String(stepIndex + 1),
             'Em Andamento'
           );
         }
       }
       
-      atualizarEtapaWorkflow(pedido.id, stepIndex, status);
+      atualizarEtapaWorkflow(
+        pedido.id, 
+        String(stepIndex),
+        status
+      );
       toast.success(`Status da etapa atualizado para ${status}`);
-      setRefreshKey(prev => prev + 1); // Force refresh
+      setRefreshKey(prev => prev + 1);
     }
   };
 
@@ -112,7 +111,6 @@ const WorkflowPedido: React.FC = () => {
     if (pedido && pedido.workflow) {
       const currentStep = pedido.workflow.steps[stepIndex];
       
-      // Check if user has permission to edit this specific step
       if (!canEditWorkflowStep(currentStep.title)) {
         toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
         return;
@@ -125,7 +123,7 @@ const WorkflowPedido: React.FC = () => {
       
       atualizarEtapaWorkflow(
         pedido.id, 
-        stepIndex, 
+        String(stepIndex),
         pedido.workflow.steps[stepIndex].status,
         undefined,
         responsavel
@@ -139,7 +137,6 @@ const WorkflowPedido: React.FC = () => {
     if (pedido && pedido.workflow) {
       const currentStep = pedido.workflow.steps[stepIndex];
       
-      // Check if user has permission to edit this specific step
       if (!canEditWorkflowStep(currentStep.title)) {
         toast.error(`Você não tem permissão para editar a etapa "${currentStep.title}"`);
         return;
@@ -152,17 +149,16 @@ const WorkflowPedido: React.FC = () => {
       
       atualizarEtapaWorkflow(
         pedido.id, 
-        stepIndex, 
+        String(stepIndex),
         pedido.workflow.steps[stepIndex].status,
-        pedido.workflow.steps[stepIndex].date,
-        pedido.workflow.steps[stepIndex].responsavel,
-        data
+        undefined,
+        pedido.workflow.steps[stepIndex].responsavel
       );
       toast.success('Data de conclusão atualizada com sucesso');
       setRefreshKey(prev => prev + 1);
     }
   };
-  
+
   const getStatusIcon = (status: WorkflowStepStatus) => {
     switch (status) {
       case 'Concluído':
@@ -190,7 +186,7 @@ const WorkflowPedido: React.FC = () => {
         return 'text-gray-600 border-gray-200 bg-gray-50';
     }
   };
-  
+
   const getProgressColor = (percent: number) => {
     if (percent < 30) return 'bg-red-500';
     if (percent < 70) return 'bg-yellow-500';
@@ -244,9 +240,7 @@ const WorkflowPedido: React.FC = () => {
           
           <div className="space-y-6 mt-8">
             {pedido.workflow?.steps.map((step, index) => {
-              // Verificando se a etapa pode ser editada com base na função canEditStep
               const isEditable = canEditStep(pedido.workflow!, index);
-              // Verificando se o usuário tem permissão para editar esta etapa específica
               const hasPermission = canEditWorkflowStep(step.title);
               
               return (
@@ -255,7 +249,6 @@ const WorkflowPedido: React.FC = () => {
                   className={`border rounded-lg p-4 ${getStatusClass(step.status, isEditable, hasPermission)}`}
                 >
                   <div className="flex flex-col gap-4">
-                    {/* Title and Status Section */}
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0">
@@ -300,7 +293,6 @@ const WorkflowPedido: React.FC = () => {
                         )}
                       </div>
                       
-                      {/* Replace dropdown with approval button for the first step, keep dropdown for others */}
                       {step.title === 'Aprovação da DFD' ? (
                         <div>
                           {userRole === 'admin' || userRole === 'manager' ? (
@@ -340,9 +332,7 @@ const WorkflowPedido: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Additional Fields Section */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
-                      {/* Responsible Person */}
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">
                           <User className="h-3 w-3 inline mr-1" /> Responsável
@@ -356,7 +346,6 @@ const WorkflowPedido: React.FC = () => {
                         />
                       </div>
 
-                      {/* Completion Date */}
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">
                           <Calendar className="h-3 w-3 inline mr-1" /> Data de Conclusão <span className="text-gray-500">(opcional)</span>

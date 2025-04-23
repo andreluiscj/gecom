@@ -60,7 +60,7 @@ export function getPermittedWorkflowStep(): string {
   return localStorage.getItem('user-permitted-step') || '';
 }
 
-// Add a synchronous version for comparative operations
+// Add a synchronous version for comparative operations - this is critical for the fixes
 export function getUserRoleSync(): string {
   return localStorage.getItem('user-role') || 'user';
 }

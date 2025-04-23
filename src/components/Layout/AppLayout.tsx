@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import NavBar from './NavBar';
+import NavBar from './Navbar'; // Changed from './Sidebar' to './Navbar' with correct casing
 import Sidebar from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader } from '@/components/ui/loader';

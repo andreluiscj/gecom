@@ -33,6 +33,7 @@ export function obterPedidosPorSetor(setorId: string) {
   return obterTodosPedidos().filter(p => p.setor_id === setorId);
 }
 
+// Update to accept only one parameter
 export function removerPedido(id: string) {
   console.log(`Removing pedido ${id}`);
   return Promise.resolve(true);

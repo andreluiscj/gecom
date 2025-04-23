@@ -75,11 +75,11 @@ export const municipioService = {
   },
   
   async update(id: string, municipio: Partial<Municipio>): Promise<Municipio | null> {
-    const municipioForDb = { ...municipio };
-    if (municipioForDb.created_at) {
+    const municipioForDb = { ...municipio } as any;
+    if (municipioForDb.created_at instanceof Date) {
       municipioForDb.created_at = municipioForDb.created_at.toISOString();
     }
-    if (municipioForDb.updated_at) {
+    if (municipioForDb.updated_at instanceof Date) {
       municipioForDb.updated_at = municipioForDb.updated_at.toISOString();
     }
     
@@ -433,7 +433,7 @@ export const pedidoService = {
   },
   
   async update(id: string, pedido: Partial<PedidoCompra>): Promise<PedidoCompra | null> {
-    const pedidoForDb = { ...pedido };
+    const pedidoForDb = { ...pedido } as any;
     if (pedidoForDb.data_compra instanceof Date) {
       pedidoForDb.data_compra = pedidoForDb.data_compra.toISOString();
     }
