@@ -30,12 +30,6 @@ export function canEditWorkflowStep(stepTitle: string): boolean {
   return false;
 }
 
-export function getPermittedWorkflowStep(): string {
-  // In a real app, this would get the permitted step from the authenticated user
-  // For now, we'll simulate by returning a step from localStorage or a default
-  return localStorage.getItem('user-permitted-step') || '';
-}
-
 export function isAuthenticated(): boolean {
   // In a real app, this would check if the user is authenticated
   return localStorage.getItem('user-authenticated') === 'true';

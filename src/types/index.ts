@@ -2,7 +2,6 @@
 export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
 export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído';
 export type UserRole = 'admin' | 'user' | 'manager';
-export type Setor = string;
 
 export interface Municipio {
   id: string;
@@ -74,7 +73,6 @@ export interface Funcionario {
   cargo: string;
   setor_id: string | null;
   setor?: string;
-  setores_adicionais?: string[];
   data_contratacao: Date;
   ativo: boolean;
   telefone?: string;
@@ -90,7 +88,6 @@ export interface UsuarioLogin {
   primeiro_acesso?: boolean;
 }
 
-// Dashboard data interface for metrics
 export interface DadosDashboard {
   resumo_financeiro: {
     estimativa_despesa: number;
@@ -109,4 +106,12 @@ export interface DadosDashboard {
   gastos_por_setor: Record<string, number>;
   valor_contratado_total: number;
   pedidos_por_setor: Record<string, number>;
+}
+
+export interface Setor {
+  id: string;
+  nome: string;
+  municipio_id: string;
+  created_at: Date;
+  updated_at: Date;
 }

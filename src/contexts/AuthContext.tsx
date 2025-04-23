@@ -92,11 +92,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .single();
 
           if (!userError && userData) {
-            // Store any relevant user data in localStorage for easy access
+            // Store user role for easy access
             localStorage.setItem('user-role', userData.role);
             localStorage.setItem('user-authenticated', 'true');
-            localStorage.setItem('user-id', userData.id);
-            localStorage.setItem('funcionario-id', userData.funcionario_id);
           }
         } catch (err) {
           console.error("Error fetching user data:", err);
@@ -119,8 +117,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await supabase.auth.signOut();
       localStorage.removeItem('user-authenticated');
       localStorage.removeItem('user-role');
-      localStorage.removeItem('user-id');
-      localStorage.removeItem('funcionario-id');
     } catch (err) {
       console.error("Sign out error:", err);
     }
