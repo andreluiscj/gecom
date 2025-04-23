@@ -41,9 +41,7 @@ export function calcularPorcentagem(valor: number, total: number): number {
   return Math.round((valor / total) * 100);
 }
 
+// Single export for formatarData to avoid duplicates
 export function formatarData(data: Date): string {
   return data.toLocaleDateString('pt-BR');
 }
-
-// Add mockData export for backward compatibility
-export { formatarData as formatarData };
