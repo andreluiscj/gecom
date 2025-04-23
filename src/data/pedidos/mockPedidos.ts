@@ -134,3 +134,7 @@ export const obterPedidosFicticios = (): PedidoCompra[] => {
 
   return pedidos;
 };
+
+// Export the list of pedidos for other modules to use
+export const listaPedidos: PedidoCompra[] = obterPedidosFicticios();
+
