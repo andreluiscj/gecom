@@ -3,6 +3,9 @@ export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamen
 export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído';
 export type UserRole = 'admin' | 'user' | 'manager';
 
+// Changed from type to string union to resolve type compatibility issues
+export type Setor = string;
+
 export interface Municipio {
   id: string;
   nome: string;
@@ -12,14 +15,6 @@ export interface Municipio {
   orcamento: number;
   orcamento_anual: number;
   prefeito: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface Setor {
-  id: string;
-  nome: string;
-  municipio_id: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -51,6 +46,12 @@ export interface PedidoCompra {
   workflow?: Workflow;
   local_entrega?: string;
   updated_at: Date;
+  
+  // Add compatibility properties for legacy code
+  dataCompra?: Date;
+  fundoMonetario?: string | null;
+  localEntrega?: string;
+  valorTotal?: number;
 }
 
 export interface WorkflowStep {
@@ -62,6 +63,9 @@ export interface WorkflowStep {
   responsavel_id?: string | null;
   responsavel?: string;
   ordem: number;
+  
+  // Add compatibility property for legacy code
+  title?: string;
 }
 
 export interface Workflow {

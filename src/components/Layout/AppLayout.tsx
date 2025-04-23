@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import Navbar from './NavBar';
+import Navbar from './Navbar'; // Fix casing to match file system
 import Sidebar from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader } from '@/components/ui/loader';

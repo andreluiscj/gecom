@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { gerarPDF } from '@/utils/pdfGenerator';
+import { PedidoCompra } from '@/types';
 
 const VisualizarPedido: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +28,15 @@ const VisualizarPedido: React.FC = () => {
   
   const todosPedidos = obterTodosPedidos();
   const pedido = useMemo(() => todosPedidos.find(p => p.id === id), [id, todosPedidos]);
+
+  // Add compatibility properties
+  const normalizedPedido: PedidoCompra | undefined = pedido ? {
+    ...pedido,
+    dataCompra: pedido.data_compra,
+    fundoMonetario: pedido.fundo_monetario,
+    localEntrega: pedido.local_entrega,
+    valorTotal: pedido.valor_total
+  } : undefined;
 
   const handleDelete = () => {
     if (pedido) {
@@ -118,7 +129,7 @@ const VisualizarPedido: React.FC = () => {
               <div className="space-y-1 text-sm">
                 <p className="flex justify-between">
                   <span className="text-muted-foreground">Data do Pedido:</span>
-                  <span>{formatDate(pedido.dataCompra)}</span>
+                  <span>{formatDate(pedido.data_compra)}</span>
                 </p>
                 <p className="flex justify-between">
                   <span className="text-muted-foreground">Secretaria:</span>
@@ -130,21 +141,21 @@ const VisualizarPedido: React.FC = () => {
                     <span>{pedido.solicitante}</span>
                   </p>
                 )}
-                {pedido.fundoMonetario && (
+                {pedido.fundo_monetario && (
                   <p className="flex justify-between">
                     <span className="text-muted-foreground">Fundo Monetário:</span>
-                    <span>{pedido.fundoMonetario}</span>
+                    <span>{pedido.fundo_monetario}</span>
                   </p>
                 )}
-                {pedido.localEntrega && (
+                {pedido.local_entrega && (
                   <p className="flex justify-between">
                     <span className="text-muted-foreground">Local de Entrega:</span>
-                    <span>{pedido.localEntrega}</span>
+                    <span>{pedido.local_entrega}</span>
                   </p>
                 )}
                 <p className="flex justify-between">
                   <span className="text-muted-foreground">Valor Total:</span>
-                  <span className="font-semibold">{formatCurrency(pedido.valorTotal)}</span>
+                  <span className="font-semibold">{formatCurrency(pedido.valor_total)}</span>
                 </p>
               </div>
             </div>
@@ -174,15 +185,15 @@ const VisualizarPedido: React.FC = () => {
                     <tr key={item.id}>
                       <td className="px-4 py-3 text-sm">{item.nome}</td>
                       <td className="px-4 py-3 text-sm text-right">{item.quantidade}</td>
-                      <td className="px-4 py-3 text-sm text-right">{formatCurrency(item.valorUnitario)}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-right">{formatCurrency(item.valorTotal)}</td>
+                      <td className="px-4 py-3 text-sm text-right">{formatCurrency(item.valor_unitario)}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-right">{formatCurrency(item.valor_total)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr className="bg-muted/50">
                     <td colSpan={3} className="px-4 py-2 text-right font-medium">Total</td>
-                    <td className="px-4 py-2 text-right font-medium">{formatCurrency(pedido.valorTotal)}</td>
+                    <td className="px-4 py-2 text-right font-medium">{formatCurrency(pedido.valor_total)}</td>
                   </tr>
                 </tfoot>
               </table>

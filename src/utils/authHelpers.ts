@@ -50,3 +50,8 @@ export function isAuthenticated(): boolean {
   // No ambiente real, verificamos se o usuário está autenticado
   return localStorage.getItem('user-authenticated') === 'true';
 }
+
+// Add missing function
+export function getUserId(): string {
+  return localStorage.getItem('user-id') || '';
+}

@@ -1,386 +1,439 @@
 import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DashboardHeader from '@/components/Dashboard/DashboardHeader';
-import StatCard from '@/components/Dashboard/StatCard';
-import DashboardSummary from '@/components/Dashboard/DashboardSummary';
-import { Building, Printer, Receipt, ShoppingCart, Wallet } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-import { Municipio, DadosDashboard } from '@/types';
-import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { obterDadosDashboard } from '@/data/extended-mockData';
+import { formatCurrency } from '@/utils/formatters';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
+import { 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Download,
+  ShoppingCart,
+  Wallet,
+  CheckCircle,
+  TrendingUp,
+  Filter
+} from 'lucide-react';
+import { DadosDashboard, Municipio } from '@/types';
+
+// Mock data for the municipality
+const municipio: Municipio = {
+  id: '1',
+  nome: 'São Paulo',
+  estado: 'SP',
+  populacao: 12325232,
+  logo: '/logo-municipio.png',
+  orcamento: 25000000,
+  orcamento_anual: 300000000,
+  prefeito: 'João Silva',
+  created_at: new Date('2023-01-01'),
+  updated_at: new Date('2023-06-15')
+};
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
 const Dashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('grafico');
-  const [language, setLanguage] = useState('pt'); // Default language is Portuguese
-  const [municipio, setMunicipio] = useState<Municipio | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
   const [dadosDashboard, setDadosDashboard] = useState<DadosDashboard | null>(null);
-  const [filteredData, setFilteredData] = useState<any[]>([]);
-  const [filteredDeptData, setFilteredDeptData] = useState<any[]>([]);
-  const [period, setPeriod] = useState('anual');
-  const [filters, setFilters] = useState({
-    year: '2024',
-    quarter: 'Q2',
-    month: 'Junho',
-    department: 'Todos'
-  });
+  const [periodoSelecionado, setPeriodoSelecionado] = useState('mensal');
+  const [loading, setLoading] = useState(true);
+  const [language, setLanguage] = useState('pt-BR');
 
-  // Dados para gráficos mensais
-  const monthlyData = [
-    { name: 'Jan', planejado: 240000, executado: 220000 },
-    { name: 'Fev', planejado: 300000, executado: 320000 },
-    { name: 'Mar', planejado: 280000, executado: 290000 },
-    { name: 'Abr', planejado: 320000, executado: 300000 },
-    { name: 'Mai', planejado: 350000, executado: 360000 },
-    { name: 'Jun', planejado: 380000, executado: 390000 },
-    { name: 'Jul', planejado: 400000, executado: 380000 },
-    { name: 'Ago', planejado: 420000, executado: 405000 },
-    { name: 'Set', planejado: 390000, executado: 400000 },
-    { name: 'Out', planejado: 450000, executado: 430000 },
-    { name: 'Nov', planejado: 480000, executado: 460000 },
-    { name: 'Dez', planejado: 520000, executado: 500000 },
-  ];
-
-  // Dados para análise de departamentos
-  const departmentData = [
-    { name: 'Saúde', valor: 1850000, percent: 28 },
-    { name: 'Educação', valor: 1520000, percent: 23 },
-    { name: 'Administração', valor: 950000, percent: 14 },
-    { name: 'Obras', valor: 1200000, percent: 18 },
-    { name: 'Transporte', valor: 650000, percent: 10 },
-    { name: 'Outros', valor: 450000, percent: 7 },
-  ];
-
-  // Effect para carregar município selecionado
   useEffect(() => {
-    const fetchMunicipio = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('municipios')
-          .select('*')
-          .limit(1)
-          .single();
-          
-        if (error) throw error;
-        
-        // Transform dates into Date objects
-        const municipioWithDates: Municipio = {
-          ...data,
-          created_at: new Date(data.created_at),
-          updated_at: new Date(data.updated_at)
-        };
-        
-        setMunicipio(municipioWithDates);
+        // In a real app, this would be an API call
+        const data = obterDadosDashboard();
+        setDadosDashboard(data);
       } catch (error) {
-        console.error("Erro ao buscar município:", error);
-        toast.error("Não foi possível carregar os dados do município");
-        
-        // Set default municipality in case of error
-        const defaultMunicipio: Municipio = {
-          id: 'default',
-          nome: 'Município Padrão',
-          estado: 'MG',
-          populacao: 50000,
-          orcamento: 25000000,
-          orcamento_anual: 25000000,
-          prefeito: 'Nome do Prefeito',
-          created_at: new Date(),
-          updated_at: new Date()
-        };
-        
-        setMunicipio(defaultMunicipio);
-      }
-    };
-
-    const fetchPedidos = async () => {
-      try {
-        // Buscar os pedidos para calcular estatísticas
-        const { data: pedidosData, error: pedidosError } = await supabase
-          .from('pedidos_compra')
-          .select('*');
-          
-        if (pedidosError) throw pedidosError;
-        
-        // Calculate total value
-        const valorTotal = pedidosData ? pedidosData.reduce((sum, pedido) => sum + pedido.valor_total, 0) : 0;
-        
-        // Create dashboard data
-        const dashboardData: DadosDashboard = {
-          resumo_financeiro: {
-            estimativa_despesa: municipio?.orcamento_anual || 25000000,
-            valor_contratado_total: valorTotal,
-            percentual_utilizado: municipio?.orcamento_anual ? (valorTotal / municipio.orcamento_anual) * 100 : 0,
-            total_pedidos: pedidosData?.length || 0
-          },
-          cartoes: [
-            {
-              titulo: 'Total de Pedidos',
-              valor: pedidosData?.length || 0,
-              percentual_mudanca: 12.5,
-              icon: 'Receipt',
-              classe_cor: 'bg-blue-500'
-            },
-            {
-              titulo: 'Orçamento Executado',
-              valor: formatCurrency(valorTotal),
-              percentual_mudanca: 8.2,
-              icon: 'Wallet',
-              classe_cor: 'bg-green-500'
-            }
-          ],
-          orcamento_previsto: { 'Trimestre 1': 7000000, 'Trimestre 2': 7500000, 'Trimestre 3': 7000000, 'Trimestre 4': 7000000 },
-          gastos_por_setor: {},
-          valor_contratado_total: valorTotal,
-          pedidos_por_setor: {}
-        };
-        
-        setDadosDashboard(dashboardData);
-      } catch (error) {
-        console.error("Erro ao buscar pedidos:", error);
-        toast.error("Não foi possível carregar os dados do dashboard");
+        console.error('Erro ao buscar dados do dashboard:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMunicipio().then(() => fetchPedidos());
-  }, []);
+    fetchData();
+  }, [periodoSelecionado]);
 
-  // Efeito para aplicar filtros
-  useEffect(() => {
-    applyFilters();
-  }, [period, filters]);
-
-  const applyFilters = () => {
-    // Aplicar filtro de período
-    let periodFilteredData = [...monthlyData];
-    if (period === 'mensal') {
-      // Filtrar para mostrar apenas o mês atual (usando o mês selecionado dos filtros)
-      const monthIndex = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
-                        .findIndex(m => m === filters.month);
-      
-      if (monthIndex !== -1) {
-        const monthShortNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
-                                'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-        periodFilteredData = monthlyData.filter(data => data.name === monthShortNames[monthIndex]);
-      } else {
-        periodFilteredData = monthlyData.slice(0, 1); // Padrão para o primeiro mês se não encontrado
-      }
-    } else if (period === 'trimestral') {
-      // Filtrar por trimestre
-      let quarterMonths: string[] = [];
-      switch(filters.quarter) {
-        case 'Q1':
-          quarterMonths = ['Jan', 'Fev', 'Mar'];
-          break;
-        case 'Q2':
-          quarterMonths = ['Abr', 'Mai', 'Jun'];
-          break;
-        case 'Q3':
-          quarterMonths = ['Jul', 'Ago', 'Set'];
-          break;
-        case 'Q4':
-          quarterMonths = ['Out', 'Nov', 'Dez'];
-          break;
-      }
-      periodFilteredData = monthlyData.filter(data => quarterMonths.includes(data.name));
-    }
+  const handleExportPDF = () => {
+    if (!dadosDashboard) return;
     
-    // Aplicar filtro de departamento
-    let deptFilteredData = [...departmentData];
-    if (filters.department !== 'Todos') {
-      deptFilteredData = departmentData.filter(dept => dept.name === filters.department);
+    try {
+      // This would call a PDF export function in a real implementation
+      alert('Exportação de PDF não implementada nesta versão de demonstração');
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
     }
-    
-    setFilteredData(periodFilteredData);
-    setFilteredDeptData(deptFilteredData);
   };
 
-  // Valores para os cards de estatísticas
-  const totalPedidos = dadosDashboard?.resumo_financeiro.total_pedidos || 0;
-  const orcamentoExecutado = dadosDashboard?.valor_contratado_total || 0;
-  const pedidosAprovados = dadosDashboard ? Math.floor(dadosDashboard.resumo_financeiro.total_pedidos * 0.75) : 0;
-  const secretarias = 15;
-
-  // Handle data export from dashboard
-  const handleExportDashboard = () => {
-    toast.success('Exportando relatório PDF...');
-    
-    setTimeout(() => {
-      const dashboardData = {
-        municipio: municipio?.nome || 'Município',
-        totalPedidos,
-        orcamentoExecutado,
-        pedidosAprovados,
-        secretarias,
-        orcamentoAnual: municipio?.orcamento_anual || 0,
-        data: new Date().toLocaleDateString('pt-BR')
-      };
-      
-      // Use the PDF export function with the current active tab
-      exportDashboardAsPDF(dashboardData, activeTab === 'grafico' ? 'orcamento' : 'secretarias', filteredData, filteredDeptData);
-    }, 500);
-  };
-
-  if (loading) {
+  if (loading || !dadosDashboard) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6 animate-fade-in dashboard-view">
-      {/* Cabeçalho com informações do município */}
-      <DashboardHeader municipio={municipio!} language={language} />
-      
-      {/* Cards de estatísticas */}
-      <DashboardStatCards 
-        totalPedidos={totalPedidos}
-        orcamentoExecutado={orcamentoExecutado}
-        pedidosAprovados={pedidosAprovados}
-        secretarias={secretarias}
-      />
+  // Prepare data for charts
+  const gastosSetorData = Object.entries(dadosDashboard.gastos_por_setor)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 8);
 
-      {/* Tabs para alternar entre gráficos e resumo */}
-      <DashboardTabs
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        handleExportDashboard={handleExportDashboard}
-        dadosDashboard={dadosDashboard!}
-        municipio={municipio!}
-        language={language}
-        filteredData={filteredData}
-        filteredDeptData={filteredDeptData}
-        period={period}
-        setPeriod={setPeriod}
-        filters={filters}
-        setFilters={setFilters}
+  const orcamentoGastosData = Object.keys(dadosDashboard.orcamento_previsto).map(setor => ({
+    name: setor,
+    Orçado: dadosDashboard.orcamento_previsto[setor],
+    Gasto: dadosDashboard.gastos_por_setor[setor] || 0
+  })).slice(0, 6);
+
+  const pedidosSetorData = Object.entries(dadosDashboard.pedidos_por_setor)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 8);
+
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'ShoppingCart':
+        return <ShoppingCart className="h-5 w-5" />;
+      case 'Wallet':
+        return <Wallet className="h-5 w-5" />;
+      case 'CheckCircle':
+        return <CheckCircle className="h-5 w-5" />;
+      case 'TrendingUp':
+        return <TrendingUp className="h-5 w-5" />;
+      default:
+        return <ShoppingCart className="h-5 w-5" />;
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Visão geral das compras e orçamentos do município
+          </p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Select
+            value={periodoSelecionado}
+            onValueChange={setPeriodoSelecionado}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Selecione o período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="semanal">Últimos 7 dias</SelectItem>
+              <SelectItem value="mensal">Últimos 30 dias</SelectItem>
+              <SelectItem value="trimestral">Último trimestre</SelectItem>
+              <SelectItem value="anual">Último ano</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button variant="outline" onClick={handleExportPDF}>
+            <Download className="h-4 w-4 mr-2" />
+            Exportar PDF
+          </Button>
+        </div>
+      </div>
+
+      {/* Cards de resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {dadosDashboard.cartoes.map((card, index) => (
+          <Card key={index}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between space-x-4">
+                <div className="flex items-center space-x-4">
+                  <div className={`p-2 rounded-full ${card.classe_cor}`}>
+                    {getIcon(card.icon)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground leading-none">
+                      {card.titulo}
+                    </p>
+                    <h2 className="text-2xl font-bold mt-1">{card.valor}</h2>
+                  </div>
+                </div>
+                <div className={`flex items-center ${
+                  card.percentual_mudanca > 0 
+                    ? 'text-green-600' 
+                    : card.percentual_mudanca < 0 
+                    ? 'text-red-600' 
+                    : 'text-gray-600'
+                }`}>
+                  {card.percentual_mudanca > 0 ? (
+                    <ArrowUpRight className="h-4 w-4 mr-1" />
+                  ) : (
+                    <ArrowDownRight className="h-4 w-4 mr-1" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {Math.abs(card.percentual_mudanca)}%
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Resumo financeiro */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Resumo Financeiro</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Orçamento Total</span>
+              <span className="font-medium">
+                {formatCurrency(dadosDashboard.resumo_financeiro.estimativa_despesa)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Valor Contratado</span>
+              <span className="font-medium">
+                {formatCurrency(dadosDashboard.resumo_financeiro.valor_contratado_total)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm mb-1">
+              <span className="text-muted-foreground">Progresso</span>
+              <span className="font-medium">
+                {dadosDashboard.resumo_financeiro.percentual_utilizado.toFixed(1)}%
+              </span>
+            </div>
+            <Progress 
+              value={dadosDashboard.resumo_financeiro.percentual_utilizado} 
+              className="h-2"
+              color={
+                dadosDashboard.resumo_financeiro.percentual_utilizado > 90 
+                  ? "bg-red-500" 
+                  : dadosDashboard.resumo_financeiro.percentual_utilizado > 70 
+                  ? "bg-yellow-500" 
+                  : ""
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabs para diferentes visualizações */}
+      <Tabs defaultValue="orcamento" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="orcamento">Orçamento vs Gastos</TabsTrigger>
+          <TabsTrigger value="setores">Gastos por Setor</TabsTrigger>
+          <TabsTrigger value="pedidos">Pedidos por Setor</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="orcamento" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Orçamento vs Gastos por Setor</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={orcamentoGastosData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="name" 
+                    angle={-45} 
+                    textAnchor="end"
+                    height={70}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => 
+                      new Intl.NumberFormat(language, {
+                        notation: 'compact',
+                        compactDisplay: 'short',
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(value)
+                    }
+                  />
+                  <Tooltip 
+                    formatter={(value) => 
+                      new Intl.NumberFormat(language, {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(Number(value))
+                    }
+                  />
+                  <Legend />
+                  <Bar dataKey="Orçado" fill="#8884d8" />
+                  <Bar dataKey="Gasto" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="setores" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gastos por Setor</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={gastosSetorData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                    nameKey="name"
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {gastosSetorData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value) => 
+                      new Intl.NumberFormat(language, {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(Number(value))
+                    }
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="pedidos" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pedidos por Setor</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={pedidosSetorData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="name" 
+                    angle={-45} 
+                    textAnchor="end"
+                    height={70}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="value" name="Quantidade de Pedidos" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Dashboard Summary */}
+      <DashboardSummary 
+        dadosDashboard={dadosDashboard} 
+        municipio={municipio} 
+        language={language} 
       />
     </div>
   );
 };
 
-interface DashboardStatCardsProps {
-  totalPedidos: number;
-  orcamentoExecutado: number;
-  pedidosAprovados: number;
-  secretarias: number;
-}
-
-function DashboardStatCards({ 
-  totalPedidos, 
-  orcamentoExecutado, 
-  pedidosAprovados, 
-  secretarias 
-}: DashboardStatCardsProps) {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <StatCard 
-        title="Total de Pedidos"
-        value={totalPedidos}
-        percentChange={12.5}
-        icon={Receipt}
-        colorClass="bg-blue-500"
-      />
-      <StatCard 
-        title="Orçamento Executado"
-        value={formatCurrency(orcamentoExecutado)}
-        percentChange={8.2}
-        icon={Wallet}
-        colorClass="bg-green-500"
-      />
-      <StatCard 
-        title="Pedidos Aprovados"
-        value={pedidosAprovados}
-        percentChange={4.3}
-        icon={ShoppingCart}
-        colorClass="bg-yellow-500"
-      />
-      <StatCard 
-        title="Secretarias"
-        value={secretarias}
-        percentChange={0}
-        icon={Building}
-        colorClass="bg-purple-500"
-      />
-    </div>
-  );
-}
-
-interface DashboardTabsProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  handleExportDashboard: () => void;
+interface DashboardSummaryProps {
   dadosDashboard: DadosDashboard;
   municipio: Municipio;
   language: string;
-  filteredData: any[];
-  filteredDeptData: any[];
-  period: string;
-  setPeriod: (period: string) => void;
-  filters: any;
-  setFilters: (filters: any) => void;
 }
 
-function DashboardTabs({
-  activeTab,
-  setActiveTab,
-  handleExportDashboard,
-  dadosDashboard,
-  municipio,
-  language,
-  filteredData,
-  filteredDeptData,
-  period,
-  setPeriod,
-  filters,
-  setFilters
-}: DashboardTabsProps) {
+const DashboardSummary: React.FC<DashboardSummaryProps> = ({ 
+  dadosDashboard, 
+  municipio, 
+  language 
+}) => {
   return (
-    <Tabs 
-      defaultValue={activeTab} 
-      onValueChange={setActiveTab}
-      className="space-y-4"
-    >
-      <div className="flex justify-between items-center">
-        <TabsList className="grid w-full md:w-[400px] grid-cols-2">
-          <TabsTrigger value="grafico">Gráficos</TabsTrigger>
-          <TabsTrigger value="avancado">Analytics Avançado</TabsTrigger>
-        </TabsList>
-        
-        <button
-          onClick={handleExportDashboard}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
-        >
-          <Printer className="h-4 w-4 mr-2" />
-          Exportar PDF
-        </button>
-      </div>
-      
-      <TabsContent value="grafico" className="space-y-4">
-        <DashboardSummary 
-          dadosDashboard={dadosDashboard}
-          municipio={municipio}
-          language={language}
-        />
-      </TabsContent>
-      
-      <TabsContent value="avancado">
-        <AdvancedAnalytics 
-          monthlyData={filteredData} 
-          departmentData={filteredDeptData}
-          period={period}
-          setPeriod={setPeriod}
-          filters={filters}
-          setFilters={setFilters}
-        />
-      </TabsContent>
-    </Tabs>
+    <Card>
+      <CardHeader>
+        <CardTitle>Resumo do Município</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 className="font-medium mb-2">Informações Gerais</h3>
+            <div className="space-y-1 text-sm">
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">Município:</span>
+                <span>{municipio.nome} - {municipio.estado}</span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">População:</span>
+                <span>{municipio.populacao.toLocaleString(language)}</span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">Prefeito:</span>
+                <span>{municipio.prefeito}</span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">Orçamento Anual:</span>
+                <span>{formatCurrency(municipio.orcamento_anual)}</span>
+              </p>
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="font-medium mb-2">Estatísticas de Compras</h3>
+            <div className="space-y-1 text-sm">
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">Total de Pedidos:</span>
+                <span>{dadosDashboard.resumo_financeiro.total_pedidos}</span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">Valor Contratado:</span>
+                <span>{formatCurrency(dadosDashboard.valor_contratado_total)}</span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">Percentual do Orçamento:</span>
+                <span>{dadosDashboard.resumo_financeiro.percentual_utilizado.toFixed(1)}%</span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">Valor Médio por Pedido:</span>
+                <span>{formatCurrency(
+                  dadosDashboard.resumo_financeiro.total_pedidos > 0 
+                    ? dadosDashboard.valor_contratado_total / dadosDashboard.resumo_financeiro.total_pedidos 
+                    : 0
+                )}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
-}
+};
 
 export default Dashboard;

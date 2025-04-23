@@ -23,7 +23,7 @@ interface GerenteDialogProps {
   onSubmit: (values: any) => void;
   isSubmitting: boolean;
   isEditing: boolean;
-  setores: Setor[];
+  setores: string[]; // Changed from Setor to string[]
 }
 
 // Form schema from the main component

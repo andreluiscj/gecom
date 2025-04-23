@@ -1,173 +1,106 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { useNavigate, Routes, Route } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Link } from '@/components/ui/button'; // Use Button as Link
+import ListaPedidos from './Pedidos/ListaPedidos';
+import NovoPedido from './Pedidos/NovoPedido';
+import VisualizarPedido from './Pedidos/VisualizarPedido';
+import AprovacaoDFD from './Pedidos/AprovacaoDFD';
+import WorkflowPedido from './Pedidos/WorkflowPedido';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PedidoCompra } from '@/types';
-import { supabase } from '@/lib/supabase';
-import { Plus, Filter } from 'lucide-react';
-import { formatDate, formatCurrency } from '@/utils/formatters';
 
 const Pedidos: React.FC = () => {
-  const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPedidos = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('pedidos_compra')
-          .select(`
-            *,
-            setores:setor_id (nome)
-          `)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Error fetching pedidos:', error);
-        } else if (data) {
-          const formattedPedidos = data.map(pedido => ({
-            ...pedido,
-            setor: pedido.setores?.nome || '',
-            created_at: new Date(pedido.created_at),
-            data_compra: new Date(pedido.data_compra),
-            itens: [] // We'll load items on demand when viewing details
-          }));
-          
-          setPedidos(formattedPedidos);
-        }
-      } catch (err) {
-        console.error('Error in data fetching:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPedidos();
-  }, []);
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'Aprovado':
-        return 'bg-green-100 text-green-800';
-      case 'Pendente':
-        return 'bg-amber-100 text-amber-800';
-      case 'Em Análise':
-        return 'bg-blue-100 text-blue-800';
-      case 'Rejeitado':
-        return 'bg-red-100 text-red-800';
-      case 'Em Andamento':
-        return 'bg-purple-100 text-purple-800';
-      case 'Concluído':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
+  const navigate = useNavigate();
+  
   return (
-    <div className="space-y-6 animate-fade-in">
+    <Routes>
+      <Route index element={<PedidosTabs />} />
+      <Route path="novo" element={<NovoPedido />} />
+      <Route path=":id" element={<VisualizarPedido />} />
+      <Route path=":id/aprovacao" element={<AprovacaoDFD />} />
+      <Route path=":id/workflow" element={<WorkflowPedido />} />
+    </Routes>
+  );
+};
+
+const PedidosTabs: React.FC = () => {
+  const navigate = useNavigate();
+  
+  return (
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Pedidos de Compra</h1>
           <p className="text-muted-foreground">
-            Gerencie e acompanhe os pedidos de compra do município.
+            Gerencie todos os pedidos de compra do município
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Filter className="mr-2 h-4 w-4" />
-            Filtrar
-          </Button>
-          <Button asChild>
-            <Link to="/pedidos/novo">
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Pedido
-            </Link>
-          </Button>
-        </div>
+      
+        <Button 
+          onClick={() => navigate('/pedidos/novo')}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Nova DFD
+        </Button>
       </div>
-
-      <Tabs defaultValue="todos" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="todos">Todos</TabsTrigger>
-          <TabsTrigger value="pendentes">Pendentes</TabsTrigger>
-          <TabsTrigger value="aprovados">Aprovados</TabsTrigger>
-          <TabsTrigger value="concluidos">Concluídos</TabsTrigger>
-        </TabsList>
+      
+      <Tabs defaultValue="lista" className="w-full space-y-6">
+        <div className="flex items-center justify-between">
+          <TabsList className="grid grid-cols-2 w-[400px]">
+            <TabsTrigger value="lista">Lista de Pedidos</TabsTrigger>
+            <TabsTrigger value="tarefas">Minhas Tarefas</TabsTrigger>
+          </TabsList>
+          
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/setores')}
+              className="flex items-center gap-2"
+            >
+              Ver Secretarias
+            </Button>
+          </div>
+        </div>
         
-        <TabsContent value="todos" className="space-y-4">
-          {loading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <Card key={i} className="p-4 animate-pulse">
-                  <div className="h-6 w-48 bg-gray-200 rounded mb-4"></div>
-                  <div className="flex justify-between">
-                    <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                    <div className="h-4 w-20 bg-gray-200 rounded"></div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {pedidos.length === 0 ? (
-                <Card className="p-6 text-center">
-                  <p className="text-muted-foreground">Nenhum pedido encontrado.</p>
-                  <Button asChild className="mt-4">
-                    <Link to="/pedidos/novo">
-                      Criar Novo Pedido
-                    </Link>
-                  </Button>
-                </Card>
-              ) : (
-                pedidos.map((pedido) => (
-                  <Card key={pedido.id} className="p-4 hover:bg-gray-50 transition-colors">
-                    <Link to={`/pedidos/${pedido.id}`} className="block">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+        <TabsContent value="lista" className="space-y-4">
+          <ListaPedidos />
+        </TabsContent>
+        
+        <TabsContent value="tarefas" className="space-y-4">
+          <div className="flex flex-col space-y-4">
+            <div className="rounded-md border shadow-sm">
+              <div className="p-6">
+                <h3 className="text-lg font-medium mb-4">Tarefas Pendentes</h3>
+                <div className="space-y-4">
+                  <div className="grid gap-4">
+                    {[1, 2, 3].map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between p-4 border rounded-lg bg-white"
+                      >
                         <div>
-                          <h3 className="font-medium">{pedido.descricao}</h3>
-                          <div className="text-sm text-muted-foreground flex flex-wrap gap-2 mt-1">
-                            <span>{pedido.setor}</span>
-                            <span>•</span>
-                            <span>Data: {formatDate(pedido.data_compra)}</span>
-                          </div>
+                          <h4 className="font-medium">Requisição de Material de Escritório</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Departamento: Administração • Prazo: 15/08/2023
+                          </p>
                         </div>
-                        <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
-                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusClass(pedido.status)}`}>
-                            {pedido.status}
-                          </span>
-                          <span className="font-semibold">
-                            {formatCurrency(pedido.valor_total)}
-                          </span>
-                        </div>
+                        <Button 
+                          variant="outline"
+                          className="text-sm"
+                          onClick={() => navigate(`/pedidos/${i+1}`)}
+                        >
+                          Ver Detalhes
+                        </Button>
                       </div>
-                    </Link>
-                  </Card>
-                ))
-              )}
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="pendentes" className="space-y-4">
-          <Card className="p-6">
-            <p className="text-muted-foreground text-center">Selecione o filtro de pedidos pendentes para visualização.</p>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="aprovados" className="space-y-4">
-          <Card className="p-6">
-            <p className="text-muted-foreground text-center">Selecione o filtro de pedidos aprovados para visualização.</p>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="concluidos" className="space-y-4">
-          <Card className="p-6">
-            <p className="text-muted-foreground text-center">Selecione o filtro de pedidos concluídos para visualização.</p>
-          </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

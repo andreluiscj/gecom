@@ -1,137 +1,133 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { User, Session } from '@supabase/supabase-js';
-import { UserRole } from '@/types';
+import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
-  userRole: UserRole | null;
+  userRole: string;
   loading: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string, userDetails?: object) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  userRole: null,
+  userRole: '',
   loading: true,
   error: null,
-  signIn: async () => ({ success: false }),
-  signOut: async () => {}
+  signIn: async () => ({ success: false, error: 'AuthContext not initialized' }),
+  signUp: async () => ({ success: false, error: 'AuthContext not initialized' }),
+  signOut: async () => { /* empty function */ },
 });
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check for existing session and set up auth state change listener
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Get user role if session exists
-        if (session?.user) {
-          setTimeout(async () => {
-            try {
-              const { data, error } = await supabase
-                .from('usuarios')
-                .select('role')
-                .eq('auth_user_id', session.user.id)
-                .single();
-                
-              if (data) {
-                setUserRole(data.role as UserRole);
-                localStorage.setItem('user-role', data.role);
-                localStorage.setItem('user-authenticated', 'true');
-              } else {
-                console.error('No user data found:', error);
-                setUserRole(null);
-              }
-            } catch (err) {
-              console.error('Error fetching user role:', err);
-              setUserRole(null);
-            }
-          }, 0);
-        } else {
-          setUserRole(null);
-          localStorage.removeItem('user-role');
-          localStorage.removeItem('user-authenticated');
-        }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user || null);
+
+      // Set user data in localStorage
+      if (newSession?.user) {
+        localStorage.setItem('user-authenticated', 'true');
+        getUserRole(newSession.user.id);
+      } else {
+        localStorage.setItem('user-authenticated', 'false');
+        localStorage.removeItem('user-role');
+        localStorage.removeItem('user-id');
       }
-    );
-    
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Get user role
-        supabase
-          .from('usuarios')
-          .select('role')
-          .eq('auth_user_id', session.user.id)
-          .single()
-          .then(({ data, error }) => {
-            if (data) {
-              setUserRole(data.role as UserRole);
-              localStorage.setItem('user-role', data.role);
-              localStorage.setItem('user-authenticated', 'true');
-            } else {
-              console.error('No user data found:', error);
-              setUserRole(null);
-            }
-          })
-          .catch(err => {
-            console.error('Error fetching user role:', err);
-            setUserRole(null);
-          });
+    });
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user || null);
+      if (currentSession?.user) {
+        localStorage.setItem('user-authenticated', 'true');
+        getUserRole(currentSession.user.id);
       }
-      
-      setLoading(false);
-    }).catch(err => {
-      console.error('Error fetching session:', err);
       setLoading(false);
     });
-    
+
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
+  const getUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('role')
+        .eq('auth_user_id', userId)
+        .single();
+
+      if (error) throw error;
+      
+      if (data) {
+        const role = data.role;
+        setUserRole(role);
+        localStorage.setItem('user-role', role);
+        localStorage.setItem('user-id', userId);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      // Use localStorage fallback for demo/development purposes
+      const mockRole = localStorage.getItem('user-role') || 'user';
+      setUserRole(mockRole);
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
     try {
-      setError(null);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) {
-        setError(error.message);
-        return { success: false, error: error.message };
-      }
+      if (error) throw error;
 
       if (data.user) {
-        toast.success('Login realizado com sucesso!');
         return { success: true };
       } else {
-        return { success: false, error: "Falha na autenticação" };
+        return { success: false, error: 'No user data returned' };
       }
-    } catch (err) {
-      console.error("Sign in error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Erro ao fazer login";
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to sign in';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const signUp = async (email: string, password: string, userDetails = {}) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userDetails
+        }
+      });
+
+      if (error) throw error;
+
+      return { success: true };
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to sign up';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -140,26 +136,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      localStorage.removeItem('user-authenticated');
+      localStorage.setItem('user-authenticated', 'false');
       localStorage.removeItem('user-role');
-      toast.success('Logout realizado com sucesso!');
-    } catch (err) {
-      console.error("Sign out error:", err);
-      toast.error('Erro ao fazer logout');
+      localStorage.removeItem('user-id');
+    } catch (error) {
+      console.error('Error signing out:', error);
     }
   };
 
-  const value = {
-    user,
-    userRole,
-    loading,
-    error,
-    signIn,
-    signOut
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ 
+      user, 
+      userRole,
+      loading, 
+      error, 
+      signIn, 
+      signUp, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -97,3 +97,29 @@ export function atualizarSenhaUsuario(userId: string, novaSenha: string): boolea
   
   return false;
 }
+
+// Add missing exported functions
+export function getUserById(id: string): Funcionario | undefined {
+  return funcionarios.find(f => f.id === id);
+}
+
+export function getUsuariosLogin() {
+  return usuarios;
+}
+
+export function updateFuncionario(id: string, data: Partial<Funcionario>): boolean {
+  const index = funcionarios.findIndex(f => f.id === id);
+  if (index !== -1) {
+    funcionarios[index] = { ...funcionarios[index], ...data };
+    return true;
+  }
+  return false;
+}
+
+export function getFuncionarios() {
+  return funcionarios;
+}
+
+export function filtrarFuncionariosPorSetor(setorId: string): Funcionario[] {
+  return funcionarios.filter(f => f.setor_id === setorId);
+}
