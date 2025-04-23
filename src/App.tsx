@@ -9,6 +9,7 @@ import AppLayout from '@/components/Layout/AppLayout';
 
 // Pages
 import Login from '@/pages/Login';
+import Cadastro from '@/pages/Cadastro';
 import Dashboard from '@/pages/Dashboard';
 import Pedidos from '@/pages/Pedidos';
 import NovoPedido from '@/pages/Pedidos/NovoPedido';
@@ -20,6 +21,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/cadastro" element={<Cadastro />} />
           
           <Route element={<AppLayout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />

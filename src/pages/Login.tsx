@@ -6,15 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
-  const { user, signIn } = useAuth();
+  const { user, signIn, error } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -26,25 +26,23 @@ const Login: React.FC = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
     
     if (!email || !password) {
-      setError('Por favor, preencha todos os campos');
-      setLoading(false);
+      toast.error('Por favor, preencha todos os campos');
       return;
     }
     
+    setLoading(true);
     try {
       const result = await signIn(email, password);
       
       if (result.success) {
         navigate('/dashboard');
       } else {
-        setError(result.error || 'Falha na autenticação');
+        toast.error(result.error || 'Falha na autenticação');
       }
     } catch (err) {
-      setError('Ocorreu um erro durante o login');
+      toast.error('Ocorreu um erro durante o login');
       console.error(err);
     } finally {
       setLoading(false);

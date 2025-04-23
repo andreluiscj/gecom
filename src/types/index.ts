@@ -16,6 +16,14 @@ export interface Municipio {
   updated_at: Date;
 }
 
+export interface Setor {
+  id: string;
+  nome: string;
+  municipio_id: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface Item {
   id: string;
   nome: string;
@@ -42,6 +50,7 @@ export interface PedidoCompra {
   observacoes?: string;
   workflow?: Workflow;
   local_entrega?: string;
+  updated_at: Date;
 }
 
 export interface WorkflowStep {
@@ -106,12 +115,4 @@ export interface DadosDashboard {
   gastos_por_setor: Record<string, number>;
   valor_contratado_total: number;
   pedidos_por_setor: Record<string, number>;
-}
-
-export interface Setor {
-  id: string;
-  nome: string;
-  municipio_id: string;
-  created_at: Date;
-  updated_at: Date;
 }

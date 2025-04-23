@@ -1,14 +1,21 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    // Always redirect to login page first
-    navigate('/login');
-  }, [navigate]);
+    if (loading) return;
+    
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/login');
+    }
+  }, [navigate, user, loading]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

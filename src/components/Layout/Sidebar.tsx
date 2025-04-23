@@ -3,17 +3,27 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { LayoutDashboard, FileText, Settings, ShoppingBag, Users, Building2, FileCheck } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+  const { userRole } = useAuth();
+  
   const sidebarItems = [
     { name: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" />, href: '/dashboard' },
     { name: 'Pedidos', icon: <ShoppingBag className="h-5 w-5" />, href: '/pedidos' },
     { name: 'Setores', icon: <Building2 className="h-5 w-5" />, href: '/setores' }
   ];
+  
+  // Adicionar itens específicos para administradores
+  if (userRole === 'admin') {
+    sidebarItems.push(
+      { name: 'Administração', icon: <Settings className="h-5 w-5" />, href: '/admin' }
+    );
+  }
 
   if (!isOpen) return null;
 
