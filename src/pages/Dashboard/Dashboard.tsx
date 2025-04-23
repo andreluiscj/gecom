@@ -25,8 +25,8 @@ const defaultMunicipio: Municipio = {
 // Sample dashboard data
 const dadosDashboard: DadosDashboard = {
   resumoFinanceiro: {
-    orcamentoAnual: 28500000,
-    orcamentoUtilizado: 2400000,
+    estimativaDespesa: 28500000,
+    valorContratadoTotal: 2400000,
     percentualUtilizado: 8.42,
     totalPedidos: 587,
   },
@@ -54,7 +54,7 @@ const dadosDashboard: DadosDashboard = {
     'Obras': 430000,
     'Transporte': 170000,
   },
-  gastosTotais: 2400000,
+  valorContratadoTotal: 2400000,
   pedidosPorSetor: {
     'Saúde': 143,
     'Educação': 125,

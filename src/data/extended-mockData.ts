@@ -67,13 +67,11 @@ export function calcularDadosDashboard() {
 export function obterDadosDashboard() {
   // Get calculated data based on actual pedidos
   const calculatedData = calcularDadosDashboard();
-  // Data atual
-  const hoje = new Date();
   
   return {
     resumoFinanceiro: {
-      orcamentoAnual: 2500000.00,
-      orcamentoUtilizado: calculatedData.valorTotal,
+      estimativaDespesa: 2500000.00,
+      valorContratadoTotal: calculatedData.valorTotal,
       percentualUtilizado: (calculatedData.valorTotal / 2500000.00) * 100,
       totalPedidos: calculatedData.totalPedidos,
     },
@@ -111,6 +109,8 @@ export function obterDadosDashboard() {
     
     // Use the calculated values from actual pedidos
     orcamentoPrevisto: calculatedData.orcamentoPrevisto,
-    gastosPorSetor: calculatedData.gastosPorSetor
+    gastosPorSetor: calculatedData.gastosPorSetor,
+    valorContratadoTotal: calculatedData.valorTotal,
+    pedidosPorSetor: calculatedData.pedidosPorSetor
   };
 }

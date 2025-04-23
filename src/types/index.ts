@@ -1,3 +1,4 @@
+
 export type Role = "admin" | "editor" | null;
 
 export type Tarefa = {
@@ -105,10 +106,6 @@ export interface DadosDashboard {
   gastosPorSetor: Record<string, number>;
   valorContratadoTotal: number;
   pedidosPorSetor: Record<string, number>;
-  indicadoresDesempenho: {
-    tempoMedioConclusao: number;
-    percentualEconomia: number;
-  };
 }
 
 export type UserRole = 'admin' | 'user' | 'manager';
