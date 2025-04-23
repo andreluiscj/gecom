@@ -1,141 +1,150 @@
 
-export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
-export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído';
-export type UserRole = 'admin' | 'user' | 'manager';
+export type Role = "admin" | "editor" | null;
 
-// Changed from type to string union to resolve type compatibility issues
-export type Setor = string;
+export type Tarefa = {
+  id: string;
+  title: string;
+  description: string;
+  status: "pendente" | "em_progresso" | "concluida";
+  priority: "alta" | "media" | "baixa";
+  dueDate: Date;
+  assignedTo: string;
+  comments: string[];
+  attachments: string[];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type Setor =
+  | "Saúde"
+  | "Educação"
+  | "Administrativo"
+  | "Transporte"
+  | "Assistência Social"
+  | "Cultura"
+  | "Meio Ambiente"
+  | "Obras"
+  | "Segurança Pública"
+  | "Fazenda"
+  | "Turismo"
+  | "Esportes e Lazer"
+  | "Planejamento"
+  | "Comunicação"
+  | "Ciência e Tecnologia";
+
+export type PedidoStatus = 'Pendente' | 'Em Análise' | 'Aprovado' | 'Em Andamento' | 'Concluído' | 'Rejeitado';
+
+export interface Item {
+  id: string;
+  nome: string;
+  quantidade: number;
+  valorUnitario: number;
+  valorTotal?: number;
+}
+
+export interface PedidoCompra {
+  id: string;
+  descricao: string;
+  dataCompra: Date;
+  setor: Setor;
+  itens: Item[];
+  valorTotal: number;
+  status: PedidoStatus;
+  fundoMonetario: string;
+  createdAt: Date;
+  justificativa?: string;
+  solicitante?: string;
+  observacoes?: string;
+  workflow?: Workflow;
+  localEntrega?: string;
+}
+
+export type WorkflowStepStatus = 'Pendente' | 'Em Andamento' | 'Concluído';
+
+export interface WorkflowStep {
+  id: string;
+  title: string;
+  status: WorkflowStepStatus;
+  date?: Date;
+  dataConclusao?: Date;   // New field: completion date
+  responsavel?: string;   // New field: responsible person
+}
+
+export interface Workflow {
+  currentStep: number;
+  totalSteps: number;
+  percentComplete: number;
+  steps: WorkflowStep[];
+}
 
 export interface Municipio {
   id: string;
   nome: string;
   estado: string;
   populacao: number;
-  logo?: string;
+  logo?: string; // Added logo property as optional
   orcamento: number;
-  orcamento_anual: number;
+  orcamentoAnual: number;
   prefeito: string;
-  created_at: Date;
-  updated_at: Date;
 }
 
-export interface Item {
-  id: string;
-  nome: string;
-  quantidade: number;
-  valor_unitario: number;
-  valor_total: number;
-  pedido_id: string;
+export interface DadosDashboard {
+  resumoFinanceiro: {
+    estimativaDespesa: number;
+    valorContratadoTotal: number;
+    percentualUtilizado: number;
+    totalPedidos: number;
+    orcamentoAnual?: number; // Added orcamentoAnual as optional to match usage
+  };
+  cartoes: Array<{
+    titulo: string;
+    valor: string | number;
+    percentualMudanca: number;
+    icon: string;
+    classeCor: string;
+  }>;
+  orcamentoPrevisto: Record<string, number>;
+  gastosPorSetor: Record<string, number>;
+  valorContratadoTotal: number;
+  pedidosPorSetor: Record<string, number>;
+  indicadoresDesempenho: {
+    tempoMedioConclusao: number;
+    percentualEconomia: number;
+  };
 }
 
-export interface PedidoCompra {
-  id: string;
-  descricao: string;
-  data_compra: Date;
-  setor_id: string;
-  setor?: string;
-  itens: Item[];
-  valor_total: number;
-  status: PedidoStatus;
-  fundo_monetario: string | null;
-  created_at: Date;
-  justificativa?: string;
-  solicitante_id?: string;
-  solicitante?: string;
-  observacoes?: string;
-  workflow?: Workflow;
-  local_entrega?: string;
-  updated_at: Date;
-  
-  // Add compatibility properties for legacy code
-  dataCompra?: Date;
-  fundoMonetario?: string | null;
-  localEntrega?: string;
-  valorTotal?: number;
-}
-
-export interface WorkflowStep {
-  id: string;
-  titulo: string;
-  status: WorkflowStepStatus;
-  data_inicio?: Date;
-  data_conclusao?: Date;
-  responsavel_id?: string | null;
-  responsavel?: string;
-  ordem: number;
-  
-  // Add compatibility property for legacy code
-  title?: string;
-}
-
-export interface Workflow {
-  id: string;
-  pedido_id: string;
-  etapa_atual: number;
-  total_etapas: number;
-  percentual_completo: number;
-  steps: WorkflowStep[];
-  // For backward compatibility
-  percentComplete?: number;
-}
+export type UserRole = 'admin' | 'user' | 'manager';
 
 export interface Funcionario {
   id: string;
   nome: string;
   cpf: string;
-  data_nascimento: Date;
+  dataNascimento: Date;
   email: string;
   cargo: string;
-  setor_id: string | null;
-  setor?: string;
-  data_contratacao: Date;
+  setor: Setor;
+  setoresAdicionais?: Setor[];
+  dataContratacao: Date;
   ativo: boolean;
-  telefone?: string;
+  senha?: string; // Only used for creation/update, not stored in state
+  permissaoEtapa?: string;
+  username?: string; // Username for login
+  telefone?: string; // Added the missing telefone property
+}
+
+export interface LoginLog {
+  userId: string;
+  timestamp: string;
+  success: boolean;
+  ip: string;
 }
 
 export interface UsuarioLogin {
   id: string;
-  auth_user_id?: string;
   username: string;
-  funcionario_id: string;
+  senha: string;
+  funcionarioId: string;
   role: UserRole;
   ativo: boolean;
-  primeiro_acesso?: boolean;
-}
-
-export interface DadosDashboard {
-  resumo_financeiro: {
-    estimativa_despesa: number;
-    valor_contratado_total: number;
-    percentual_utilizado: number;
-    total_pedidos: number;
-  };
-  cartoes: {
-    titulo: string;
-    valor: string | number;
-    percentual_mudanca: number;
-    icon: string;
-    classe_cor: string;
-  }[];
-  orcamento_previsto: Record<string, number>;
-  gastos_por_setor: Record<string, number>;
-  valor_contratado_total: number;
-  pedidos_por_setor: Record<string, number>;
-  
-  // Add compatibility properties for legacy code
-  orcamentoPrevisto?: Record<string, number>;
-  gastosPorSetor?: Record<string, number>;
-}
-
-export interface Tarefa {
-  id: string;
-  titulo: string;
-  descricao?: string;
-  status: string;
-  prioridade: string;
-  data_vencimento?: Date;
-  responsavel_id?: string;
-  responsavel?: string;
-  created_at: Date;
-  updated_at: Date;
+  primeiroAcesso?: boolean;
 }

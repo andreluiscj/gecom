@@ -1,6 +1,7 @@
 
 import React from 'react';
 import PedidoForm from '@/components/Pedidos/PedidoForm';
+import { Card } from '@/components/ui/card';
 
 const NovoPedido: React.FC = () => {
   return (

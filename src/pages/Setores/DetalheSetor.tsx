@@ -1,3 +1,4 @@
+
 import React, { useMemo, useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,15 +19,19 @@ import { getSetorIcon, getSetorColor } from '@/utils/iconHelpers';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+// Palette for charts
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
 const DetalheSetor: React.FC = () => {
+  // Fix: Use id parameter instead of setor
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dashboardData = obterDadosDashboard();
+  const dadosDashboard = obterDadosDashboard();
   
+  // Use state to store pedidos so we can update it when data changes
   const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
   
+  // Fetch pedidos whenever component mounts or whenever a new DFD might have been added
   useEffect(() => {
     const allPedidos = obterPedidos();
     setPedidos(allPedidos);
@@ -132,22 +137,23 @@ const DetalheSetor: React.FC = () => {
     },
   ];
   
+  // Fix: find setor by id parameter
   const setorConfig = useMemo(() => SETORES_CONFIG.find(s => s.id === id), [id]);
 
   if (!setorConfig) {
     return <div>Setor não encontrado</div>;
   }
 
+  // Get actual pedidos for this setor from the system - filter from all pedidos
   const setorPedidos = pedidos.filter(p => p.setor === setorConfig.titulo);
   const totalPedidos = setorPedidos.length;
 
-  const orcamentoData = dashboardData.orcamento_previsto;
-  const gastosData = dashboardData.gastos_por_setor;
-
-  const orcamentoPrevisto = orcamentoData?.[setorConfig.titulo] || 0;
-  const totalGasto = gastosData?.[setorConfig.titulo] || 0;
+  // Only calculate budget data if there are pedidos for this setor
+  const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto?.[setorConfig.titulo] || 0;
+  const totalGasto = dadosDashboard.gastosPorSetor?.[setorConfig.titulo] || 0;
   const percentualGasto = calcularPorcentagem(totalGasto, orcamentoPrevisto);
   
+  // Calculate status distribution for pedidos
   const pedidosPorStatus = setorPedidos.reduce((acc, pedido) => {
     acc[pedido.status] = (acc[pedido.status] || 0) + 1;
     return acc;
@@ -155,6 +161,7 @@ const DetalheSetor: React.FC = () => {
   
   const statusChartData = Object.entries(pedidosPorStatus).map(([name, value]) => ({ name, value }));
   
+  // Generate monthly spending data
   const gastosPortMes = setorPedidos.reduce((acc, pedido) => {
     const mes = pedido.dataCompra.toLocaleDateString('pt-BR', { month: 'short' });
     acc[mes] = (acc[mes] || 0) + pedido.valorTotal;
@@ -163,8 +170,10 @@ const DetalheSetor: React.FC = () => {
   
   const gastosChartData = Object.entries(gastosPortMes).map(([name, value]) => ({ name, value }));
   
+  // Generate category distribution data
   const categorias = ['Material Permanente', 'Material de Consumo', 'Serviços', 'Outros'];
   const pedidosPorCategoria = setorPedidos.reduce((acc, pedido, index) => {
+    // This is a simplified example, in a real app you'd have actual categories
     const categoria = categorias[index % categorias.length];
     acc[categoria] = (acc[categoria] || 0) + pedido.valorTotal;
     return acc;
@@ -172,6 +181,7 @@ const DetalheSetor: React.FC = () => {
   
   const categoriasChartData = Object.entries(pedidosPorCategoria).map(([name, value]) => ({ name, value }));
 
+  // Funções de navegação para os novos redirecionamentos
   const handleVisualizarPedido = (id: string) => {
     navigate(`/pedidos/${id}`);
   };

@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PedidoCompra } from '@/types';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { Calendar, Eye, FileText, Search } from 'lucide-react';
+import { Calendar as CalendarIcon, Eye, FileText, Search } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -23,8 +23,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { fundosMonetarios } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 
 interface PedidosTableProps {
@@ -43,42 +44,35 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   
-  // Extrair secretarias únicas dos pedidos para o dropdown de filtro
+  // Extract unique secretarias from pedidos for the filter dropdown
   const uniqueSecretarias = Array.from(new Set(pedidos.map(p => p.setor)));
   
-  // Ordenar pedidos por data (mais recentes primeiro) antes de filtrar
-  const sortedPedidos = [...pedidos].sort((a, b) => {
-    // Para garantir que podemos comparar as datas
-    const dateA = a.data_compra instanceof Date ? a.data_compra : new Date(a.data_compra);
-    const dateB = b.data_compra instanceof Date ? b.data_compra : new Date(b.data_compra);
-    return dateB.getTime() - dateA.getTime();
-  });
+  // Sort pedidos by date (newest first) before filtering
+  const sortedPedidos = [...pedidos].sort((a, b) => b.dataCompra.getTime() - a.dataCompra.getTime());
   
   const filteredPedidos = sortedPedidos.filter(
     (pedido) => {
-      // Filtro de texto
+      // Text search filter
       const textMatch = 
         pedido.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (pedido.fundo_monetario || '').toLowerCase().includes(searchTerm.toLowerCase());
+        pedido.fundoMonetario.toLowerCase().includes(searchTerm.toLowerCase());
       
-      // Filtro de status
+      // Status filter
       const statusMatch = statusFilter === 'todos' || pedido.status === statusFilter;
       
-      // Filtro de secretaria
+      // Secretaria filter
       const secretariaMatch = secretariaFilter === 'todos' || pedido.setor === secretariaFilter;
       
-      // Filtro de intervalo de datas
-      const pedidoDate = pedido.data_compra instanceof Date ? pedido.data_compra : new Date(pedido.data_compra);
-      
-      const dateFromMatch = !dateFrom || pedidoDate >= dateFrom;
-      const dateToMatch = !dateTo || pedidoDate <= dateTo;
+      // Date range filter
+      const dateFromMatch = !dateFrom || pedido.dataCompra >= dateFrom;
+      const dateToMatch = !dateTo || pedido.dataCompra <= dateTo;
       
       return textMatch && statusMatch && secretariaMatch && dateFromMatch && dateToMatch;
     }
   );
 
   const handleVisualizar = (id: string) => {
-    // Navegar para a página de detalhes do pedido
+    // Navigate to the pedido detail page
     navigate(`/pedidos/${id}`);
   };
 
@@ -86,7 +80,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
     switch (status) {
       case 'Aprovado':
         return 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium';
-      case 'Rejeitado':
+      case 'Reprovado':
         return 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium';
       case 'Concluído':
         return 'bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium';
@@ -106,9 +100,9 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
   };
 
   return (
-    <Card className="border shadow-sm hover:shadow-md transition-all">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-xl text-blue-700">{titulo}</CardTitle>
+        <CardTitle>{titulo}</CardTitle>
         <div className="flex flex-col gap-4 mt-4">
           <div className="relative flex-1">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -129,7 +123,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
                 <SelectItem value="todos">Todos os status</SelectItem>
                 <SelectItem value="Pendente">Pendente</SelectItem>
                 <SelectItem value="Aprovado">Aprovado</SelectItem>
-                <SelectItem value="Rejeitado">Reprovado</SelectItem>
+                <SelectItem value="Reprovado">Reprovado</SelectItem>
                 <SelectItem value="Em Andamento">Em Andamento</SelectItem>
                 <SelectItem value="Concluído">Concluído</SelectItem>
               </SelectContent>
@@ -142,9 +136,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
               <SelectContent>
                 <SelectItem value="todos">Todas as secretarias</SelectItem>
                 {uniqueSecretarias.map((secretaria) => (
-                  <SelectItem key={secretaria} value={secretaria || 'Sem Secretaria'}>
-                    {secretaria || 'Sem Secretaria'}
-                  </SelectItem>
+                  <SelectItem key={secretaria} value={secretaria}>{secretaria}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -158,17 +150,16 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
                     !dateFrom && "text-muted-foreground"
                   )}
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Data inicial"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <CalendarComponent
+                <Calendar
                   mode="single"
                   selected={dateFrom}
                   onSelect={setDateFrom}
                   initialFocus
-                  className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
@@ -182,17 +173,16 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
                     !dateTo && "text-muted-foreground"
                   )}
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateTo ? format(dateTo, "dd/MM/yyyy") : "Data final"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <CalendarComponent
+                <Calendar
                   mode="single"
                   selected={dateTo}
                   onSelect={setDateTo}
                   initialFocus
-                  className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
@@ -202,42 +192,35 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
             <Button variant="secondary" onClick={resetFilters}>
               Limpar Filtros
             </Button>
-            <Button 
-              onClick={() => navigate('/pedidos/novo')}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Nova DFD
-            </Button>
+            <Button onClick={() => navigate('/pedidos/novo')}>Nova DFD</Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
           <Table>
-            <TableHeader className="bg-blue-50">
+            <TableHeader>
               <TableRow>
-                <TableHead className="text-blue-800">Data</TableHead>
-                <TableHead className="text-blue-800">Descrição</TableHead>
-                <TableHead className="text-blue-800">Valor</TableHead>
-                <TableHead className="text-blue-800">Fundo</TableHead>
-                <TableHead className="text-blue-800">Secretaria</TableHead>
-                <TableHead className="text-blue-800">Status</TableHead>
-                <TableHead className="text-right text-blue-800">Visualizar</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Fundo</TableHead>
+                <TableHead>Secretaria</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Visualizar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPedidos.length > 0 ? (
                 filteredPedidos.map((pedido) => (
-                  <TableRow key={pedido.id} className="hover:bg-blue-50/50">
-                    <TableCell>
-                      {formatDate(pedido.data_compra instanceof Date ? pedido.data_compra : new Date(pedido.data_compra))}
-                    </TableCell>
+                  <TableRow key={pedido.id}>
+                    <TableCell>{formatDate(pedido.dataCompra)}</TableCell>
                     <TableCell className="max-w-xs truncate">
                       {pedido.descricao}
                     </TableCell>
-                    <TableCell>{formatCurrency(pedido.valor_total)}</TableCell>
-                    <TableCell>{pedido.fundo_monetario || '-'}</TableCell>
-                    <TableCell>{pedido.setor || '-'}</TableCell>
+                    <TableCell>{formatCurrency(pedido.valorTotal)}</TableCell>
+                    <TableCell>{pedido.fundoMonetario}</TableCell>
+                    <TableCell>{pedido.setor}</TableCell>
                     <TableCell>
                       <span className={getStatusBadgeClass(pedido.status)}>
                         {pedido.status}
@@ -248,7 +231,6 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
                         variant="ghost" 
                         size="sm"
                         onClick={() => handleVisualizar(pedido.id)}
-                        className="hover:bg-blue-100 hover:text-blue-600"
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         Visualizar
@@ -258,7 +240,7 @@ const PedidosTable: React.FC<PedidosTableProps> = ({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Nenhum pedido encontrado
                   </TableCell>
                 </TableRow>

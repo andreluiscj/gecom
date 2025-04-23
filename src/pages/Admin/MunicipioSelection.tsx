@@ -15,10 +15,8 @@ const municipios: Municipio[] = [
     estado: 'MG',
     populacao: 6083,
     orcamento: 28500000,
-    orcamento_anual: 28500000,
+    orcamentoAnual: 28500000,
     prefeito: 'Maria Silva',
-    created_at: new Date(),
-    updated_at: new Date()
   },
   {
     id: 'capitao-eneas',
@@ -26,10 +24,8 @@ const municipios: Municipio[] = [
     estado: 'MG',
     populacao: 15438,
     orcamento: 48000000,
-    orcamento_anual: 48000000,
+    orcamentoAnual: 48000000,
     prefeito: 'José Santos',
-    created_at: new Date(),
-    updated_at: new Date()
   }
 ];
 

@@ -49,7 +49,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
       
       if (foundUser) {
         const userData = getUserById(foundUser.id);
-        if (userData) {
+        if (userData && userData.funcionario) {
           // In a real app, this would send an email
           setSubmitted(true);
           

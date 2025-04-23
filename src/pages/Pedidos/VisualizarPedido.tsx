@@ -18,7 +18,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { gerarPDF } from '@/utils/pdfGenerator';
-import { PedidoCompra } from '@/types';
 
 const VisualizarPedido: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,17 +27,9 @@ const VisualizarPedido: React.FC = () => {
   const todosPedidos = obterTodosPedidos();
   const pedido = useMemo(() => todosPedidos.find(p => p.id === id), [id, todosPedidos]);
 
-  const normalizedPedido: PedidoCompra | undefined = pedido ? {
-    ...pedido,
-    dataCompra: pedido.data_compra,
-    fundoMonetario: pedido.fundo_monetario,
-    localEntrega: pedido.local_entrega,
-    valorTotal: pedido.valor_total
-  } : undefined;
-
   const handleDelete = () => {
     if (pedido) {
-      removerPedido(pedido.id);
+      removerPedido(pedido.id, pedido.setor);
       toast.success('DFD excluída com sucesso!');
       navigate('/pedidos');
     }
@@ -127,7 +118,7 @@ const VisualizarPedido: React.FC = () => {
               <div className="space-y-1 text-sm">
                 <p className="flex justify-between">
                   <span className="text-muted-foreground">Data do Pedido:</span>
-                  <span>{formatDate(pedido.data_compra)}</span>
+                  <span>{formatDate(pedido.dataCompra)}</span>
                 </p>
                 <p className="flex justify-between">
                   <span className="text-muted-foreground">Secretaria:</span>
@@ -139,21 +130,21 @@ const VisualizarPedido: React.FC = () => {
                     <span>{pedido.solicitante}</span>
                   </p>
                 )}
-                {pedido.fundo_monetario && (
+                {pedido.fundoMonetario && (
                   <p className="flex justify-between">
                     <span className="text-muted-foreground">Fundo Monetário:</span>
-                    <span>{pedido.fundo_monetario}</span>
+                    <span>{pedido.fundoMonetario}</span>
                   </p>
                 )}
-                {pedido.local_entrega && (
+                {pedido.localEntrega && (
                   <p className="flex justify-between">
                     <span className="text-muted-foreground">Local de Entrega:</span>
-                    <span>{pedido.local_entrega}</span>
+                    <span>{pedido.localEntrega}</span>
                   </p>
                 )}
                 <p className="flex justify-between">
                   <span className="text-muted-foreground">Valor Total:</span>
-                  <span className="font-semibold">{formatCurrency(pedido.valor_total)}</span>
+                  <span className="font-semibold">{formatCurrency(pedido.valorTotal)}</span>
                 </p>
               </div>
             </div>
@@ -183,15 +174,15 @@ const VisualizarPedido: React.FC = () => {
                     <tr key={item.id}>
                       <td className="px-4 py-3 text-sm">{item.nome}</td>
                       <td className="px-4 py-3 text-sm text-right">{item.quantidade}</td>
-                      <td className="px-4 py-3 text-sm text-right">{formatCurrency(item.valor_unitario)}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-right">{formatCurrency(item.valor_total)}</td>
+                      <td className="px-4 py-3 text-sm text-right">{formatCurrency(item.valorUnitario)}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-right">{formatCurrency(item.valorTotal)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr className="bg-muted/50">
                     <td colSpan={3} className="px-4 py-2 text-right font-medium">Total</td>
-                    <td className="px-4 py-2 text-right font-medium">{formatCurrency(pedido.valor_total)}</td>
+                    <td className="px-4 py-2 text-right font-medium">{formatCurrency(pedido.valorTotal)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -207,6 +198,7 @@ const VisualizarPedido: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Confirm delete dialog */}
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent>
           <DialogHeader>

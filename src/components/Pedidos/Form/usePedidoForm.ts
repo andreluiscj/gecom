@@ -1,28 +1,26 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Item } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
+import { Item, PedidoCompra, Setor } from '@/types';
+import { adicionarPedido, gerarId } from '@/data/mockData';
 import { toast } from 'sonner';
 
+// Schema for form validation
 const pedidoSchema = z.object({
-  data_compra: z.string().nonempty('Data da compra é obrigatória'),
+  dataCompra: z.string().nonempty('Data da compra é obrigatória'),
   descricao: z.string().min(5, 'Descrição deve ter pelo menos 5 caracteres'),
-  fundo_monetario: z.string().nonempty('Fundo monetário é obrigatório'),
-  setor_id: z.string().nonempty('Setor é obrigatório'),
+  fundoMonetario: z.string().nonempty('Fundo monetário é obrigatório'),
+  setor: z.string().nonempty('Setor é obrigatório'),
   itens: z.array(
     z.object({
       nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
       quantidade: z.number().min(1, 'Quantidade deve ser pelo menos 1'),
-      valor_unitario: z.number().min(0.01, 'Valor unitário deve ser maior que zero'),
+      valorUnitario: z.number().min(0.01, 'Valor unitário deve ser maior que zero'),
     })
   ).min(1, 'Pelo menos um item é obrigatório'),
-  observacoes: z.string().optional(),
-  solicitante_id: z.string().optional(),
-  local_entrega: z.string().optional(),
-  justificativa: z.string().optional(),
 });
 
 export type PedidoFormValues = z.infer<typeof pedidoSchema>;
@@ -30,42 +28,24 @@ export type PedidoFormValues = z.infer<typeof pedidoSchema>;
 export const usePedidoForm = () => {
   const navigate = useNavigate();
   const [itens, setItens] = useState<Item[]>([
-    { 
-      id: crypto.randomUUID(),
-      nome: '', 
-      quantidade: 1, 
-      valor_unitario: 0, 
-      valor_total: 0,
-      pedido_id: '' 
-    }
+    { id: gerarId(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
   ]);
 
   const form = useForm<PedidoFormValues>({
     resolver: zodResolver(pedidoSchema),
     defaultValues: {
-      data_compra: new Date().toISOString().split('T')[0],
+      dataCompra: new Date().toISOString().split('T')[0],
       descricao: '',
-      fundo_monetario: '',
-      setor_id: '',
-      itens: [{ nome: '', quantidade: 1, valor_unitario: 0 }],
-      observacoes: '',
-      solicitante_id: '',
-      local_entrega: '',
-      justificativa: '',
+      fundoMonetario: '',
+      setor: '',
+      itens: [{ nome: '', quantidade: 1, valorUnitario: 0 }],
     },
   });
 
   const adicionarItem = () => {
     setItens([
       ...itens,
-      { 
-        id: crypto.randomUUID(),
-        nome: '', 
-        quantidade: 1, 
-        valor_unitario: 0, 
-        valor_total: 0,
-        pedido_id: '' 
-      }
+      { id: gerarId(), nome: '', quantidade: 1, valorUnitario: 0, valorTotal: 0 },
     ]);
   };
 
@@ -84,61 +64,56 @@ export const usePedidoForm = () => {
       [campo]: valor,
     };
 
-    if (campo === 'quantidade' || campo === 'valor_unitario') {
-      novosItens[index].valor_total =
-        Number(novosItens[index].quantidade) * Number(novosItens[index].valor_unitario);
+    // Recalcular valor total
+    if (campo === 'quantidade' || campo === 'valorUnitario') {
+      novosItens[index].valorTotal =
+        Number(novosItens[index].quantidade) * Number(novosItens[index].valorUnitario);
     }
 
     setItens(novosItens);
     
+    // Atualiza os valores no formulário também
     const formItens = form.getValues().itens || [];
     formItens[index] = {
       nome: novosItens[index].nome,
       quantidade: Number(novosItens[index].quantidade),
-      valor_unitario: Number(novosItens[index].valor_unitario),
+      valorUnitario: Number(novosItens[index].valorUnitario),
     };
     form.setValue('itens', formItens);
   };
 
   const calcularValorTotal = () => {
-    return itens.reduce((total, item) => total + (item.valor_total || 0), 0);
+    return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
   };
 
-  const onSubmit = async (data: PedidoFormValues) => {
+  const onSubmit = (data: PedidoFormValues) => {
     try {
-      const { data: pedido, error: pedidoError } = await supabase
-        .from('pedidos_compra')
-        .insert({
-          descricao: data.descricao,
-          data_compra: data.data_compra,
-          setor_id: data.setor_id,
-          fundo_monetario: data.fundo_monetario,
-          valor_total: calcularValorTotal(),
-          status: 'Pendente',
-          observacoes: data.observacoes,
-          solicitante_id: data.solicitante_id,
-          local_entrega: data.local_entrega,
-          justificativa: data.justificativa
-        })
-        .select()
-        .single();
-
-      if (pedidoError) throw pedidoError;
-
-      const itensParaInserir = itens.map(item => ({
-        ...item,
-        pedido_id: pedido.id
+      // Garantir que os itens tenham valores corretos
+      const itensCompletos = itens.map((item) => ({
+        id: item.id,
+        nome: item.nome,
+        quantidade: Number(item.quantidade),
+        valorUnitario: Number(item.valorUnitario),
+        valorTotal: Number(item.quantidade) * Number(item.valorUnitario),
       }));
 
-      const { error: itensError } = await supabase
-        .from('itens_pedido')
-        .insert(itensParaInserir);
+      const novoPedido: PedidoCompra = {
+        id: gerarId(),
+        dataCompra: new Date(data.dataCompra),
+        descricao: data.descricao,
+        itens: itensCompletos,
+        valorTotal: calcularValorTotal(),
+        fundoMonetario: data.fundoMonetario,
+        setor: data.setor as Setor,
+        status: 'Pendente',
+        createdAt: new Date(),
+      };
 
-      if (itensError) throw itensError;
-
+      console.log("Salvando pedido:", novoPedido);
+      adicionarPedido(novoPedido);
       toast.success('Pedido de compra cadastrado com sucesso!');
       navigate('/pedidos');
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro ao salvar pedido:", error);
       toast.error('Erro ao cadastrar pedido. Verifique os dados e tente novamente.');
     }

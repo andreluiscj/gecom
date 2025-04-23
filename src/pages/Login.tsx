@@ -2,149 +2,140 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
-import { toast } from 'sonner';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
+import { PasswordChangeDialog } from '@/components/Auth/PasswordChangeDialog';
+import { GDPRConsentDialog } from '@/components/Auth/GDPRConsentDialog';
+import { ForgotPasswordDialog } from '@/components/Auth/ForgotPasswordDialog';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  
-  const { user, signIn, error } = useAuth();
   const navigate = useNavigate();
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   
+  const { 
+    isSubmitting, 
+    showChangePasswordDialog, 
+    setShowChangePasswordDialog,
+    showGDPRDialog,
+    setShowGDPRDialog,
+    handleLogin,
+    handlePasswordChange,
+    handleGDPRConsent
+  } = useAuth();
+
   useEffect(() => {
-    // If user is already logged in, redirect to dashboard
-    if (user) {
+    const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
+    if (isAuthenticated) {
       navigate('/dashboard');
     }
-  }, [user, navigate]);
-  
-  const handleSubmit = async (e: React.FormEvent) => {
+  }, [navigate]);
+
+  const onSubmitLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Por favor, preencha todos os campos');
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      const result = await signIn(email, password);
-      
-      if (result.success) {
-        navigate('/dashboard');
-      } else {
-        toast.error(result.error || 'Falha na autenticação');
-      }
-    } catch (err) {
-      toast.error('Ocorreu um erro durante o login');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    handleLogin(username, password);
   };
-  
+
+  const onSubmitPasswordChange = () => {
+    handlePasswordChange(newPassword, confirmPassword);
+  };
+
+  const onGDPRConsent = () => {
+    handleGDPRConsent(username, password);
+  };
+
   return (
-    <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-2 items-center text-center pb-6">
-          <div className="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center shadow-md">
-            <span className="text-white text-2xl font-bold">GC</span>
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-2">
+            <img 
+              src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" 
+              alt="GECOM Logo" 
+              className="h-16"
+            />
           </div>
-          <CardTitle className="text-2xl text-blue-700">GECOM</CardTitle>
-          <p className="text-sm text-gray-500">
-            Sistema de Gestão de Compras Públicas
-          </p>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="space-y-4">
+          <form onSubmit={onSubmitLogin} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu.email@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Senha
-                </label>
+              <div className="relative">
+                <Input
+                  id="username"
+                  placeholder="Nome de usuário"
+                  type="text"
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  autoCorrect="off"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={isSubmitting}
+                />
               </div>
+            </div>
+            <div className="space-y-2">
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Sua senha"
+                  placeholder="Senha"
+                  type="password"
+                  autoCapitalize="none"
+                  autoComplete="current-password"
+                  autoCorrect="off"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pr-10"
-                  disabled={loading}
-                  required
+                  disabled={isSubmitting}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                  tabIndex={-1}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
               </div>
             </div>
-            
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-            
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="flex items-center">
-                  <span className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full" />
-                  Entrando...
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Entrar
-                </span>
-              )}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Entrando...' : 'Entrar'}
             </Button>
-            
-            <div className="text-center mt-6">
-              <p className="text-xs text-gray-500">
-                Use as credenciais fornecidas pelo administrador do sistema
-              </p>
-              <p className="text-xs text-gray-400 mt-4">
-                GECOM v1.0 © {new Date().getFullYear()}
-              </p>
-            </div>
           </form>
         </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-center text-sm text-muted-foreground">
+            <button 
+              type="button" 
+              onClick={() => setShowForgotPasswordDialog(true)}
+              className="text-primary hover:underline"
+            >
+              Esqueceu sua senha?
+            </button>
+          </div>
+        </CardFooter>
       </Card>
+      
+      <PasswordChangeDialog
+        open={showChangePasswordDialog}
+        onOpenChange={setShowChangePasswordDialog}
+        newPassword={newPassword}
+        confirmPassword={confirmPassword}
+        setNewPassword={setNewPassword}
+        setConfirmPassword={setConfirmPassword}
+        onSubmit={onSubmitPasswordChange}
+        isSubmitting={isSubmitting}
+      />
+
+      <GDPRConsentDialog
+        open={showGDPRDialog}
+        onAccept={onGDPRConsent}
+        onOpenChange={setShowGDPRDialog}
+      />
+
+      <ForgotPasswordDialog
+        open={showForgotPasswordDialog}
+        onOpenChange={setShowForgotPasswordDialog}
+      />
     </div>
   );
 };

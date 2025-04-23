@@ -1,68 +1,126 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DadosDashboard } from '@/types';
-import { formatCurrency } from '@/lib/utils';
-import { BarChart, Building2, Users, Wallet, TrendingUp, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { DadosDashboard, Municipio } from '@/types';
+import { formatCurrency } from '@/utils/formatters';
+import { Building, Users, Crown, DollarSign } from 'lucide-react';
 
 interface DashboardSummaryProps {
-  data: DadosDashboard;
+  dadosDashboard: DadosDashboard;
+  municipio: Municipio;
+  language: string;
 }
 
-const DashboardSummary: React.FC<DashboardSummaryProps> = ({ data }) => {
+const DashboardSummary: React.FC<DashboardSummaryProps> = ({
+  dadosDashboard,
+  municipio,
+  language
+}) => {
+  // Calculate the percentage of homologated expenses against estimated budget
+  const percentualOrcamento = ((dadosDashboard.valorContratadoTotal / municipio.orcamentoAnual) * 100).toFixed(2);
+  
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {data.cartoes.map((cartao, index) => (
-        <Card key={index}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              {cartao.titulo}
-            </CardTitle>
-            {getIcon(cartao.icon)}
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {typeof cartao.valor === 'number' 
-                ? formatCurrency(cartao.valor) 
-                : cartao.valor}
+    <>
+      <Card className="border shadow-sm">
+        <CardHeader className="border-b pb-3">
+          <CardTitle className="text-xl">{language === 'pt' ? 'Resumo Financeiro' : 'Financial Summary'}</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="space-y-6">
+            <div className="border rounded-md overflow-hidden shadow-sm">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      {language === 'pt' ? 'Métrica' : 'Metric'}
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      {language === 'pt' ? 'Valor' : 'Value'}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-background divide-y divide-border">
+                  <tr>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium flex items-center">
+                      <DollarSign className="h-4 w-4 mr-2 text-green-500" />
+                      Estimativa de Despesa
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
+                      {formatCurrency(municipio.orcamentoAnual)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium flex items-center">
+                      <DollarSign className="h-4 w-4 mr-2 text-blue-500" />
+                      Valor Contratado
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
+                      {formatCurrency(dadosDashboard.valorContratadoTotal)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium flex items-center">
+                      <DollarSign className="h-4 w-4 mr-2 text-purple-500" />
+                      Diferença
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
+                      {formatCurrency(municipio.orcamentoAnual - dadosDashboard.valorContratadoTotal)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <p className="flex items-center text-xs text-muted-foreground mt-1">
-              {cartao.percentual_mudanca > 0 ? (
-                <>
-                  <ArrowUpCircle className="mr-1 h-3 w-3 text-green-500" />
-                  <span className="text-green-500">{cartao.percentual_mudanca}% de aumento</span>
-                </>
-              ) : cartao.percentual_mudanca < 0 ? (
-                <>
-                  <ArrowDownCircle className="mr-1 h-3 w-3 text-red-500" />
-                  <span className="text-red-500">{Math.abs(cartao.percentual_mudanca)}% de redução</span>
-                </>
-              ) : (
-                <span>Sem alteração</span>
-              )}
-            </p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="border shadow-sm">
+        <CardHeader className="border-b pb-3">
+          <CardTitle className="text-xl">{language === 'pt' ? 'Informações do Município' : 'Municipality Information'}</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Building className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{language === 'pt' ? 'Nome' : 'Name'}</p>
+                <p className="font-medium">{municipio.nome}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Building className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{language === 'pt' ? 'Estado' : 'State'}</p>
+                <p className="font-medium">{municipio.estado}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Users className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{language === 'pt' ? 'População' : 'Population'}</p>
+                <p className="font-medium">{municipio.populacao.toLocaleString('pt-BR')} habitantes</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Crown className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{language === 'pt' ? 'Prefeito' : 'Mayor'}</p>
+                <p className="font-medium">{municipio.prefeito}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 };
-
-function getIcon(iconName: string) {
-  switch (iconName) {
-    case 'bar-chart':
-      return <BarChart className="h-4 w-4 text-blue-600" />;
-    case 'building':
-      return <Building2 className="h-4 w-4 text-blue-600" />;
-    case 'users':
-      return <Users className="h-4 w-4 text-blue-600" />;
-    case 'wallet':
-      return <Wallet className="h-4 w-4 text-blue-600" />;
-    case 'trending-up':
-      return <TrendingUp className="h-4 w-4 text-blue-600" />;
-    default:
-      return <BarChart className="h-4 w-4 text-blue-600" />;
-  }
-}
 
 export default DashboardSummary;

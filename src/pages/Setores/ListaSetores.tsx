@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -12,7 +13,7 @@ import { Link } from 'react-router-dom';
 import { obterPedidosFicticios } from '@/data/pedidos/mockPedidos';
 
 const ListaSetores: React.FC = () => {
-  const dashboardData = obterDadosDashboard();
+  const dadosDashboard = obterDadosDashboard();
   const todosPedidos = obterPedidosFicticios();
 
   const secretarias = [
@@ -139,13 +140,11 @@ const ListaSetores: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {secretarias.map((secretaria) => {
           const totalDFDs = getPedidosForSetor(secretaria.titulo);
-          const gastoSetor = dashboardData.gastos_por_setor[secretaria.titulo] || 0;
-          const totalGastos = Object.values(dashboardData.gastos_por_setor).reduce((sum, val) => sum + val, 0);
-          const hasPedidos = totalDFDs > 0 && gastoSetor > 0;
+          const gastosRealizados = dadosDashboard.gastosPorSetor[secretaria.titulo as keyof typeof dadosDashboard.gastosPorSetor] || 0;
+          const hasPedidos = totalDFDs > 0 && gastosRealizados > 0;
           
-          const orcamentoSetor = dashboardData.orcamento_previsto[secretaria.titulo] || 0;
-          const totalOrcamento = Object.values(dashboardData.orcamento_previsto).reduce((sum, val) => sum + val, 0);
-          const percentualGasto = calcularPorcentagem(gastoSetor, orcamentoSetor);
+          const orcamentoPrevisto = dadosDashboard.orcamentoPrevisto[secretaria.titulo as keyof typeof dadosDashboard.orcamentoPrevisto] || 0;
+          const percentualGasto = calcularPorcentagem(gastosRealizados, orcamentoPrevisto);
           
           return (
             <Link to={secretaria.href} key={secretaria.id} className="block">
@@ -169,7 +168,7 @@ const ListaSetores: React.FC = () => {
                       <div className="flex justify-between items-center text-sm">
                         <span className="font-medium">Orçamento Utilizado</span>
                         <span className="text-sm text-muted-foreground">
-                          {formatCurrency(gastoSetor)} de {formatCurrency(orcamentoSetor)}
+                          {formatCurrency(gastosRealizados)} de {formatCurrency(orcamentoPrevisto)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-xs mb-1">
