@@ -13,19 +13,29 @@ export const gerarPDF = (pedido: PedidoCompra) => {
       <title>DFD - ${pedido.descricao}</title>
       <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
-        h1 { text-align: center; margin-bottom: 30px; }
+        h1 { text-align: center; margin-bottom: 30px; color: #1e40af; }
         .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
         .section { margin-bottom: 20px; }
-        .section h3 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        .section h3 { border-bottom: 1px solid #1e40af; padding-bottom: 5px; color: #1e40af; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         table th, table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        table th { background-color: #f2f2f2; }
+        table th { background-color: #f0f4ff; }
         .footer { margin-top: 50px; text-align: center; }
         .row { display: flex; margin-bottom: 10px; }
         .row .label { font-weight: bold; width: 200px; }
+        .logo-container { text-align: center; margin-bottom: 20px; }
+        .logo { max-width: 200px; }
+        @media print {
+          body { margin: 20px; }
+          h1 { font-size: 18px; margin-bottom: 20px; }
+          table { page-break-inside: avoid; }
+        }
       </style>
     </head>
     <body>
+      <div class="logo-container">
+        <img src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" class="logo" alt="GECOM Logo" />
+      </div>
       <h1>DOCUMENTO DE FORMALIZAÇÃO DE DEMANDA (DFD)</h1>
       
       <div class="section">
@@ -128,13 +138,14 @@ export const gerarPDF = (pedido: PedidoCompra) => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.success("Arquivo PDF gerado. Verifique seus downloads.");
   }
 };
 
 // Função para exportar dados do dashboard como PDF
 export const exportDashboardAsPDF = async (data: any, activeTab: string, chartData: any, deptData: any) => {
   try {
-    toast.success('Capturando dashboard para PDF...');
+    toast.success('Gerando relatório em PDF...');
     
     // Primeiro, captura a visualização atual do dashboard como imagem
     const dashboardView = document.querySelector('.dashboard-view');
@@ -142,29 +153,27 @@ export const exportDashboardAsPDF = async (data: any, activeTab: string, chartDa
       toast.error('Não foi possível localizar a visualização do dashboard');
       return false;
     }
-    
-    // Captura todos os gráficos individualmente para melhor qualidade
-    const charts: HTMLCanvasElement[] = [];
-    
+
     // Captura os elementos de gráficos
     const chartElements = dashboardView.querySelectorAll('.recharts-wrapper');
+    const chartImages: string[] = [];
     
-    // Usa Promise.all para esperar todas as capturas de gráficos
-    await Promise.all(Array.from(chartElements).map(async (chart, index) => {
-      const canvas = await html2canvas(chart as HTMLElement, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false
-      });
-      charts.push(canvas);
-    }));
+    // Captura cada gráfico individualmente para melhor qualidade
+    for (const chart of Array.from(chartElements)) {
+      try {
+        const canvas = await html2canvas(chart as HTMLElement, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+        });
+        chartImages.push(canvas.toDataURL('image/png'));
+      } catch (err) {
+        console.error("Erro ao capturar gráfico:", err);
+      }
+    }
     
     // Captura todo o dashboard para contexto geral
     const canvas = await html2canvas(dashboardView as HTMLElement, {
       scale: 1.5,
-      useCORS: true,
-      logging: false,
       backgroundColor: '#ffffff',
       ignoreElements: (element) => {
         return element.classList.contains('sidebar') || 
@@ -175,9 +184,6 @@ export const exportDashboardAsPDF = async (data: any, activeTab: string, chartDa
     
     const dashboardImage = canvas.toDataURL('image/png');
     
-    // Preparar conteúdo HTML para o PDF
-    const statsCards = dashboardView.querySelector('.grid.gap-4');
-    
     // Gerar HTML para o PDF
     const htmlContent = `
       <html>
@@ -186,8 +192,8 @@ export const exportDashboardAsPDF = async (data: any, activeTab: string, chartDa
         <style>
           body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
           .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-          .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaeaea; }
-          h1, h2, h3 { margin: 20px 0; color: #333; }
+          .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e40af; }
+          h1, h2, h3 { margin: 20px 0; color: #1e40af; }
           h1 { text-align: center; font-size: 24px; }
           h2 { font-size: 20px; }
           h3 { font-size: 16px; }
@@ -202,12 +208,18 @@ export const exportDashboardAsPDF = async (data: any, activeTab: string, chartDa
           img { max-width: 100%; }
           table { width: 100%; border-collapse: collapse; margin: 20px 0; }
           th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f5f5f5; }
+          th { background-color: #f0f4ff; }
           .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eaeaea; padding-top: 20px; }
+          .logo-container { text-align: center; margin-bottom: 20px; }
+          .logo { max-width: 200px; }
         </style>
       </head>
       <body>
         <div class="container">
+          <div class="logo-container">
+            <img src="/lovable-uploads/d6c59aa6-5f8d-498d-92db-f4a917a2f5b3.png" class="logo" alt="GECOM Logo" />
+          </div>
+        
           <h1>Dashboard - ${data.municipio}</h1>
           <div class="timestamp">Data de geração: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
           
@@ -236,13 +248,13 @@ export const exportDashboardAsPDF = async (data: any, activeTab: string, chartDa
             <img src="${dashboardImage}" alt="Visão geral do dashboard">
           </div>
           
-          ${charts.length > 0 ? `
+          ${chartImages.length > 0 ? `
             <h2>Gráficos Detalhados</h2>
             <div class="charts-container">
-              ${charts.map((chart, i) => `
+              ${chartImages.map((chartSrc, i) => `
                 <div class="chart">
                   <div class="chart-title">Gráfico ${i+1}</div>
-                  <img src="${chart.toDataURL('image/png')}" alt="Gráfico ${i+1}">
+                  <img src="${chartSrc}" alt="Gráfico ${i+1}">
                 </div>
               `).join('')}
             </div>
@@ -284,7 +296,7 @@ export const exportDashboardAsPDF = async (data: any, activeTab: string, chartDa
                 <tr>
                   <td>${row.name}</td>
                   <td>${formatCurrency(row.valor)}</td>
-                  <td>${row.percent}%</td>
+                  <td>${(row.percent * 100).toFixed(2)}%</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -317,7 +329,7 @@ export const exportDashboardAsPDF = async (data: any, activeTab: string, chartDa
       link.click();
       document.body.removeChild(link);
       
-      toast("Seu navegador bloqueou a janela de impressão. O arquivo foi baixado automaticamente.");
+      toast.success("Arquivo PDF gerado. Verifique seus downloads.");
     }
     
     return true;

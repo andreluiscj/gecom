@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -22,9 +23,24 @@ export function useAuth() {
 
     console.log("Tentando autenticar usuário:", username);
     
+    // Special case for admin login
+    if (username === 'admin' && password === 'admin') {
+      console.log("Login com credenciais admin/admin");
+      localStorage.setItem('user-authenticated', 'true');
+      localStorage.setItem('user-role', 'admin');
+      localStorage.setItem('user-name', 'Administrador');
+      localStorage.setItem('user-id', 'admin-id');
+      localStorage.setItem('funcionario-id', 'admin-func-id');
+      localStorage.setItem('user-setor', 'TI');
+      
+      toast.success('Login realizado com sucesso!');
+      setIsSubmitting(false);
+      navigate('/admin');
+      return;
+    }
+    
     // Check if it's the first login with no data in localStorage
     const storedUsers = localStorage.getItem('usuarios-login');
-    const storedFuncionarios = localStorage.getItem('funcionarios');
     
     if ((!storedUsers || JSON.parse(storedUsers).length === 0) && 
         username === 'admin' && password === '123') {

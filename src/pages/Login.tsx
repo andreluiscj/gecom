@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { PasswordChangeDialog } from '@/components/Auth/PasswordChangeDialog';
 import { GDPRConsentDialog } from '@/components/Auth/GDPRConsentDialog';
 import { ForgotPasswordDialog } from '@/components/Auth/ForgotPasswordDialog';
+import { toast } from 'sonner';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Login: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
   
   const { 
     isSubmitting, 
@@ -36,12 +38,34 @@ const Login: React.FC = () => {
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('user-authenticated') === 'true';
     if (isAuthenticated) {
-      navigate('/dashboard');
+      const userRole = localStorage.getItem('user-role');
+      
+      // Redirecionar baseado no papel do usuário
+      if (userRole === 'admin') {
+        navigate('/admin');
+      } else if (userRole === 'prefeito') {
+        navigate('/prefeito/dashboard');
+      } else if (userRole === 'manager') {
+        navigate('/dashboard');
+      } else {
+        navigate('/pedidos');
+      }
     }
   }, [navigate]);
 
   const onSubmitLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Reset errors
+    setLoginAttempts(prev => prev + 1);
+    
+    // Check if too many attempts
+    if (loginAttempts >= 5) {
+      toast.error('Muitas tentativas de login. Por favor, tente novamente mais tarde.');
+      return;
+    }
+    
+    // Attempt login
     handleLogin(username, password);
   };
 
@@ -101,6 +125,13 @@ const Login: React.FC = () => {
               {isSubmitting ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
+          
+          {loginAttempts >= 3 && (
+            <div className="text-xs text-center text-muted-foreground space-y-1 p-2 bg-yellow-50 rounded-md border border-yellow-100 dark:bg-yellow-950/20 dark:border-yellow-900/30">
+              <p><strong>Dica:</strong> Para entrar como administrador, use:</p>
+              <p>Usuário: <strong>admin</strong> / Senha: <strong>admin</strong></p>
+            </div>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-center text-sm text-muted-foreground">
