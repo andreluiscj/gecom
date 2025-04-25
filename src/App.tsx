@@ -1,9 +1,11 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { getFuncionarios, getUsuariosLogin } from "./data/funcionarios/mockFuncionarios";
 
-// Lazy load components for better performance
+// Eager load Admin component to prevent dynamic loading issues
+import Admin from "./pages/Admin/Admin";
+
+// Lazy load other components for better performance
 const AppLayout = lazy(() => import("./components/Layout/AppLayout"));
 const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
 const ListaSetores = lazy(() => import("./pages/Setores/ListaSetores"));
@@ -14,7 +16,6 @@ const ListaPedidos = lazy(() => import("./pages/Pedidos/ListaPedidos"));
 const VisualizarPedido = lazy(() => import("./pages/Pedidos/VisualizarPedido"));
 const NovoPedido = lazy(() => import("./pages/Pedidos/NovoPedido"));
 const MunicipioSelection = lazy(() => import("./pages/Admin/MunicipioSelection"));
-const Admin = lazy(() => import("./pages/Admin/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
