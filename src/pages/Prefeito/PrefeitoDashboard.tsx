@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Building2, Users, FileText, TrendingUp, ShieldAlert, Wallet, BriefcaseBusiness, CalendarCheck } from 'lucide-react';
-import { getUserRole } from '@/utils/auth/permissionHelpers';
+import { getUserRole } from '@/utils/authHelpers';
 
 const PrefeitoDashboard = () => {
   const userRole = getUserRole();

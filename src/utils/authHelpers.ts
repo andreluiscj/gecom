@@ -1,27 +1,22 @@
 
-// Helper functions for authentication-related tasks
+// Re-export all auth utilities from a single file for easier imports
 
-// Get current user's role from localStorage
-export const getUserRole = (): string | null => {
-  return localStorage.getItem('user-role');
-};
+// Re-export functions from authCore
+export {
+  isAuthenticated,
+  getUserRole,
+  getUserName,
+  getUserId,
+  getFuncionarioId,
+  getUserSetor
+} from './auth/authCore';
 
-// Get current user's id from localStorage
-export const getUserId = (): string | null => {
-  return localStorage.getItem('user-id');
-};
+// Re-export functions from permissionHelpers
+export {
+  shouldFilterByUserSetor,
+  canAccessDashboard,
+  canAccessUserManagement,
+  canEditWorkflowStep,
+  getPermittedWorkflowStep
+} from './auth/permissionHelpers';
 
-// Check if user is authenticated
-export const isAuthenticated = (): boolean => {
-  return localStorage.getItem('user-authenticated') === 'true';
-};
-
-// Get current user's municipality
-export const getUserMunicipality = (): string | null => {
-  return localStorage.getItem('user-municipality');
-};
-
-// Get current employee id
-export const getFuncionarioId = (): string | null => {
-  return localStorage.getItem('funcionario-id');
-};

@@ -81,9 +81,11 @@ const PedidoForm: React.FC = () => {
   });
 
   useEffect(() => {
-    form.setValue('responsavel', userName);
+    if (userName) {
+      form.setValue('responsavel', userName);
+    }
     
-    if (shouldRestrictSetor) {
+    if (shouldRestrictSetor && userSetor) {
       form.setValue('setor', userSetor);
     }
   }, [form, userName, userSetor, shouldRestrictSetor]);
