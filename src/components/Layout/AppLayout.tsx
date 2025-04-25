@@ -4,7 +4,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
 import { toast } from 'sonner';
-import { getUserRole, canAccessDashboard } from '@/utils/auth';
+import { getUserRole, canAccessDashboard } from '@/utils/auth/permissionHelpers';
 
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
