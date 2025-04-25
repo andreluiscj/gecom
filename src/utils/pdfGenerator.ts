@@ -1,15 +1,11 @@
+
 import { PedidoCompra } from '@/types';
 import { formatCurrency, formatDate } from './formatters';
-import { GecomLogo } from '@/assets/GecomLogo';
-import { MosaicoLogo } from '@/assets/MosaicoLogo';
 import { toast } from "sonner";
 import html2canvas from 'html2canvas';
 
+// Função para gerar PDF de um pedido individual
 export const gerarPDF = (pedido: PedidoCompra) => {
-  // In a real application, we would use a library like jspdf or pdfmake
-  // to generate the PDF. For this demo, we'll create a new window with
-  // the PDF preview.
-  
   // Prepare the content
   const htmlContent = `
     <html>
@@ -40,7 +36,7 @@ export const gerarPDF = (pedido: PedidoCompra) => {
         </div>
         <div class="row">
           <div class="label">Unidade Administrativa:</div>
-          <div>${pedido.fundoMonetario}</div>
+          <div>${pedido.fundoMonetario || '-'}</div>
         </div>
         <div class="row">
           <div class="label">Responsável pela Solicitação:</div>
@@ -115,7 +111,7 @@ export const gerarPDF = (pedido: PedidoCompra) => {
     </html>
   `;
   
-  // Open new window with the PDF preview
+  // Abre nova janela com o conteúdo do PDF para impressão
   const win = window.open('', '_blank');
   if (win) {
     win.document.write(htmlContent);
@@ -124,7 +120,7 @@ export const gerarPDF = (pedido: PedidoCompra) => {
       win.print();
     }, 500);
   } else {
-    // If popup is blocked, offer download instead
+    // Se o popup for bloqueado, oferece download
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -135,28 +131,42 @@ export const gerarPDF = (pedido: PedidoCompra) => {
   }
 };
 
-// Function to export dashboard data as PDF based on current active tab
+// Função para exportar dados do dashboard como PDF
 export const exportDashboardAsPDF = async (data: any, activeTab: string, chartData: any, deptData: any) => {
   try {
     toast.success('Capturando dashboard para PDF...');
     
-    // First, capture the current dashboard view as an image
-    const dashboardView = document.querySelector('.dashboard-view') || document.querySelector('.space-y-6');
+    // Primeiro, captura a visualização atual do dashboard como imagem
+    const dashboardView = document.querySelector('.dashboard-view');
     if (!dashboardView) {
       toast.error('Não foi possível localizar a visualização do dashboard');
       return false;
     }
     
-    // Take a screenshot of the dashboard content
+    // Captura todos os gráficos individualmente para melhor qualidade
+    const charts: HTMLCanvasElement[] = [];
+    
+    // Captura os elementos de gráficos
+    const chartElements = dashboardView.querySelectorAll('.recharts-wrapper');
+    
+    // Usa Promise.all para esperar todas as capturas de gráficos
+    await Promise.all(Array.from(chartElements).map(async (chart, index) => {
+      const canvas = await html2canvas(chart as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+      charts.push(canvas);
+    }));
+    
+    // Captura todo o dashboard para contexto geral
     const canvas = await html2canvas(dashboardView as HTMLElement, {
-      scale: 2, // Higher resolution
-      useCORS: true, // Allow cross-origin images
+      scale: 1.5,
+      useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 1200,
-      windowHeight: 1800,
       ignoreElements: (element) => {
-        // Ignore sidebar, navigation, and other elements that shouldn't be in the PDF
         return element.classList.contains('sidebar') || 
                element.classList.contains('navbar') ||
                element.tagName === 'BUTTON';
@@ -165,58 +175,140 @@ export const exportDashboardAsPDF = async (data: any, activeTab: string, chartDa
     
     const dashboardImage = canvas.toDataURL('image/png');
     
-    // Generate PDF content
+    // Preparar conteúdo HTML para o PDF
+    const statsCards = dashboardView.querySelector('.grid.gap-4');
+    
+    // Gerar HTML para o PDF
     const htmlContent = `
       <html>
       <head>
         <title>Dashboard - ${data.municipio}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+          .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
           .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaeaea; }
-          .logos { display: flex; justify-content: space-between; width: 100%; }
-          .gecom-logo { text-align: left; }
-          .mosaico-logo { text-align: right; }
-          h1 { text-align: center; margin: 20px 0; }
-          .timestamp { text-align: center; color: #666; margin-bottom: 20px; }
-          .dashboard-image { width: 100%; max-width: 100%; }
-          .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eaeaea; padding-top: 20px; }
+          h1, h2, h3 { margin: 20px 0; color: #333; }
+          h1 { text-align: center; font-size: 24px; }
+          h2 { font-size: 20px; }
+          h3 { font-size: 16px; }
+          .timestamp { text-align: center; color: #666; margin-bottom: 20px; font-style: italic; }
+          .stats { display: flex; flex-wrap: wrap; gap: 20px; margin: 20px 0; }
+          .stat-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; flex: 1; min-width: 200px; }
+          .stat-title { font-weight: bold; color: #555; margin-bottom: 5px; }
+          .stat-value { font-size: 24px; font-weight: bold; color: #000; }
+          .charts-container { margin: 30px 0; }
+          .chart { margin: 20px 0; border: 1px solid #eee; padding: 10px; border-radius: 8px; }
+          .chart-title { font-weight: bold; margin-bottom: 10px; }
+          img { max-width: 100%; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f5f5f5; }
+          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eaeaea; padding-top: 20px; }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="logos">
-            <div class="gecom-logo">
-              <div style="width: 48px; height: 48px; background-color: white; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 28px; color: #9b87f5; font-weight: bold;">G</div>
+        <div class="container">
+          <h1>Dashboard - ${data.municipio}</h1>
+          <div class="timestamp">Data de geração: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
+          
+          <h2>Resumo dos Indicadores</h2>
+          <div class="stats">
+            <div class="stat-card">
+              <div class="stat-title">Total de Pedidos</div>
+              <div class="stat-value">${data.totalPedidos}</div>
             </div>
-            <div class="mosaico-logo">
-              <img src="/lovable-uploads/b81639ad-2b05-401a-8fbe-8b05c81df9ce.png" alt="Mosaico Logo" width="150" />
+            <div class="stat-card">
+              <div class="stat-title">Orçamento Executado</div>
+              <div class="stat-value">${formatCurrency(data.orcamentoExecutado)}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Pedidos Aprovados</div>
+              <div class="stat-value">${data.pedidosAprovados}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Secretarias</div>
+              <div class="stat-value">${data.secretarias}</div>
             </div>
           </div>
-        </div>
-        
-        <h1>Dashboard - ${data.municipio}</h1>
-        <div class="timestamp">Data de geração: ${new Date().toLocaleDateString('pt-BR')}</div>
-        
-        <img src="${dashboardImage}" alt="Dashboard Screenshot" class="dashboard-image">
-        
-        <div class="footer">
-          <p>Relatório gerado automaticamente pelo sistema GECOM</p>
-          <p>© ${new Date().getFullYear()} - Todos os direitos reservados</p>
+          
+          <h2>Visão Geral</h2>
+          <div class="chart">
+            <img src="${dashboardImage}" alt="Visão geral do dashboard">
+          </div>
+          
+          ${charts.length > 0 ? `
+            <h2>Gráficos Detalhados</h2>
+            <div class="charts-container">
+              ${charts.map((chart, i) => `
+                <div class="chart">
+                  <div class="chart-title">Gráfico ${i+1}</div>
+                  <img src="${chart.toDataURL('image/png')}" alt="Gráfico ${i+1}">
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          
+          <h2>Comparativo Orçamentário</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Mês</th>
+                <th>Planejado</th>
+                <th>Executado</th>
+                <th>Diferença</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${chartData.map((row: any) => `
+                <tr>
+                  <td>${row.name}</td>
+                  <td>${formatCurrency(row.planejado)}</td>
+                  <td>${formatCurrency(row.executado)}</td>
+                  <td>${formatCurrency(row.planejado - row.executado)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <h2>Distribuição por Secretaria</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Secretaria</th>
+                <th>Valor</th>
+                <th>Percentual</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${deptData.map((row: any) => `
+                <tr>
+                  <td>${row.name}</td>
+                  <td>${formatCurrency(row.valor)}</td>
+                  <td>${row.percent}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="footer">
+            <p>Relatório gerado automaticamente pelo sistema GECOM</p>
+            <p>© ${new Date().getFullYear()} - Todos os direitos reservados</p>
+          </div>
         </div>
       </body>
       </html>
     `;
     
-    // Open new window with the PDF preview
+    // Abrir nova janela com o conteúdo do PDF para impressão
     const win = window.open('', '_blank');
     if (win) {
       win.document.write(htmlContent);
       win.document.close();
       win.setTimeout(() => {
         win.print();
-      }, 1000);  // Increased timeout for better rendering
+      }, 1000);
     } else {
-      // If popup is blocked, offer download instead
+      // Se o popup for bloqueado, oferece download
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);

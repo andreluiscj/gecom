@@ -43,30 +43,6 @@ const VisualizarPedido: React.FC = () => {
     }
   };
 
-  if (!pedido) {
-    return (
-      <div className="space-y-4 animate-fade-in">
-        <div className="flex items-center gap-2 mb-4">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">Pedido não encontrado</h1>
-        </div>
-        
-        <Card>
-          <CardContent className="p-6 text-center">
-            <p className="mt-4 text-muted-foreground">
-              O pedido que você está procurando não existe ou foi removido.
-            </p>
-            <Button className="mt-4" onClick={() => navigate('/pedidos')}>
-              Ver todos os pedidos
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  
   const statusColor = {
     'Pendente': 'bg-orange-100 text-orange-800',
     'Em Análise': 'bg-blue-100 text-blue-800',

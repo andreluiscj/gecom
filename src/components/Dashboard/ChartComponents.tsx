@@ -13,7 +13,7 @@ interface MonthlyChartProps {
 
 export const MonthlyBudgetChart: React.FC<MonthlyChartProps> = ({ data }) => {
   return (
-    <ResponsiveContainer width="100%" height={300} className="mt-4">
+    <ResponsiveContainer width="100%" height={300} className="mt-4 recharts-wrapper">
       <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="colorPlanejado" x1="0" y1="0" x2="0" y2="1">
@@ -64,7 +64,7 @@ export const DepartmentPieChart: React.FC<DepartmentChartProps> = ({ data }) => 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
   
   return (
-    <ResponsiveContainer width="100%" height={300} className="mt-4">
+    <ResponsiveContainer width="100%" height={300} className="mt-4 recharts-wrapper">
       <PieChart>
         <Pie
           data={data}
@@ -89,7 +89,7 @@ export const DepartmentPieChart: React.FC<DepartmentChartProps> = ({ data }) => 
 
 export const DepartmentBarChart: React.FC<DepartmentChartProps> = ({ data }) => {
   return (
-    <ResponsiveContainer width="100%" height={300} className="mt-4">
+    <ResponsiveContainer width="100%" height={300} className="mt-4 recharts-wrapper">
       <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />

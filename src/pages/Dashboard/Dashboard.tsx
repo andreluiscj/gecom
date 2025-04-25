@@ -253,20 +253,18 @@ const Dashboard: React.FC = () => {
   const handleExportDashboard = () => {
     toast.success('Exportando relatório PDF...');
     
-    setTimeout(() => {
-      const dashboardData = {
-        municipio: municipio.nome,
-        totalPedidos,
-        orcamentoExecutado,
-        pedidosAprovados,
-        secretarias,
-        orcamentoAnual: municipio.orcamentoAnual,
-        data: new Date().toLocaleDateString('pt-BR')
-      };
-      
-      // Use the PDF export function with the current active tab
-      exportDashboardAsPDF(dashboardData, activeTab === 'grafico' ? 'orcamento' : 'secretarias', filteredData, filteredDeptData);
-    }, 500);
+    const dashboardData = {
+      municipio: municipio.nome,
+      totalPedidos,
+      orcamentoExecutado,
+      pedidosAprovados,
+      secretarias,
+      orcamentoAnual: municipio.orcamentoAnual,
+      data: new Date().toLocaleDateString('pt-BR')
+    };
+    
+    // Use the PDF export function with the current active tab
+    exportDashboardAsPDF(dashboardData, activeTab, filteredData, filteredDeptData);
   };
 
   return (
