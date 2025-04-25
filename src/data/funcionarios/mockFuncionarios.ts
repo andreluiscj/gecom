@@ -1,14 +1,39 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { Funcionario, UsuarioLogin, UserRole } from '@/types';
 
-// Removing original admin and prefeito mock data
-// Only keeping empty arrays for initialization
+// Administrator mock data (always present)
+const adminId = 'admin-user-id';
+const adminFuncionarioId = 'admin-funcionario-id';
 
-// Empty employees data
-export const mockFuncionarios: Funcionario[] = [];
+// Initialize with admin user
+export const mockFuncionarios: Funcionario[] = [
+  {
+    id: adminFuncionarioId,
+    nome: 'Administrador',
+    cargo: 'Administrador do Sistema',
+    cpf: '000.000.000-00',
+    email: 'admin@gecom.gov.br',
+    telefone: '(00) 00000-0000',
+    setor: 'TI',
+    dataContratacao: new Date(),
+    dataNascimento: new Date('1980-01-01'),
+    ativo: true
+  }
+];
 
-// Login users data store - empty 
-export const mockUsuariosLogin: UsuarioLogin[] = [];
+// Login users data store - with admin
+export const mockUsuariosLogin: UsuarioLogin[] = [
+  {
+    id: adminId,
+    username: 'admin',
+    senha: '123', // Default admin password
+    funcionarioId: adminFuncionarioId,
+    role: 'admin',
+    ativo: true,
+    primeiroAcesso: false
+  }
+];
 
 // Login logs storage
 export const mockLoginLogs: any[] = [];
@@ -30,7 +55,7 @@ export const getFuncionarios = () => {
     }));
   }
   
-  // Initialize localStorage with empty array if it doesn't exist
+  // Initialize localStorage with mockFuncionarios (including admin)
   localStorage.setItem('funcionarios', JSON.stringify(mockFuncionarios));
   return mockFuncionarios;
 };
@@ -42,6 +67,7 @@ export const getUsuariosLogin = () => {
     return JSON.parse(storedUsuarios);
   }
   
+  // Initialize localStorage with mockUsuariosLogin (including admin)
   localStorage.setItem('usuarios-login', JSON.stringify(mockUsuariosLogin));
   return mockUsuariosLogin;
 };

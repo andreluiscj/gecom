@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -18,6 +17,27 @@ export function useAuth() {
     if (!username || !password) {
       toast.error('Por favor, preencha todos os campos.');
       setIsSubmitting(false);
+      return;
+    }
+
+    console.log("Tentando autenticar usuário:", username);
+    
+    // Check if it's the first login with no data in localStorage
+    const storedUsers = localStorage.getItem('usuarios-login');
+    const storedFuncionarios = localStorage.getItem('funcionarios');
+    
+    if ((!storedUsers || JSON.parse(storedUsers).length === 0) && 
+        username === 'admin' && password === '123') {
+      console.log("Primeiro login como admin");
+      // First login as admin
+      createInitialAdminUser();
+      toast.success('Login realizado com sucesso!');
+      setIsSubmitting(false);
+      localStorage.setItem('user-authenticated', 'true');
+      localStorage.setItem('user-role', 'admin');
+      localStorage.setItem('user-name', 'Administrador');
+      localStorage.setItem('user-id', 'admin-id');
+      navigate('/admin');
       return;
     }
 
@@ -52,6 +72,30 @@ export function useAuth() {
       toast.error('Credenciais inválidas. Tente novamente.');
       setIsSubmitting(false);
     }
+  };
+
+  // Função para criar o usuário admin inicial quando não há dados
+  const createInitialAdminUser = () => {
+    const adminUser = {
+      id: 'admin-id',
+      username: 'admin',
+      senha: '123',
+      role: 'admin',
+      ativo: true,
+      primeiroAcesso: false
+    };
+    
+    const adminFuncionario = {
+      id: 'admin-func-id',
+      nome: 'Administrador',
+      cargo: 'Administrador do Sistema',
+      setor: 'TI',
+      ativo: true,
+      dataContratacao: new Date().toISOString()
+    };
+    
+    localStorage.setItem('usuarios-login', JSON.stringify([adminUser]));
+    localStorage.setItem('funcionarios', JSON.stringify([adminFuncionario]));
   };
 
   const handlePasswordChange = (newPassword: string, confirmPassword: string) => {

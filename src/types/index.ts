@@ -1,4 +1,3 @@
-
 export type Role = "admin" | "editor" | null;
 
 export type Tarefa = {
@@ -160,4 +159,18 @@ export interface PrefeitoData {
   partido: string;
   email: string;
   telefone: string;
+}
+
+export interface Pedido {
+  id: string;
+  titulo: string;
+  descricao: string;
+  setor: string;
+  status: string;
+  dataCriacao: Date;
+  dataAtualizacao: Date;
+  valorTotal: number;
+  itens: any[];
+  etapaAtual?: string;
+  responsavel?: string;
 }

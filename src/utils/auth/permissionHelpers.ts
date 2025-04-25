@@ -15,3 +15,27 @@ export const canAccessDashboard = (): boolean => {
   return userRole === 'admin' || userRole === 'prefeito' || userRole === 'manager';
 };
 
+// Check if user can access user management
+export const canAccessUserManagement = (): boolean => {
+  const userRole = localStorage.getItem('user-role');
+  // Only admin can manage users
+  return userRole === 'admin';
+};
+
+// Check if user can edit a specific workflow step
+export const canEditWorkflowStep = (step: string): boolean => {
+  const userRole = localStorage.getItem('user-role');
+  // Admin and prefeito can edit all steps
+  if (userRole === 'admin' || userRole === 'prefeito') {
+    return true;
+  }
+  
+  // For other users, check the permitted step
+  const permittedStep = localStorage.getItem('user-permitted-step');
+  return permittedStep === step;
+};
+
+// Get the permitted workflow step for current user
+export const getPermittedWorkflowStep = (): string | null => {
+  return localStorage.getItem('user-permitted-step');
+};
