@@ -27,10 +27,16 @@ export async function getMunicipios(): Promise<Municipio[]> {
 
 export async function getMunicipioById(id: string): Promise<Municipio | null> {
   try {
+    // Convert string id to number for the database query
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
+      throw new Error('Invalid ID format');
+    }
+
     const { data, error } = await supabase
       .from('municipios')
       .select('*')
-      .eq('id', id)
+      .eq('id', numericId)
       .single();
 
     if (error) throw error;

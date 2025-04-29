@@ -19,10 +19,16 @@ export async function getSecretarias(): Promise<string[]> {
 
 export async function getSecretariaStats(municipioId: string) {
   try {
+    // Convert string id to number for the database query
+    const numericId = parseInt(municipioId);
+    if (isNaN(numericId)) {
+      throw new Error('Invalid ID format');
+    }
+
     const { data, error } = await supabase
       .from('secretarias')
       .select('nome, orcamento_previsto, orcamento_utilizado, quantidade_pedidos')
-      .eq('municipio_id', municipioId);
+      .eq('municipio_id', numericId);
 
     if (error) throw error;
 

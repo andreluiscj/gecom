@@ -10,10 +10,13 @@ export async function getPedidos() {
       .select(`
         id,
         descricao,
-        data_pedido as dataCompra,
-        valor_previsto as valorTotal,
+        data_pedido,
+        valor_previsto,
         status,
-        secretarias!inner(nome)
+        secretaria_id,
+        secretarias (
+          nome
+        )
       `)
       .order('data_pedido', { ascending: false });
 
@@ -23,11 +26,11 @@ export async function getPedidos() {
     return data.map(pedido => ({
       id: pedido.id.toString(),
       descricao: pedido.descricao,
-      dataCompra: new Date(pedido.dataCompra),
-      valorTotal: pedido.valorTotal,
+      dataCompra: new Date(pedido.data_pedido),
+      valorTotal: pedido.valor_previsto,
       status: pedido.status,
-      setor: pedido.secretarias.nome,
-      createdAt: new Date(pedido.dataCompra),
+      setor: pedido.secretarias?.nome || "Não especificado",
+      createdAt: new Date(pedido.data_pedido),
       itens: [] // We'll need to fetch these separately
     })) as PedidoCompra[];
   } catch (error) {
@@ -38,17 +41,26 @@ export async function getPedidos() {
 
 export async function getPedidoById(id: string) {
   try {
+    // Convert string id to number for the database query
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
+      throw new Error('Invalid ID format');
+    }
+
     const { data, error } = await supabase
       .from('pedidos_compras')
       .select(`
         id,
         descricao,
-        data_pedido as dataCompra,
-        valor_previsto as valorTotal,
+        data_pedido,
+        valor_previsto,
         status,
-        secretarias!inner(nome)
+        secretaria_id,
+        secretarias (
+          nome
+        )
       `)
-      .eq('id', id)
+      .eq('id', numericId)
       .single();
 
     if (error) throw error;
@@ -57,11 +69,11 @@ export async function getPedidoById(id: string) {
     return {
       id: data.id.toString(),
       descricao: data.descricao,
-      dataCompra: new Date(data.dataCompra),
-      valorTotal: data.valorTotal,
+      dataCompra: new Date(data.data_pedido),
+      valorTotal: data.valor_previsto,
       status: data.status,
-      setor: data.secretarias.nome,
-      createdAt: new Date(data.dataCompra),
+      setor: data.secretarias?.nome || "Não especificado",
+      createdAt: new Date(data.data_pedido),
       itens: [] // We'll need to fetch these separately
     } as PedidoCompra;
   } catch (error) {
@@ -96,7 +108,7 @@ export async function createPedido(pedido: Omit<PedidoCompra, 'id'>) {
 
     if (error) throw error;
     
-    return { id: data[0].id };
+    return { id: data[0].id.toString() };
   } catch (error) {
     console.error('Error creating pedido:', error);
     throw error;
@@ -105,6 +117,12 @@ export async function createPedido(pedido: Omit<PedidoCompra, 'id'>) {
 
 export async function updatePedido(id: string, updates: Partial<PedidoCompra>) {
   try {
+    // Convert string id to number for the database query
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
+      throw new Error('Invalid ID format');
+    }
+
     const updateData: any = {};
     
     if (updates.descricao) updateData.descricao = updates.descricao;
@@ -126,7 +144,7 @@ export async function updatePedido(id: string, updates: Partial<PedidoCompra>) {
     const { error } = await supabase
       .from('pedidos_compras')
       .update(updateData)
-      .eq('id', id);
+      .eq('id', numericId);
 
     if (error) throw error;
     
@@ -139,10 +157,16 @@ export async function updatePedido(id: string, updates: Partial<PedidoCompra>) {
 
 export async function deletePedido(id: string) {
   try {
+    // Convert string id to number for the database query
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
+      throw new Error('Invalid ID format');
+    }
+
     const { error } = await supabase
       .from('pedidos_compras')
       .delete()
-      .eq('id', id);
+      .eq('id', numericId);
 
     if (error) throw error;
     

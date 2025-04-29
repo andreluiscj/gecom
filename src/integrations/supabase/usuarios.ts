@@ -1,6 +1,6 @@
 
 import { supabase } from './client';
-import { Funcionario, UsuarioLogin } from '@/types';
+import { Funcionario, UsuarioLogin, Setor } from '@/types';
 
 export async function getUsuarios() {
   try {
@@ -13,17 +13,19 @@ export async function getUsuarios() {
 
     if (error) throw error;
 
-    return data.map(u => ({
+    const funcionarios = data.map(u => ({
       id: u.id.toString(),
       nome: u.nome,
       email: u.email,
       cpf: u.cpf,
       dataNascimento: u.data_nascimento ? new Date(u.data_nascimento) : new Date(),
       cargo: u.tipos_usuarios.nome,
-      setor: 'Não especificado', // This would need to be fetched from usuario_secretaria
+      setor: 'Não especificado' as Setor, // Cast to Setor type
       dataContratacao: new Date(), // Not available in the DB schema
       ativo: true // Not available in the DB schema
     })) as Funcionario[];
+
+    return funcionarios;
   } catch (error) {
     console.error('Error fetching usuarios:', error);
     throw error;
@@ -58,7 +60,7 @@ export async function autenticarUsuario(email: string, senha: string) {
       funcionario: {
         id: userData.id.toString(),
         nome: userData.nome,
-        setor: 'Não especificado' // This would need to be fetched from usuario_secretaria
+        setor: 'Não especificado' as Setor // Cast to Setor type
       },
       primeiroAcesso: userData.primeiro_login || false
     };

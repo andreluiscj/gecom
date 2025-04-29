@@ -98,8 +98,7 @@ export const usePedidoForm = () => {
         valorTotal: Number(item.quantidade) * Number(item.valorUnitario),
       }));
 
-      const novoPedido: PedidoCompra = {
-        id: '', // Will be assigned by the database
+      const novoPedido: Omit<PedidoCompra, 'id'> = {
         dataCompra: new Date(data.dataCompra),
         descricao: data.descricao,
         itens: itensCompletos,
@@ -118,8 +117,8 @@ export const usePedidoForm = () => {
       // Store in local storage as a fallback (can be removed later)
       const pedidosStorage = localStorage.getItem('pedidos');
       const pedidos = pedidosStorage ? JSON.parse(pedidosStorage) : [];
-      novoPedido.id = result.id;
-      pedidos.push(novoPedido);
+      const pedidoCompleto = { ...novoPedido, id: result.id };
+      pedidos.push(pedidoCompleto);
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
       
       toast.success('Pedido de compra cadastrado com sucesso!');
