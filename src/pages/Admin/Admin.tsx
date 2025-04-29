@@ -53,11 +53,9 @@ const Admin: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
                   <Users className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-medium">Usuários</h3>
+                  <h3 className="text-lg font-medium">Gestores</h3>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Cadastre e gerencie usuários gerentes
-                </p>
+                <p className="text-sm text-muted-foreground mt-2">Cadastre e gerencie os gestores</p>
               </CardContent>
             </Card>
             
@@ -65,11 +63,9 @@ const Admin: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-medium">Funcionários</h3>
+                  <h3 className="text-lg font-medium">Servidores</h3>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Gerencie todos os funcionários cadastrados
-                </p>
+                <p className="text-sm text-muted-foreground mt-2">Gerencie todos os servidores cadastrados</p>
               </CardContent>
             </Card>
           </div>
