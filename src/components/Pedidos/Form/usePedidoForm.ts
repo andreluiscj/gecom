@@ -5,8 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Item, PedidoCompra, Setor } from '@/types';
-import { adicionarPedido, gerarId } from '@/data/mockData';
+import { gerarId } from '@/data/mockData';
 import { toast } from 'sonner';
+import { createPedido } from '@/integrations/supabase/pedidos';
 
 // Schema for form validation
 const pedidoSchema = z.object({
@@ -86,7 +87,7 @@ export const usePedidoForm = () => {
     return itens.reduce((total, item) => total + (item.valorTotal || 0), 0);
   };
 
-  const onSubmit = (data: PedidoFormValues) => {
+  const onSubmit = async (data: PedidoFormValues) => {
     try {
       // Garantir que os itens tenham valores corretos
       const itensCompletos = itens.map((item) => ({
@@ -98,7 +99,7 @@ export const usePedidoForm = () => {
       }));
 
       const novoPedido: PedidoCompra = {
-        id: gerarId(),
+        id: '', // Will be assigned by the database
         dataCompra: new Date(data.dataCompra),
         descricao: data.descricao,
         itens: itensCompletos,
@@ -110,7 +111,17 @@ export const usePedidoForm = () => {
       };
 
       console.log("Salvando pedido:", novoPedido);
-      adicionarPedido(novoPedido);
+      
+      // Save to Supabase and get the ID
+      const result = await createPedido(novoPedido);
+      
+      // Store in local storage as a fallback (can be removed later)
+      const pedidosStorage = localStorage.getItem('pedidos');
+      const pedidos = pedidosStorage ? JSON.parse(pedidosStorage) : [];
+      novoPedido.id = result.id;
+      pedidos.push(novoPedido);
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+      
       toast.success('Pedido de compra cadastrado com sucesso!');
       navigate('/pedidos');
     } catch (error) {

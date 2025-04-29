@@ -1,13 +1,12 @@
-import React, { useMemo } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { obterTodosPedidos } from '@/data/mockData';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { getSetorIcon } from '@/utils/iconHelpers';
 import { Badge } from '@/components/ui/badge';
-import { removerPedido } from '@/data/mockData';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -18,22 +17,69 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { gerarPDF } from '@/utils/pdfGenerator';
+import { getPedidoById, deletePedido } from '@/integrations/supabase/pedidos';
+import { PedidoCompra } from '@/types';
 
 const VisualizarPedido: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pedido, setPedido] = useState<PedidoCompra | null>(null);
+  const [loading, setLoading] = useState(true);
   
-  const todosPedidos = obterTodosPedidos();
-  const pedido = useMemo(() => todosPedidos.find(p => p.id === id), [id, todosPedidos]);
+  useEffect(() => {
+    async function fetchPedido() {
+      if (!id) return;
+      
+      try {
+        const data = await getPedidoById(id);
+        setPedido(data);
+      } catch (error) {
+        console.error('Erro ao buscar pedido:', error);
+        toast.error('Erro ao carregar pedido');
+        
+        // Fallback to local storage
+        const pedidosStorage = localStorage.getItem('pedidos');
+        if (pedidosStorage) {
+          const storedPedidos = JSON.parse(pedidosStorage);
+          const storedPedido = storedPedidos.find((p: PedidoCompra) => p.id === id);
+          if (storedPedido) {
+            setPedido(storedPedido);
+          } else {
+            toast.error('Pedido não encontrado');
+            navigate('/pedidos');
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchPedido();
+  }, [id, navigate]);
 
-  const handleDelete = () => {
-    if (pedido) {
-      removerPedido(pedido.id, pedido.setor);
+  const handleDelete = async () => {
+    if (!pedido) return;
+    
+    try {
+      await deletePedido(pedido.id);
+      
+      // Also remove from localStorage if it exists there
+      const pedidosStorage = localStorage.getItem('pedidos');
+      if (pedidosStorage) {
+        const storedPedidos = JSON.parse(pedidosStorage);
+        const updatedPedidos = storedPedidos.filter((p: PedidoCompra) => p.id !== pedido.id);
+        localStorage.setItem('pedidos', JSON.stringify(updatedPedidos));
+      }
+      
       toast.success('DFD excluída com sucesso!');
       navigate('/pedidos');
+    } catch (error) {
+      console.error('Erro ao excluir pedido:', error);
+      toast.error('Erro ao excluir pedido');
+    } finally {
+      setConfirmDelete(false);
     }
-    setConfirmDelete(false);
   };
 
   const handleDownloadPDF = () => {
@@ -51,6 +97,23 @@ const VisualizarPedido: React.FC = () => {
     'Concluído': 'bg-green-100 text-green-800',
     'Rejeitado': 'bg-red-100 text-red-800',
   };
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  if (!pedido) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <p className="text-xl">Pedido não encontrado</p>
+        <Button onClick={() => navigate('/pedidos')}>Voltar para a lista</Button>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-4 animate-fade-in">
